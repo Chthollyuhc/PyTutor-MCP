@@ -8,15 +8,37 @@ Module Tích hợp Mô hình Ngôn ngữ Lớn (LLM) Qwen2.5-14B và Chiến lư
 """
 import json
 import logging
+import os
 import re
+import asyncio
 from typing import Optional
+from pathlib import Path
 import httpx
 
 logger = logging.getLogger("pytutor.llm")
 
-QWEN_API_URL = "http://101.96.66.232:8037/ollama/api/generate"
-QWEN_SECKEY = "neutv"
-QWEN_MODEL = "qwen2.5:14b-instruct-ctx16k"
+# Tự động nạp biến môi trường từ file .env ở thư mục gốc
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+env_file = PROJECT_ROOT / ".env"
+if env_file.exists():
+    try:
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+    except Exception as e:
+        logger.warning(f"Không thể đọc file .env: {e}")
+
+# Cấu hình Gemini AI (Mô hình chính chất lượng cao)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"]
+
+# Cấu hình Qwen (Dự phòng theo đề tài nếu server trường online)
+QWEN_API_URL = os.getenv("QWEN_API_URL", "http://101.96.66.232:8037/ollama/api/generate")
+QWEN_SECKEY = os.getenv("QWEN_SECKEY", "neutv")
+QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen2.5:14b-instruct-ctx16k")
 
 
 def build_scaffolding_prompt(
@@ -226,6 +248,38 @@ async def call_qwen_api(prompt: str, timeout_seconds: float = 45.0) -> Optional[
         return None
 
 
+def _sync_call_gemini(prompt: str) -> Optional[tuple[str, str]]:
+    """Hàm đồng bộ gọi Gemini API qua google-genai SDK."""
+    try:
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        for model_name in GEMINI_MODELS:
+            try:
+                res = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
+                if res.text and len(res.text.strip()) > 10:
+                    return res.text.strip(), f"Google {model_name}"
+            except Exception as e:
+                logger.warning(f"Thử nghiệm Gemini {model_name} chưa thành công: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Lỗi khởi tạo Gemini SDK: {e}")
+        return None
+
+
+async def call_gemini_api(prompt: str) -> Optional[tuple[str, str]]:
+    """Gọi Gemini API qua thread pool để tránh block event loop."""
+    if not GEMINI_API_KEY:
+        return None
+    try:
+        return await asyncio.to_thread(_sync_call_gemini, prompt)
+    except Exception as e:
+        logger.error(f"Lỗi bất đồng bộ khi gọi Gemini: {e}")
+        return None
+
+
 def sanitize_spoil_code(response_text: str, hint_level: int, all_passed: bool) -> str:
     """
     Bộ lọc hậu kiểm chống lộ lời giải (Anti-Spoil Guard).
@@ -259,9 +313,9 @@ async def generate_tutor_hint(
     """
     Hàm điều phối sinh gợi ý gia sư sư phạm:
     1. Đóng gói Context Bundle & Prompt
-    2. Thử gọi Qwen2.5-14B API
-    3. Nếu Qwen phản hồi tốt -> Hậu kiểm lọc code giải (sanitize_spoil_code) -> Trả về gợi ý từ Qwen
-    4. Nếu Qwen lỗi mạng/timeout -> Tự động kích hoạt Rule-based Fallback
+    2. Gọi Google Gemini AI (Chất lượng cao nhất, tiếng Việt sư phạm chuẩn mực)
+    3. Thử Qwen2.5-14B nếu Gemini lỗi
+    4. Kích hoạt Rule-based Fallback nếu toàn bộ mạng ngoại tuyến
     Trả về: (tutor_hint_content, source_label)
     """
     prompt = build_scaffolding_prompt(
@@ -272,9 +326,21 @@ async def generate_tutor_hint(
         hint_level=hint_level
     )
     
-    qwen_response = await call_qwen_api(prompt, timeout_seconds=45.0)
-    
     all_passed = test_results.get("all_passed", False)
+
+    # 1. Ưu tiên hàng đầu: Gọi Google Gemini AI
+    gemini_res = await call_gemini_api(prompt)
+    if gemini_res:
+        raw_hint, model_name = gemini_res
+        sanitized_hint = sanitize_spoil_code(
+            response_text=raw_hint,
+            hint_level=hint_level,
+            all_passed=all_passed
+        )
+        return sanitized_hint, model_name
+
+    # 2. Dự phòng: Thử Qwen2.5-14B (nếu server trường mở)
+    qwen_response = await call_qwen_api(prompt, timeout_seconds=15.0)
     if qwen_response and len(qwen_response) > 20:
         sanitized_hint = sanitize_spoil_code(
             response_text=qwen_response,
@@ -282,13 +348,14 @@ async def generate_tutor_hint(
             all_passed=all_passed
         )
         return sanitized_hint, QWEN_MODEL
-    else:
-        fallback_hint = generate_rule_based_fallback(
-            exercise=exercise,
-            code=code,
-            test_results=test_results,
-            ast_analysis=ast_analysis,
-            hint_level=hint_level
-        )
-        return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)"
+
+    # 3. Dự phòng cấp cuối: Rule-based Fallback
+    fallback_hint = generate_rule_based_fallback(
+        exercise=exercise,
+        code=code,
+        test_results=test_results,
+        ast_analysis=ast_analysis,
+        hint_level=hint_level
+    )
+    return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)"
 
