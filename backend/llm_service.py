@@ -31,9 +31,10 @@ if env_file.exists():
     except Exception as e:
         logger.warning(f"Không thể đọc file .env: {e}")
 
-# Cấu hình Gemini AI (Mô hình chính chất lượng cao)
+# Cấu hình Gemini AI (Mô hình chính chất lượng cao & hạn mức RPD dồi dào)
+PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite"]
+GEMINI_MODELS = [PRIMARY_MODEL, "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 
 # Cấu hình Qwen (Dự phòng theo đề tài nếu server trường online)
 QWEN_API_URL = os.getenv("QWEN_API_URL", "http://101.96.66.232:8037/ollama/api/generate")
