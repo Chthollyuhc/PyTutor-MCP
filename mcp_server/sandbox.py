@@ -152,8 +152,13 @@ def run_test_cases(code: str, test_cases: list[dict], timeout_seconds: float = 5
             "execution_time_ms": exec_res["elapsed_ms"]
         })
         
-        # Nếu gặp lỗi cú pháp ở test đầu tiên thì dừng các test sau để tiết kiệm thời gian
-        if test_status == "SYNTAX_ERROR":
+        # Nếu gặp lỗi cú pháp hoặc timeout thì dừng các test sau để tiết kiệm thời gian
+        if test_status in ("SYNTAX_ERROR", "TIMEOUT"):
+            skip_reason = (
+                "Bỏ qua do có lỗi cú pháp phía trước."
+                if test_status == "SYNTAX_ERROR"
+                else "Bỏ qua do phát hiện vòng lặp vô hạn (Timeout) ở test trước."
+            )
             for rem_idx in range(idx + 1, total + 1):
                 rem_tc = test_cases[rem_idx - 1]
                 results.append({
@@ -163,7 +168,7 @@ def run_test_cases(code: str, test_cases: list[dict], timeout_seconds: float = 5
                     "expected_output": str(rem_tc.get("expected_output", "")).strip(),
                     "actual_output": "",
                     "status": "SKIPPED",
-                    "error_message": "Bỏ qua do có lỗi cú pháp phía trước.",
+                    "error_message": skip_reason,
                     "stderr": "",
                     "execution_time_ms": 0.0
                 })
