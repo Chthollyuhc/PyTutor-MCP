@@ -8,6 +8,7 @@ Module Tích hợp Mô hình Ngôn ngữ Lớn (LLM) Qwen2.5-14B và Chiến lư
 """
 import json
 import logging
+import re
 from typing import Optional
 import httpx
 
@@ -225,6 +226,29 @@ async def call_qwen_api(prompt: str, timeout_seconds: float = 45.0) -> Optional[
         return None
 
 
+def sanitize_spoil_code(response_text: str, hint_level: int, all_passed: bool) -> str:
+    """
+    Bộ lọc hậu kiểm chống lộ lời giải (Anti-Spoil Guard).
+    Nếu chưa pass 100% và ở hint_level 1 hoặc 2:
+    Kiểm tra xem trong response_text có chứa khối code ```python ... ``` hoặc ``` ... ```
+    nào dài từ 3 dòng lệnh trở lên không. Nếu có, tự động thay thế bằng thông báo sư phạm.
+    """
+    if all_passed or hint_level not in (1, 2):
+        return response_text
+
+    def replace_long_code_block(match):
+        code_body = match.group(1).strip()
+        lines = [ln for ln in code_body.splitlines() if ln.strip()]
+        if len(lines) >= 3:
+            return "\n\n🔒 *[Đoạn mã minh họa đã được PyTutor ẩn tự động ở Level 1-2 để bạn tự rèn luyện tư duy lập trình]*\n\n"
+        return match.group(0)
+
+    # Tìm các khối ```python ... ``` hoặc ``` ... ```
+    pattern = r"```(?:python)?\s*\n(.*?)```"
+    sanitized = re.sub(pattern, replace_long_code_block, response_text, flags=re.DOTALL | re.IGNORECASE)
+    return sanitized
+
+
 async def generate_tutor_hint(
     exercise: dict,
     code: str,
@@ -236,7 +260,7 @@ async def generate_tutor_hint(
     Hàm điều phối sinh gợi ý gia sư sư phạm:
     1. Đóng gói Context Bundle & Prompt
     2. Thử gọi Qwen2.5-14B API
-    3. Nếu Qwen phản hồi tốt -> Trả về gợi ý từ Qwen
+    3. Nếu Qwen phản hồi tốt -> Hậu kiểm lọc code giải (sanitize_spoil_code) -> Trả về gợi ý từ Qwen
     4. Nếu Qwen lỗi mạng/timeout -> Tự động kích hoạt Rule-based Fallback
     Trả về: (tutor_hint_content, source_label)
     """
@@ -250,8 +274,14 @@ async def generate_tutor_hint(
     
     qwen_response = await call_qwen_api(prompt, timeout_seconds=45.0)
     
+    all_passed = test_results.get("all_passed", False)
     if qwen_response and len(qwen_response) > 20:
-        return qwen_response, QWEN_MODEL
+        sanitized_hint = sanitize_spoil_code(
+            response_text=qwen_response,
+            hint_level=hint_level,
+            all_passed=all_passed
+        )
+        return sanitized_hint, QWEN_MODEL
     else:
         fallback_hint = generate_rule_based_fallback(
             exercise=exercise,
@@ -261,3 +291,4 @@ async def generate_tutor_hint(
             hint_level=hint_level
         )
         return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)"
+

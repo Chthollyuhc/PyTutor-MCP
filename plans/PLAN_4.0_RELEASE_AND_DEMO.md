@@ -1,7 +1,7 @@
 # 🚢 PLAN 4.0: SYSTEM INTEGRATION, ONE-CLICK LAUNCH & RELEASE
 
 > **Phân hệ:** Toàn hệ thống (Root)  
-> **Trạng thái:** ⏸️ CHƯA BẮT ĐẦU
+> **Trạng thái:** ✅ ĐÃ HOÀN THÀNH (100% Release Ready)
 
 ---
 
@@ -24,15 +24,15 @@ Tích hợp toàn bộ 3 phân hệ (`mcp_server`, `backend`, `frontend`) thành
 
 ## ✅ 3. Danh sách Công việc (Checklist)
 
-- [ ] Tạo `start_dev.ps1` (PowerShell launcher với kiểm tra môi trường và chạy đồng thời).
-- [ ] Tạo `start_dev.bat` (Batch script 1-click cho người dùng Windows).
-- [ ] Kiểm thử kịch bản thực nghiệm trên cả 5 bài tập:
-  - [ ] Code đúng 100% -> Chúc mừng + nhận xét tối ưu code.
-  - [ ] Code sai logic -> Kiểm tra gợi ý Level 1, 2, 3 từ Qwen2.5-14B.
-  - [ ] Code lặp vô hạn `while True:` -> Kiểm tra bắt timeout 5s mượt mà trên UI.
-  - [ ] Code lỗi cú pháp -> Kiểm tra thông báo chỉ rõ dòng lỗi.
-- [ ] Cập nhật `README.md` hoàn chỉnh: Giới thiệu, kiến trúc, hướng dẫn cài đặt & kịch bản demo bảo vệ đồ án.
-- [ ] Cập nhật toàn bộ các file kế hoạch trong `plans/` và `PLAN.md` thành `[x] ✅ PASSED`.
+- [x] Tạo `start_dev.ps1` (PowerShell script launcher với kiểm tra môi trường và chạy đồng thời).
+- [x] Tạo `start_dev.bat` (Batch script 1-click cho người dùng Windows).
+- [x] Kiểm thử kịch bản thực nghiệm trên cả 5 bài tập:
+  - [x] Code đúng 100% -> Chúc mừng + nhận xét tối ưu code (bắn pháo giấy confetti).
+  - [x] Code sai logic -> Kiểm tra gợi ý Level 1, 2, 3 từ Qwen2.5-14B / Fallback.
+  - [x] Code lặp vô hạn `while True:` -> Kiểm tra bắt timeout 5s mượt mà trên UI, các test sau tự động SKIPPED.
+  - [x] Code lỗi cú pháp -> Kiểm tra thông báo chỉ rõ dòng lỗi từ thẻ AST Inspector.
+- [x] Cập nhật `README.md` hoàn chỉnh: Giới thiệu, kiến trúc, hướng dẫn cài đặt & kịch bản demo bảo vệ đồ án.
+- [x] Cập nhật toàn bộ các file kế hoạch trong `plans/` và `PLAN.md` thành `[x] ✅ PASSED`.
 
 ---
 

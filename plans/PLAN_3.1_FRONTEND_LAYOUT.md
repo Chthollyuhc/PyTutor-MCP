@@ -1,7 +1,7 @@
 # 🎨 PLAN 3.1: FRONTEND PROJECT SETUP & 3-COLUMN LAYOUT
 
 > **Phân hệ:** `frontend/`  
-> **Trạng thái:** ⏸️ CHƯA BẮT ĐẦU
+> **Trạng thái:** ✅ ĐÃ HOÀN THÀNH (Build 100% Sạch)
 
 ---
 
@@ -30,12 +30,12 @@ Khởi tạo ứng dụng Frontend hiện đại bằng React 18, Vite và Tailw
 
 ## ✅ 3. Danh sách Công việc (Checklist)
 
-- [ ] Khởi tạo dự án Vite React tại thư mục `frontend/` bằng lệnh `npm.cmd create vite@latest frontend -- --template react`.
-- [ ] Cài đặt các thư viện phụ thuộc: `tailwindcss`, `postcss`, `autoprefixer`, `@monaco-editor/react`, `lucide-react`, `axios`, `canvas-confetti`.
-- [ ] Cấu hình Tailwind CSS (`tailwind.config.js` và `index.css`).
-- [ ] Xây dựng `frontend/src/services/api.js`: Axios client gọi FastAPI endpoints (`/api/health`, `/api/exercises`, `/api/submit`).
-- [ ] Xây dựng Header component: Hiển thị logo PyTutor, trạng thái Backend health và huy hiệu danh sách MCP Tools khám phá được.
-- [ ] Xây dựng `ProblemPanel.jsx`: Dropdown chọn bài tập, hiển thị độ khó, mô tả bài tập (hỗ trợ hiển thị bảng, code blocks, công thức toán).
+- [x] Khởi tạo dự án Vite React tại thư mục `frontend/` với React 18, Vite 5.
+- [x] Cài đặt các thư viện phụ thuộc: `tailwindcss@^3.4.17`, `postcss`, `autoprefixer`, `@monaco-editor/react`, `lucide-react`, `axios`, `canvas-confetti`.
+- [x] Cấu hình Tailwind CSS (`tailwind.config.js`, `postcss.config.js` và `index.css`).
+- [x] Xây dựng `frontend/src/services/api.js`: Axios client gọi FastAPI endpoints (`/api/health`, `/api/exercises`, `/api/submit`).
+- [x] Xây dựng `Header.jsx`: Hiển thị logo PyTutor, trạng thái Backend health và huy hiệu danh sách MCP Tools khám phá được.
+- [x] Xây dựng `ProblemPanel.jsx`: Dropdown chọn bài tập, hiển thị độ khó, mô tả bài tập, bảng ví dụ Input/Output và test cases mẫu.
 
 ---
 
