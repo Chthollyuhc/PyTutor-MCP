@@ -14,10 +14,10 @@
 
 <br/>
 
-> **Đồ án Tốt nghiệp Đại học Ngành Công nghệ Thông tin**  
+> **Khóa luận Tốt nghiệp Đại học Ngành Công nghệ Thông tin**  
 > **Trường Đại học Kinh tế Quốc dân (NEU) — Khoa Công nghệ thông tin**  
 > **Sinh viên thực hiện:** **Trần Minh Khánh** (Sinh viên Khóa K65 CNTT — MSV: `11236131`)  
-> **Giảng viên hướng dẫn:** Thầy **Nguyễn Văn A** & Thầy **Trần Văn B**  
+> **Giảng viên hướng dẫn:** Thầy **Phạm Thảo**  
 > **Kho lưu trữ chính thức:** [https://github.com/Chthollyuhc/PyTutor-MCP](https://github.com/Chthollyuhc/PyTutor-MCP)  
 > **Báo cáo Thực nghiệm Khoa học:** [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md)
 
