@@ -27,3 +27,13 @@ build/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Scratch & audit dumps
+scratch*.txt
+user_prompt*.txt
+QA_AUDIT*.md

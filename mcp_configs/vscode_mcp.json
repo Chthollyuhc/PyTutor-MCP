@@ -1,0 +1,21 @@
+{
+  "cline.mcpServers": {
+    "pytutor-engine": {
+      "command": "py",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "C:\\Users\\Admin\\Downloads\\Sales-support-AI-pilot",
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUNBUFFERED": "1"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "run_test_cases",
+        "analyze_code_ast",
+        "get_exercise_list",
+        "get_exercise_details",
+        "trace_code_execution"
+      ]
+    }
+  }
+}

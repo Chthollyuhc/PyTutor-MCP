@@ -1,159 +1,143 @@
-import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
-import Header from './components/Header';
-import ProblemPanel from './components/ProblemPanel';
-import EditorPanel from './components/EditorPanel';
-import TutorPanel from './components/TutorPanel';
-import { checkHealth, fetchExercises, fetchExerciseDetail, submitCode } from './services/api';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
+import StudentPortalPage from './pages/StudentPortalPage';
+import StudentClassDetailPage from './pages/StudentClassDetailPage';
+import StudentIDE from './pages/StudentIDE';
+import InstructorDashboard from './pages/InstructorDashboard';
+import ExerciseFormPage from './pages/ExerciseFormPage';
+
+// Component điều hướng thông minh tại Route gốc '/'
+function IndexRedirect() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-screen flex items-center justify-center bg-slate-950 text-slate-400 font-sans text-xs">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <span>Đang tải Cổng Đào Tạo NEU PyTutor-MCP...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'instructor') {
+    return <Navigate to="/instructor" replace />;
+  }
+
+  return <Navigate to="/student" replace />;
+}
+
+// Bọc bảo vệ route cho Sinh viên
+function StudentRoute({ children }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+}
+
+// Bọc bảo vệ route cho Giảng viên
+function InstructorRoute({ children }) {
+  const { user, isInstructor, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isInstructor) return <Navigate to="/student" replace />;
+  return children;
+}
 
 export default function App() {
-  const [health, setHealth] = useState(null);
-  const [exercises, setExercises] = useState([]);
-  const [selectedExerciseId, setSelectedExerciseId] = useState('');
-  const [exerciseDetail, setExerciseDetail] = useState(null);
-  const [code, setCode] = useState('');
-  const [hintLevel, setHintLevel] = useState(1);
-  const [testResults, setTestResults] = useState(null);
-  const [astAnalysis, setAstAnalysis] = useState(null);
-  const [tutorHint, setTutorHint] = useState('');
-  const [llmSource, setLlmSource] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingExercise, setIsLoadingExercise] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
-
-  // 1. Kiểm tra Health check khi tải trang
-  useEffect(() => {
-    const initApp = async () => {
-      const healthData = await checkHealth();
-      setHealth(healthData);
-
-      try {
-        const exList = await fetchExercises();
-        setExercises(exList);
-        if (exList.length > 0) {
-          setSelectedExerciseId(exList[0].id);
-        }
-      } catch (err) {
-        console.error('Không thể tải danh sách bài tập:', err);
-      }
-    };
-
-    initApp();
-  }, []);
-
-  // 2. Tải chi tiết bài tập khi selectedExerciseId thay đổi
-  useEffect(() => {
-    if (!selectedExerciseId) return;
-
-    const loadExercise = async () => {
-      setIsLoadingExercise(true);
-      try {
-        const detail = await fetchExerciseDetail(selectedExerciseId);
-        setExerciseDetail(detail);
-        setCode(detail.starter_code || '');
-        // Reset kết quả cũ
-        setTestResults(null);
-        setAstAnalysis(null);
-        setTutorHint('');
-        setLlmSource('');
-      } catch (err) {
-        console.error('Lỗi tải chi tiết bài tập:', err);
-      } finally {
-        setIsLoadingExercise(false);
-      }
-    };
-
-    loadExercise();
-  }, [selectedExerciseId]);
-
-  // 3. Khôi phục code mẫu
-  const handleResetCode = () => {
-    if (exerciseDetail) {
-      setCode(exerciseDetail.starter_code || '');
-    }
-  };
-
-  // 4. Xử lý Chạy code & Nộp bài
-  const handleSubmit = async () => {
-    if (!selectedExerciseId || !code.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      const res = await submitCode({
-        exercise_id: selectedExerciseId,
-        code,
-        hint_level: hintLevel,
-      });
-
-      setTestResults(res.test_results);
-      setAstAnalysis(res.ast_analysis);
-      setTutorHint(res.tutor_hint);
-      setLlmSource(res.llm_source);
-
-      // Bắn pháo giấy chúc mừng nếu đạt 100% test cases
-      if (res.test_results?.all_passed) {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      }
-    } catch (err) {
-      console.error('Lỗi khi submit bài:', err);
-      alert('Có lỗi xảy ra khi chấm bài. Vui lòng kiểm tra kết nối Backend.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <div className={`h-screen w-screen flex flex-col bg-slate-950 font-sans ${isDarkTheme ? 'dark' : ''}`}>
-      {/* Header */}
-      <Header
-        health={health}
-        isDarkTheme={isDarkTheme}
-        setIsDarkTheme={setIsDarkTheme}
-      />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Điều hướng thông minh từ trang chủ */}
+          <Route path="/" element={<IndexRedirect />} />
 
-      {/* Main 3-Column IDE Layout */}
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
-        {/* Column 1: Problem Panel (~28%) */}
-        <section className="md:col-span-3 h-full overflow-hidden">
-          <ProblemPanel
-            exercises={exercises}
-            selectedExerciseId={selectedExerciseId}
-            onSelectExercise={setSelectedExerciseId}
-            exerciseDetail={exerciseDetail}
-            isLoading={isLoadingExercise}
-          />
-        </section>
+          {/* Màn hình đăng nhập Cổng NEU */}
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Column 2: Editor & Test Results (~46%) */}
-        <section className="md:col-span-6 h-full overflow-hidden">
-          <EditorPanel
-            code={code}
-            setCode={setCode}
-            onResetCode={handleResetCode}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            testResults={testResults}
-            isDarkTheme={isDarkTheme}
+          {/* TẦNG 1 SINH VIÊN: Cổng Học tập & Danh sách Lớp Học Phần NEU */}
+          <Route
+            path="/student"
+            element={
+              <StudentRoute>
+                <StudentPortalPage />
+              </StudentRoute>
+            }
           />
-        </section>
 
-        {/* Column 3: AI Tutor Panel (~26%) */}
-        <section className="md:col-span-3 h-full overflow-hidden">
-          <TutorPanel
-            hintLevel={hintLevel}
-            setHintLevel={setHintLevel}
-            astAnalysis={astAnalysis}
-            tutorHint={tutorHint}
-            llmSource={llmSource}
-            isSubmitting={isSubmitting}
-            testResults={testResults}
+          {/* TẦNG 2 SINH VIÊN: Không gian Chi tiết Lớp Học Phần (Curriculum, Exams, Skill Roadmap, Leaderboard) */}
+          <Route
+            path="/student/classes/:classId"
+            element={
+              <StudentRoute>
+                <StudentClassDetailPage />
+              </StudentRoute>
+            }
           />
-        </section>
-      </main>
-    </div>
+
+          {/* TẦNG 3 SINH VIÊN: Môi trường Lập trình IDE Chuyên sâu 3 Cột */}
+          <Route
+            path="/student/ide/:exerciseId"
+            element={
+              <StudentRoute>
+                <StudentIDE />
+              </StudentRoute>
+            }
+          />
+          <Route
+            path="/student/ide"
+            element={
+              <StudentRoute>
+                <StudentIDE />
+              </StudentRoute>
+            }
+          />
+
+          {/* CỔNG QUẢN TRỊ GIẢNG VIÊN NEU (Sidebar Layout Hiện Đại) */}
+          <Route
+            path="/instructor"
+            element={
+              <InstructorRoute>
+                <InstructorDashboard />
+              </InstructorRoute>
+            }
+          />
+          <Route
+            path="/instructor/classes/:classId"
+            element={
+              <InstructorRoute>
+                <InstructorDashboard />
+              </InstructorRoute>
+            }
+          />
+          <Route
+            path="/instructor/exercises/new"
+            element={
+              <InstructorRoute>
+                <ExerciseFormPage />
+              </InstructorRoute>
+            }
+          />
+          <Route
+            path="/instructor/exercises/:id/edit"
+            element={
+              <InstructorRoute>
+                <ExerciseFormPage />
+              </InstructorRoute>
+            }
+          />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
