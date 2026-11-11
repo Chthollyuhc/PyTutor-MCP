@@ -309,7 +309,6 @@ PyTutor-MCP/
 │
 ├── docs/                           # Tài liệu khoa học, KB & Báo cáo đồ án
 │   ├── EVALUATION_REPORT.md        # Báo cáo thực nghiệm khoa học độc lập tự động xuất
-│   ├── MCP_QUICK_SUMMARY_MOBILE.md # Tóm tắt nhanh kiến trúc MCP đọc trên điện thoại
 │   ├── PHASE_17_METRICS_AND_BENCHMARK.md # Hợp đồng chỉ số & pilot protocol Phase 17
 │   ├── WHY_MCP_EXPLAINED.md        # Luận cứ khoa học: Vì sao đồ án cần sử dụng MCP
 │   └── knowledge_base/             # Tài liệu tri thức Python cho RAG cục bộ
