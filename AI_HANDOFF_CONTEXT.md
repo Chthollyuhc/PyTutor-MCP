@@ -148,7 +148,7 @@ Trước khi có MCP, các ứng dụng AI dạy lập trình (như ChatGPT, Cop
 
 ## 4. CƠ SỞ DỮ LIỆU SQLITE `pytutor.db` (SCHEMA & CONCURRENCY WAL)
 
-Cơ sở dữ liệu được định vị tại thư mục gốc: `c:\Users\Admin\Downloads\Sales-support-AI-pilot\pytutor.db`.
+Cơ sở dữ liệu được định vị tại thư mục gốc: `c:\Users\Admin\Downloads\PyTutor-Thesis\pytutor.db`.
 
 ### 4.1. Giải pháp Chống Khóa Ghi Đồng Thời (Concurrency WAL Mode)
 Trước Phase 10, SQLite sử dụng chế độ mặc định (`journal_mode=DELETE`), khi vừa nộp bài (ghi `submissions`), vừa chấm sao (ghi `user_exercise_stars`), vừa mở khóa huy hiệu (ghi `user_achievements`), hệ thống có nguy cơ phát sinh lỗi `sqlite3.OperationalError: database is locked`.  
@@ -305,7 +305,7 @@ CREATE TABLE IF NOT EXISTS class_exercises (
 
 ## 5. ĐẶC TẢ CHI TIẾT 8 MCP TOOLS (ENGINE LÕI GIAO THỨC STDIO)
 
-File triển khai: [`mcp_server/server.py`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/mcp_server/server.py).  
+File triển khai: [`mcp_server/server.py`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/mcp_server/server.py).  
 Khởi tạo: `mcp = MCPServer("PyTutor-Code-Engine")`.  
 Tất cả 8 công cụ đều được trang trí bằng `@mcp.tool()` và tự động công bố schema JSON qua lệnh `tools/list` của giao thức MCP.
 
@@ -380,7 +380,7 @@ Tất cả 8 công cụ đều được trang trí bằng `@mcp.tool()` và tự
 
 ## 6. CHIẾN LƯỢC SƯ PHẠM GIÀN GIÁO & AI PROMPT ENGINEERING
 
-File điều phối chính: [`backend/llm_service.py`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/backend/llm_service.py).  
+File điều phối chính: [`backend/llm_service.py`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/backend/llm_service.py).  
 Mô hình AI sử dụng: **Google Gemini 3.5 Flash Lite** (`gemini-3.5-flash-lite`) thông qua SDK chính thức `google-genai`.
 
 ### 6.1. Phương Pháp Sư Phạm Giàn Giáo (Scaffolding Pedagogy)
@@ -424,7 +424,7 @@ Khi học viên gặp lỗi, hệ thống không bao giờ giải hộ ngay lậ
 
 ## 7. HỆ THỐNG GAMIFICATION, SAO TỰ LỰC & CODE REVIEW TECH LEAD
 
-File logic: [`backend/database.py`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/backend/database.py).
+File logic: [`backend/database.py`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/backend/database.py).
 
 ### 7.1. Thuật Toán Chấm Sao Tự Lực (Autonomy Stars Rating)
 * **Hàm:** `calculate_autonomy_stars(attempt_count, max_hint_level_used, all_passed)`.
@@ -453,7 +453,7 @@ File logic: [`backend/database.py`](file:///c:/Users/Admin/Downloads/Sales-suppo
 
 ## 8. ĐẶC TẢ TOÀN BỘ DANH MỤC 30+ API ENDPOINTS (FASTAPI BACKEND)
 
-File triển khai: [`backend/main.py`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/backend/main.py).  
+File triển khai: [`backend/main.py`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/backend/main.py).  
 Port: `http://127.0.0.1:8000`.
 
 | Method | Endpoint | Yêu cầu Auth | Mô tả chức năng & Luồng xử lý |
@@ -590,7 +590,7 @@ Frontend chạy bằng **Vite + React 18 + Tailwind CSS** tại cổng `http://l
 
 Một trong những giá trị học thuật và thực tiễn cao nhất của đồ án là chứng minh **tính độc lập của MCP Server**: Engine không bị "giam cầm" trong trang web PyTutor mà có thể cắm trực tiếp vào các môi trường phát triển chuyên nghiệp.
 
-Thư mục lưu trữ: [`mcp_configs/`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/mcp_configs/).
+Thư mục lưu trữ: [`mcp_configs/`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/mcp_configs/).
 
 ### 10.1. Cấu hình Claude Desktop App (`mcp_configs/claude_desktop_config.json`)
 Đường dẫn trên Windows: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -600,7 +600,7 @@ Thư mục lưu trữ: [`mcp_configs/`](file:///c:/Users/Admin/Downloads/Sales-s
     "pytutor-engine": {
       "command": "py",
       "args": ["-m", "mcp_server.server"],
-      "cwd": "C:\\Users\\Admin\\Downloads\\Sales-support-AI-pilot",
+      "cwd": "C:\\Users\\Admin\\Downloads\\PyTutor-Thesis",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONUNBUFFERED": "1"
@@ -619,7 +619,7 @@ Thư mục lưu trữ: [`mcp_configs/`](file:///c:/Users/Admin/Downloads/Sales-s
     "pytutor-engine": {
       "command": "py",
       "args": ["-m", "mcp_server.server"],
-      "cwd": "C:\\Users\\Admin\\Downloads\\Sales-support-AI-pilot",
+      "cwd": "C:\\Users\\Admin\\Downloads\\PyTutor-Thesis",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONUNBUFFERED": "1"
@@ -636,7 +636,7 @@ Thư mục lưu trữ: [`mcp_configs/`](file:///c:/Users/Admin/Downloads/Sales-s
     "pytutor-engine": {
       "command": "py",
       "args": ["-m", "mcp_server.server"],
-      "cwd": "C:\\Users\\Admin\\Downloads\\Sales-support-AI-pilot",
+      "cwd": "C:\\Users\\Admin\\Downloads\\PyTutor-Thesis",
       "env": {
         "PYTHONIOENCODING": "utf-8"
       },
@@ -1157,14 +1157,14 @@ Nhằm giải quyết triệt để nhu cầu phân tách rõ ràng giữa việ
 Nhằm đáp ứng yêu cầu người dùng về việc tinh giản giao diện, tập trung cao độ vào việc tự học và làm bài tập học phần, hệ thống đã tạm ẩn phân hệ kỳ thi theo cơ chế cờ đảo chiều tức thì:
 
 1. **Kiến Trúc Cờ Điều Khiển (One-Click Reversible Flag):**
-   - Trong [`StudentClassDetailPage.jsx`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/frontend/src/pages/StudentClassDetailPage.jsx):
+   - Trong [`StudentClassDetailPage.jsx`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/frontend/src/pages/StudentClassDetailPage.jsx):
      - Khai báo flag: `const SHOW_EXAM_SESSIONS = false; // Đặt true khi cần hiển thị lại`.
      - Ẩn Tab 2 ("Thực Hành & Kỳ Thi") và khối nội dung danh sách ca thi tương ứng (`activeTab === 'sessions'`).
      - Tự động đánh số lại các Tab còn lại:
        - **Tab 1:** `1. Chương Trình & Bài Tập`
        - **Tab 2:** `2. Cây Kỹ Năng & Chuẩn Sao`
        - **Tab 3:** `3. Bảng Vàng & Đánh Giá Năng Lực`
-   - Trong [`StudentPortalPage.jsx`](file:///c:/Users/Admin/Downloads/Sales-support-AI-pilot/frontend/src/pages/StudentPortalPage.jsx):
+   - Trong [`StudentPortalPage.jsx`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/frontend/src/pages/StudentPortalPage.jsx):
      - Khai báo flag: `const SHOW_EXAM_SESSIONS = false;`.
      - Chuyển đổi Cột 3 thành **"Vinh Danh & Năng Lực"** (Icon Trophy, Badge `SV K65 CNTT`).
      - Khi `!SHOW_EXAM_SESSIONS`: Ẩn danh sách ca thi, hiển thị thẻ **"Thành Tích Học Phần"** (Tổng sao tự lực `totalStars`, Số bài hoàn thành `totalSolved`, Chỉ số tự lực `autonomyScore`), đi kèm danh sách huy hiệu và 2 nút mở nhanh **Bảng Vàng K65** và **Hồ Sơ 4D**. Bố cục 3 cột giữ nguyên độ cân xứng, không có khoảng trống thừa.

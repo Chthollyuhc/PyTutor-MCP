@@ -116,7 +116,7 @@ const CONFIG_SNIPPETS = {
     "pytutor-engine": {
       "command": "py",
       "args": ["-m", "mcp_server.server"],
-      "cwd": "C:\\\\Users\\\\Admin\\\\Downloads\\\\Sales-support-AI-pilot",
+      "cwd": "C:\\\\Users\\\\Admin\\\\Downloads\\\\PyTutor-Thesis",
       "env": {
         "PYTHONIOENCODING": "utf-8",
         "PYTHONUNBUFFERED": "1"
