@@ -7,6 +7,7 @@ import StudentClassDetailPage from './pages/StudentClassDetailPage';
 import StudentIDE from './pages/StudentIDE';
 import InstructorDashboard from './pages/InstructorDashboard';
 import ExerciseFormPage from './pages/ExerciseFormPage';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Component điều hướng thông minh tại Route gốc '/'
 function IndexRedirect() {
@@ -54,8 +55,9 @@ function InstructorRoute({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
           {/* Điều hướng thông minh từ trang chủ */}
           <Route path="/" element={<IndexRedirect />} />
 
@@ -136,8 +138,9 @@ export default function App() {
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

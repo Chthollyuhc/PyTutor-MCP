@@ -1,6 +1,8 @@
 # 📊 BÁO CÁO ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG GIA SƯ THÔNG MINH PYTUTOR-MCP (v3.0)
 
-> **Đồ án tốt nghiệp:** Hệ thống Gia sư Thông minh Hỗ trợ Học Lập trình Python Dựa trên Model Context Protocol (MCP)  
+> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
+>
+> **Phạm vi đánh giá:** kiểm thử kỹ thuật các chức năng hỗ trợ học và lớp tích hợp MCP; kết quả hiện tại không tự chứng minh mức tăng thành tích học tập của sinh viên.
 > **Sinh viên thực hiện:** Trần Khánh  
 > **Thời điểm xuất báo cáo:** 20/10/2026 22:59:53  
 > **Môi trường thực nghiệm:** Windows 11, Python 3.14, Node.js v24.15.0, MCP SDK 2.2.0, Gemini 3.5 Flash Lite
@@ -9,11 +11,15 @@
 
 ## 1. MỤC TIÊU VÀ PHƯƠNG PHÁP THỰC NGHIỆM
 
-Báo cáo này trình bày kết quả đo đạc thực nghiệm độc lập nhằm giải quyết 4 câu hỏi nghiên cứu then chốt của hội đồng chấm đồ án tốt nghiệp:
-1. **RQ1 (Giao thức MCP):** Chi phí phụ trội (overhead) và tính tự động của cơ chế khám phá công cụ động (*Dynamic Discovery*) qua giao thức Model Context Protocol?
-2. **RQ2 (An toàn & Độc lập):** Khả năng cô lập, chống lặp vô hạn và tính ổn định của Hộp cát (*Sandbox Execution*) khi học viên nộp mã độc hại hoặc lỗi nặng?
-3. **RQ3 (Trí tuệ Mã nguồn AST):** Khả năng trích xuất đặc trưng cấu trúc (vòng lặp, đệ quy, biến tích lũy) của bộ phân tích tĩnh AST?
-4. **RQ4 (Sư phạm Giàn giáo & Chống tiết lộ đáp án):** Tính thích ứng của 3 cấp độ gợi ý sư phạm (*Scaffolding Pedagogy*) và hiệu lực của cơ chế bảo vệ *Anti-Spoil Guard*?
+Báo cáo này tập trung kiểm tra các chức năng cốt lõi của hệ thống hỗ trợ học lập trình: thực thi/chấm bài an toàn, phân tích mã, gợi ý theo mức độ và bảo vệ không tiết lộ lời giải. MCP được đánh giá như một lựa chọn tích hợp công cụ, không phải kết quả giáo dục cần chứng minh.
+
+Các câu hỏi đánh giá kỹ thuật gồm:
+1. **RQ1 (Hỗ trợ thực hành):** Hệ thống có chạy và chấm được các bài Python, kể cả lỗi cú pháp, sai logic và chương trình quá thời gian không?
+2. **RQ2 (Phân tích và phản hồi):** Các công cụ phân tích mã, lịch sử học tập và gợi ý có trả về đúng cấu trúc, mức độ và ngữ cảnh dự kiến không?
+3. **RQ3 (An toàn sư phạm):** Các chốt chặn có hạn chế truy cập trái phép, prompt injection và lộ lời giải trong các tình huống đã kiểm thử không?
+4. **RQ4 (Tích hợp công cụ):** MCP có khám phá và gọi được các công cụ của hệ thống ổn định trong các phép đo này không?
+
+Đây là kiểm thử chức năng/kỹ thuật; cần nghiên cứu với người học và thiết kế đo lường phù hợp trước khi kết luận về hiệu quả học tập.
 
 ---
 

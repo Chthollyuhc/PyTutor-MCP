@@ -1,9 +1,11 @@
 # 📋 PYTUTOR-MCP: MASTER IMPLEMENTATION DASHBOARD
 
-> **Đồ án tốt nghiệp & Sản phẩm phát triển liên tục:** Hệ thống Gia sư Thông minh Hỗ trợ Học Lập trình Python Dựa trên Model Context Protocol (MCP)  
+> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
+>
+> **Sản phẩm:** PyTutor-MCP — nền tảng thực hành Python; MCP đảm nhiệm tích hợp công cụ trong kiến trúc.
 > **Sinh viên thực hiện:** Trần Khánh  
 > **Repository:** [https://github.com/Chthollyuhc/PyTutor-MCP](https://github.com/Chthollyuhc/PyTutor-MCP)  
-> **Định hướng phát triển:** **Continuous Evolution (Phase 1 -> Phase 15+)** | **Phiên bản hiện tại:** `v5.0 Pro (NEU Multi-Stage LMS & IDE Architecture)`
+> **Định hướng phát triển:** **Continuous Evolution (Phase 1 -> Phase 17)** | **Phiên bản hiện tại:** `v5.2 (Adaptive Feedback & Learning Analytics MVP)`
 
 ---
 
@@ -66,6 +68,8 @@
 | **Phase 15.2**| `submit-flow & sync` | Phân tách nút [▶ Chạy thử] vs [🚀 Nộp bài], Modal chúc mừng & Banner nhắc nộp bài, Đồng bộ định danh sinh viên student (Trần Minh Khánh - 11236131), Sửa key exercise_stars Backend, Curriculum dynamic status theo Mastery Rubric, Khắc phục % tiến độ lớp học phần, Đại tu Cột 3 thành Trung tâm Lịch thi & Thực hành tín chỉ | ✅ **PASSED** | [Xem chi tiết](AI_HANDOFF_CONTEXT.md#1566-chuẩn-hóa-luồng-nộp-bài-submit-flow-đồng-bộ-định-danh-sinh-viên-k65--trung-tâm-lịch-thi-tín-chỉ-phase-152) |
 | **Phase 15.3**| `qa-audit & integrity` | Sửa NameError get_db_connection tại /api/auth/me (chặn logout khi F5), đảo thứ tự param fetchSkillRoadmap & fetchStudentProfile, chuẩn hóa Mastery Rubric & nhánh NEEDS_MORE_STARS, sửa hiển thị Điểm Tự lực 4D & tổng sao lớp, hỗ trợ POST/DELETE rời lớp | ✅ **PASSED** | [Xem chi tiết](AI_HANDOFF_CONTEXT.md#1567-khắc-phục-triệt-để-5-lỗi-nghiêm-trọng-từ-đợt-rà-soát-mã-nguồn-qa-audit-hotfix--data-integrity-phase-153) |
 | **Phase 15.4**| `3-buttons & ui-audit` | Tách biệt tường minh 3 nút (Chạy thử / Hỏi Gia sư AI / Nộp bài), truyền action_type ('ask_ai' vs 'submit'), tính sao tự lực theo lịch sử gợi ý, sửa 6 lỗi lệch key giao diện (Instructor roster, submission modal, Python specs, Hero progress, DAG counts & descriptions, Leaderboard names) | ✅ **PASSED** | [Xem chi tiết](AI_HANDOFF_CONTEXT.md#1568-tách-biệt-tường-minh-3-hành-động-chạy-thử--hỏi-gia-sư-ai--nộp-bài--vá-triệt-để-6-lỗi-giao-diện-phase-154) |
+| **Phase 16** | `ai-tutor-upgrade` | Prompt persona, RAG cục bộ TF-IDF/SQLite, role chat giảng viên, guardrails, telemetry & feedback | 🟡 **MVP IMPLEMENTED** | [Kế hoạch & trạng thái](plans/PLAN_16_AI_UPGRADE.md) |
+| **Phase 17** | `adaptive-feedback & analytics` | Chọn chiến lược gợi ý theo test fail/lịch sử/pass; chỉ số tiến độ có định nghĩa, sample status, kiểm thử replay và pilot so sánh | 🟡 **TECHNICAL MVP COMPLETE; USER PILOT PENDING** | [Chỉ số, benchmark, protocol & nghiên cứu](docs/PHASE_17_METRICS_AND_BENCHMARK.md) |
 
 ---
 
@@ -112,6 +116,50 @@
 | 20/10/2026 | Phase 15.5: Exam Mode Toggle & Honor Center | ✅ 100% PASS | Tạm ẩn phân hệ 'Thực hành & Kỳ thi' qua cờ `SHOW_EXAM_SESSIONS = false`, đánh số lại các Tab lớp học, đại tu Cột 3 Cổng sinh viên thành Trung tâm Vinh danh & Năng lực học viên K65 |
 | 20/10/2026 | Final Turnkey Release & Handover Checkpoint | ✅ 100% PASS | Chuẩn hóa định danh sinh viên K65 Trần Minh Khánh (11236131), Giảng viên Nguyễn Văn A & Trần Văn B, kịch bản start_dev.bat (tự dò Python) & start_dev.sh, .env.example, benchmark 8 tools evaluate_its_benchmark.py, 100% tests PASS |
 | 20/10/2026 | Phase 15.6: Editor Space Key & 3-Tier AI Overhaul | ✅ 100% PASS | Khắc phục triệt để lỗi không gõ được phím Space bar trong Monaco Editor (chặn bubbling, ép chèn type command, cấu hình autocomplete), Đại tu 3 mức gợi ý AI Socratic phân hóa 180 độ (Mức 1: Câu hỏi tư duy; Mức 2: Chỉ chính xác dòng lỗi & phân tích test fail; Mức 3: Dàn ý 4 bước + Khung code mẫu điền chỗ trống `# TODO`) |
+| 02/11/2026 | Phase 16: AI Tutor Upgrade MVP | 🟡 CORE IMPLEMENTED | Dynamic Jinja prompts, sparse TF-IDF RAG local SQLite, authenticated student/instructor chat, input/output guards, LLM telemetry/feedback, deterministic Anti-Spoil corpus; awaiting authorized NEU coursebook and broader evaluator/rollout before marking complete |
+| 03/11/2026 | Phase 17: Adaptive Feedback & Learning Progress Analytics | 🟡 TECHNICAL MVP COMPLETE; USER PILOT PENDING | Metric contract separates official submit from ask_ai, sparse-data status, deterministic hint strategy, six-case offline replay (6/6 policy expectations; requested level preserved), research-informed 2–3 participant protocol. Automated Phase 17 tests 5/5 PASS; no user learning gain claimed. |
+
+---
+
+## 🧭 PHASE 16–17: TRẠNG THÁI CHI TIẾT & TIÊU CHÍ HOÀN TẤT
+
+### Phase 16 — Nâng cấp động cơ Gia sư AI (MVP)
+
+**Mục tiêu:** chuyển từ prompt ghép chuỗi và câu trả lời phụ thuộc kiến thức nội tại sang đường ống có prompt theo persona, truy xuất tri thức nội bộ, ranh giới role, guardrails và telemetry.
+
+**Phạm vi hiện có:**
+- Prompt Jinja2 tách persona Socratic, Pythonic Reviewer và Instructor Analytics; nhận dữ liệu hồ sơ học tập trong đúng luồng quyền.
+- RAG cục bộ SQLite + TF-IDF/sparse cosine; nguồn hiện có là tài liệu Python nội bộ trong `docs/knowledge_base/`, chưa được xem là giáo trình chính thức NEU.
+- Chat sinh viên xác thực role; EXAM guard được giữ trước khi gọi LLM. Chat giảng viên giới hạn lớp sở hữu và dùng dữ liệu tổng hợp.
+- Input/output guard chống injection/off-topic và giảm lộ đáp án; telemetry ghi model, latency, token nếu provider cung cấp, trạng thái guard; phản hồi chat có interaction ID và feedback.
+- Pythonic review/hint có telemetry; feedback UI hiện tập trung vào bong bóng chat.
+
+**Tệp chính:** `plans/PLAN_16_AI_UPGRADE.md`, `backend/prompt_templates.py`, `backend/rag/`, `backend/guardrails.py`, `backend/llm_service.py`, `backend/main.py`, `backend/database.py`, `backend/schemas.py`, `frontend/src/components/TutorPanel.jsx`, `test_phase16_ai_upgrade.py`.
+
+**Kiểm thử/trạng thái:** ghi nhận trước đây Phase 16 test 6/6 PASS, backend compile và frontend build PASS. Chỉ đánh dấu hoàn tất sau khi chạy lại suite đầy đủ, hoàn thiện đo false-positive/latency và xác nhận nội dung RAG được phép dùng. Nạp tài liệu NEU là tùy chọn phụ thuộc người dùng cung cấp/cấp quyền; không bịa hoặc tuyên bố đã tích hợp nguồn chưa có.
+
+### Phase 17 — Phản hồi thích ứng & Phân tích tiến độ học tập (Technical MVP)
+
+**Mục tiêu:** làm rõ hai năng lực nổi bật của đề tài: (1) điều chỉnh chiến lược phản hồi theo bằng chứng trong bài hiện tại/lịch sử, (2) tổng hợp tiến độ đủ minh bạch để người học và giảng viên không diễn giải quá mức.
+
+**Luồng phản hồi:** `test result + attempt history + student model → select_hint_strategy → prompt strategy + evidence → tutor response`. Chiến lược gồm `conceptual_start`, `failed_case_diagnosis`, `recurring_difficulty`, `solution_review`. Gợi ý bắt đầu nhỏ; lỗi lặp lại chuyển sang chẩn đoán cụ thể dựa trên test/lịch sử; khi pass thì chuyển sang review/củng cố và giảm scaffolding. Không tự nâng mức tiết lộ vượt `hint_level` người học yêu cầu. `ask_ai` vẫn hữu ích cho lịch sử hướng dẫn nhưng không được tính như bài nộp chính thức.
+
+**Hợp đồng chỉ số:**
+- Chỉ `action_type=submit` tính vào số lượt nộp, tỉ lệ pass, tự lực và tổng hợp lớp; `ask_ai` loại khỏi các metric chính thức.
+- Báo cáo `total_submissions`, số bài khác nhau, first-try pass rate, submissions/bài, mức hint tối đa trung bình, autonomy score hiện hữu, error breakdown và topic mastery.
+- Gắn `data_status`: `no_data` nếu chưa nộp; `limited` nếu dưới 3 bài khác nhau; `sufficient` từ 3 bài. Ngưỡng 3 là heuristic vận hành, không phải cutoff đã kiểm chứng giáo dục.
+- Tỷ lệ xin hint không tự nó chứng minh năng lực thấp. Chỉ số tự lực hiện tại kế thừa công thức sản phẩm; cần xác thực ngoài trước mọi diễn giải năng lực mạnh.
+- Chat phân tích lớp nêu khoảng thời gian, số lượng mẫu và trường hợp no-data; không gửi mã/định danh sinh viên cá nhân trong phản hồi tổng hợp.
+
+**Tệp chính:** `backend/adaptive_policy.py`, `backend/database.py`, `backend/main.py`, `backend/llm_service.py`, `backend/prompt_templates.py`, `backend/schemas.py`, `test_phase17_adaptive_analytics.py`, `evaluate_phase17_adaptive.py`, `docs/PHASE_17_METRICS_AND_BENCHMARK.md`.
+
+**Bằng chứng kỹ thuật hiện có:** test Phase 17 5/5 PASS; offline replay 6/6 chiến lược khớp expected, 6/6 giữ nguyên mức hint yêu cầu, baseline cố định khớp 2/6. Đây chỉ là bộ replay tổng hợp do dự án định nghĩa, không phải đánh giá chất lượng người dùng hoặc tác động học tập.
+
+**Phương pháp đánh giá đã thống nhất với người dùng:** 2–3 người tình nguyện gồm cả sinh viên và giảng viên; hồ sơ/lỗi lập trình giả lập; cùng kịch bản chạy baseline và adaptive, reset code/history giữa điều kiện và luân phiên thứ tự; rubric đánh giá grounding, specificity, next step, agency, anti-spoil, clarity; khảo sát ngắn sau mỗi ca; giảng viên diễn giải snapshot lớp và nêu giới hạn kết luận. Dùng dữ liệu tối thiểu, xin đồng ý nếu dùng tài khoản người tham gia, ẩn danh ghi chú, không thu mật khẩu.
+
+**Cơ sở thiết kế:** feedback hướng vào goal/current evidence/next step, task/process/self-regulation; khuyến khích người học tự đánh giá và sử dụng feedback; xem accuracy và hint use là hai dạng bằng chứng khác nhau. Xem tài liệu nguồn trong `docs/PHASE_17_METRICS_AND_BENCHMARK.md`. Các nghiên cứu khác môn học chỉ là cơ sở tham khảo, không được ngoại suy thành hiệu quả PyTutor.
+
+**Definition of Done:** kỹ thuật được xem là MVP hoàn tất khi test/replay/build đạt và metric definitions rõ. Đợt pilot chỉ hoàn tất sau khi thực sự tổ chức buổi dùng thử, ghi kết quả ẩn danh, xử lý lỗi answer leakage/unsupported claims/interpretation confusion và cập nhật báo cáo. Với 2–3 người chỉ báo cáo mô tả, không tuyên bố ý nghĩa thống kê hay learning gain/causality.
 
 
 

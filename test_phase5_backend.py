@@ -70,7 +70,7 @@ async def run_phase5_backend_tests():
         # Step 3: Run-test-only (Chạy thử không gọi LLM)
         print("\n[3] Kiểm tra /api/run-test (Chạy thử độc lập, không tốn quota AI)...")
         sample_code = "n = int(input())\ntong = sum(range(1, n + 1))\nprint(tong)"
-        run_res = await client.post("/api/run-test", json={
+        run_res = await client.post("/api/run-test", headers=headers_stu, json={
             "exercise_id": "ex_01_sum_1_to_n",
             "code": sample_code
         })
@@ -81,8 +81,8 @@ async def run_phase5_backend_tests():
 
         # Step 4: Submit Solution with Adaptive History & Student Model
         print("\n[4] Kiểm tra /api/submit (Nộp bài thích ứng + Gemini AI + Learning Event)...")
-        session_id = "test_session_phase5"
-        sub_res = await client.post("/api/submit", json={
+        session_id = "student"
+        sub_res = await client.post("/api/submit", headers=headers_stu, json={
             "exercise_id": "ex_01_sum_1_to_n",
             "code": sample_code,
             "hint_level": 1,
@@ -95,7 +95,7 @@ async def run_phase5_backend_tests():
 
         # Step 5: Check Student Model
         print("\n[5] Kiểm tra /api/student-model/{session_id}...")
-        sm_res = await client.get(f"/api/student-model/{session_id}")
+        sm_res = await client.get(f"/api/student-model/{session_id}", headers=headers_stu)
         assert sm_res.status_code == 200
         sm_data = sm_res.json()
         print(f"    ✅ Student Model: {sm_data['summary']}")

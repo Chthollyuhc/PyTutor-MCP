@@ -20,9 +20,13 @@ if sys.platform == "win32":
 
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.auth import create_token
+from backend.database import init_db
 from mcp_server.tracer import trace_code_execution
 
+init_db()
 client = TestClient(app)
+student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'Test Student')}"}
 
 
 def test_phase9_comprehensive():
@@ -102,6 +106,7 @@ while True:
     print("\n[5] Kiểm tra POST /api/trace-execution qua FastAPI...")
     api_res = client.post(
         "/api/trace-execution",
+        headers=student_headers,
         json={
             "code": "x = 10\ny = 20\nprint(x + y)",
             "stdin_input": "",
@@ -120,6 +125,7 @@ while True:
     print("\n[6] Kiểm tra POST /api/trace-execution với lỗi cú pháp...")
     err_res = client.post(
         "/api/trace-execution",
+        headers=student_headers,
         json={
             "code": "def loi_cu_phap(: pass",
             "stdin_input": "",
@@ -135,7 +141,7 @@ while True:
 
     # 7. Endpoint GET /api/skill-roadmap (Cây Lộ trình Kỹ năng DAG)
     print("\n[7] Kiểm tra GET /api/skill-roadmap (Đồ thị DAG phụ thuộc)...")
-    road_res = client.get("/api/skill-roadmap?session_id=test_phase9_session")
+    road_res = client.get("/api/skill-roadmap?session_id=student", headers=student_headers)
     assert road_res.status_code == 200, f"Skill roadmap thất bại: {road_res.text}"
     road_data = road_res.json()
     nodes = road_data.get("nodes", [])

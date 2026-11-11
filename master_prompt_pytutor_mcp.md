@@ -8,7 +8,8 @@ Mọi thông số kiến trúc, công nghệ, API và luồng nghiệp vụ đã
 ---
 
 # 1. BỐI CẢNH DỰ ÁN (PROJECT CONTEXT)
-- **Tên đề tài:** Thiết kế và đánh giá hệ thống Gia sư Thông minh (Intelligent Tutoring System) hỗ trợ học lập trình Python dựa trên Model Context Protocol (MCP).
+- **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập.
+- **Vai trò MCP:** lớp giao thức tích hợp các công cụ; không mặc định coi MCP là đóng góp giáo dục chính hoặc khẳng định nó cải thiện kết quả học tập.
 - **Tên sản phẩm:** PyTutor
 - **GitHub Repository:** https://github.com/Chthollyuhc/PyTutor-MCP
 - **Trạng thái hiện tại:**

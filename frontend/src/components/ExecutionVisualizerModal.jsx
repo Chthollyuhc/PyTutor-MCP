@@ -144,7 +144,7 @@ export default function ExecutionVisualizerModal({
   const handleTogglePlay = () => setIsPlaying((prev) => !prev);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md select-text animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
       <div className="w-full max-w-5xl h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-5 py-3 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
@@ -368,13 +368,13 @@ export default function ExecutionVisualizerModal({
                         ref={isActive ? activeLineRef : null}
                         className={`flex items-center rounded px-2 transition-colors ${
                           isActive
-                            ? 'bg-cyan-500/20 border-l-4 border-cyan-400 text-white font-semibold shadow-sm'
+                            ? 'bg-primary/15 border-l-2 border-primary text-foreground font-semibold'
                             : 'hover:bg-slate-900/60 text-slate-300'
                         }`}
                       >
                         {/* Arrow Pointer & Line Number */}
                         <span className="w-10 text-right pr-3 text-slate-500 select-none font-mono text-[11px] shrink-0 flex items-center justify-end space-x-1">
-                          {isActive && <span className="text-cyan-400 font-bold">▶</span>}
+                          {isActive && <span className="text-primary font-bold">▶</span>}
                           <span>{lineNum}</span>
                         </span>
                         {/* Line Code */}

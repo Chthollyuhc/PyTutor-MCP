@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test:theme": "node --test src/context/themePreference.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

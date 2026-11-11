@@ -300,7 +300,8 @@ async def save_learning_event_via_mcp(
     total_tests: int,
     all_passed: bool,
     llm_source: str,
-    tutor_hint: str
+    tutor_hint: str,
+    action_type: str = "submit"
 ) -> dict:
     """Lưu sự kiện học tập thông qua MCP Tool save_learning_event."""
     params = get_server_params()
@@ -318,7 +319,8 @@ async def save_learning_event_via_mcp(
                     "total_tests": total_tests,
                     "all_passed": all_passed,
                     "llm_source": llm_source,
-                    "tutor_hint": tutor_hint
+                    "tutor_hint": tutor_hint,
+                    "action_type": action_type
                 }
             )
             return json.loads(res.content[0].text)

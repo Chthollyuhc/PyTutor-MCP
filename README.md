@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🎓 PyTutor-MCP: Intelligent Tutoring System
-### Hệ thống Gia sư Thông minh Hỗ trợ Học Lập trình Python Dựa trên Giao thức Model Context Protocol (MCP)
+### Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
 
 [![Python Version](https://img.shields.io/badge/Python-3.14%20%7C%203.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -19,7 +19,9 @@
 > **Sinh viên thực hiện:** **Trần Minh Khánh** (Sinh viên Khóa K65 CNTT — MSV: `11236131`)  
 > **Giảng viên hướng dẫn:** Thầy **Phạm Thảo**  
 > **Kho lưu trữ chính thức:** [https://github.com/Chthollyuhc/PyTutor-MCP](https://github.com/Chthollyuhc/PyTutor-MCP)  
-> **Báo cáo Thực nghiệm Khoa học:** [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md)
+> **Tên đề tài đề xuất:** *Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập*
+>
+> **Báo cáo Thực nghiệm:** [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md)
 
 </div>
 
@@ -58,11 +60,14 @@ Trong kỷ nguyên Generative AI, phần lớn sinh viên sử dụng ChatGPT ho
 3. **Mất Trí Nhớ Sư Phạm (Stateless Amnesia):** AI thông thường quên tiến trình làm bài của sinh viên ngay sau lượt hỏi, lặp lại những câu hỏi chung chung làm người học mất kiên nhẫn.
 4. **Hành vi Giải Hộ Code (Spoiling):** Thay vì dẫn dắt người học tư duy giải thuật, AI thường viết luôn mã giải hoàn chỉnh, triệt tiêu động lực và năng lực tư duy lập trình độc lập của sinh viên.
 
-### 1.2. Giải pháp Đột phá: PyTutor-MCP
-**PyTutor-MCP** là Hệ thống Gia sư Thông minh Thích ứng (Adaptive Intelligent Tutoring System — ITS) giải quyết triệt để các vấn đề trên nhờ ứng dụng tiêu chuẩn công nghiệp mở **Model Context Protocol (MCP)** do Anthropic khởi xướng:
-- **Cầu nối Ground Truth:** Kết nối trực tiếp LLM (**Google Gemini 3.5 Flash Lite** / **Qwen2.5-14B**) với Hộp cát thực thi cô lập (**Python Execution Sandbox**) và Bộ phân tích cú pháp tĩnh (**AST Inspector**) qua giao thức chuẩn JSON-RPC 2.0 `stdio`.
-- **Sư phạm Giàn giáo (Scaffolding Pedagogy):** Triển khai 3 cấp độ trợ giúp từ gợi mở tư duy Socratic đến dàn ý thuật toán và khung mã nguồn điền khuyết.
-- **Anti-Spoil Guard:** Bộ lọc bảo vệ nghiêm ngặt tuyệt đối không giải hộ toàn bộ bài toán, buộc sinh viên phải tự tay viết mã để đạt chuẩn năng lực.
+### 1.2. Giải pháp: PyTutor-MCP
+**PyTutor-MCP** là hệ thống hỗ trợ học lập trình Python cho sinh viên đại học. Trọng tâm sản phẩm là quy trình thực hành có phản hồi: sinh viên viết và chạy mã, nhận gợi ý theo mức độ, nộp bài để được chấm, rồi theo dõi tiến độ và năng lực học tập. Giảng viên quản lý lớp, bài tập và xem thống kê tiến độ.
+
+Hệ thống kết hợp nhiều thành phần để hỗ trợ quy trình này:
+- **Môi trường thực hành và đánh giá:** IDE Python trên trình duyệt, bộ kiểm thử và sandbox thực thi mã.
+- **Hỗ trợ học thích ứng:** mô hình người học, lịch sử làm bài, gợi ý nhiều mức và cơ chế hạn chế lộ lời giải.
+- **Phân tích tiến độ:** ghi nhận kết quả, lỗi thường gặp và các chỉ số giúp sinh viên/giảng viên theo dõi quá trình học.
+- **Tích hợp công cụ:** MCP là giao thức kết nối giữa ứng dụng và các công cụ như chạy test, phân tích AST, truy xuất bài tập và lưu sự kiện học tập. MCP là một lựa chọn kiến trúc của hệ thống, không phải bản thân phương pháp sư phạm hay bằng chứng rằng kết quả học tập tốt hơn.
 
 ---
 
@@ -388,11 +393,13 @@ Khi đứng trước Hội đồng chấm Đồ án Tốt nghiệp, sinh viên t
 
 ## 🧪 9. Đánh Giá Thực Nghiệm Khoa Học (Academic Benchmark)
 
-Hệ thống tích hợp sẵn kịch bản kiểm thử đo đạc thực nghiệm độc lập theo 4 câu hỏi nghiên cứu (Research Questions):
-- **RQ1 (Hiệu năng MCP):** Khám phá 8 MCP Tools qua JSON-RPC 2.0 stdio đạt độ trễ trung bình **~739 ms** (dưới 1 giây).
-- **RQ2 (An toàn Sandbox):** Kiểm thử 5 kịch bản (Code đúng, Code sai, Lỗi cú pháp, Lỗi chia cho 0, Vòng lặp vô hạn `while True:` bị cưỡng chế ngắt sau đúng **~5.0s** mà không làm treo máy chủ).
-- **RQ3 (Trí tuệ AST):** Phân tích tĩnh cấu trúc mã nguồn hoàn tất dưới **3 ms**.
-- **RQ4 (Sư phạm & Chống lộ đáp án):** 100% phản hồi ở Mức 1 và 2 tuân thủ nghiêm ngặt Anti-Spoil Guard.
+Hệ thống tích hợp kịch bản kiểm thử kỹ thuật cho các chức năng hỗ trợ học; MCP là một phần trong phạm vi kiến trúc được đo lường:
+- **Thực hành và chấm bài:** kiểm tra code đúng/sai, lỗi cú pháp, lỗi runtime và timeout sandbox.
+- **Phân tích mã:** đo khả năng trích xuất đặc trưng cú pháp bằng AST.
+- **Phản hồi sư phạm:** kiểm tra gợi ý theo cấp độ và các ca Anti-Spoil đã định nghĩa.
+- **Tích hợp công cụ qua MCP:** kiểm tra khám phá 8 tools và độ trễ trong môi trường benchmark.
+
+Các kết quả này là kiểm thử chức năng/kỹ thuật; không nên diễn giải thành bằng chứng rằng hệ thống đã cải thiện kết quả học tập thực tế. Chi tiết phương pháp và giới hạn xem trong [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md).
 
 Chạy kịch bản tự động:
 ```powershell

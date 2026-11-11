@@ -230,19 +230,20 @@ export default function EditorPanel({
   return (
     <div className="h-full flex flex-col bg-slate-950 border-r border-slate-800 overflow-hidden">
       {/* Editor Toolbar */}
-      <div className="h-11 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between shrink-0 select-none">
-        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300">
+      <div className="min-h-11 bg-slate-900 border-b border-slate-800 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
+        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300 shrink-0">
           <Terminal className="w-4 h-4 text-emerald-400" />
           <span>TRÌNH SOẠN THẢO PYTHON 3</span>
         </div>
 
-        <div className="flex items-center space-x-1.5 sm:space-x-2">
+        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2" aria-label="Thao tác bài tập">
           {/* Nút Khôi phục code gốc */}
           <button
             onClick={onResetCode}
             disabled={isBusy}
+            aria-label="Khôi phục code gốc"
             type="button"
-            className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-colors disabled:opacity-50 cursor-pointer"
+            className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer"
             title="Khôi phục lại code ban đầu của bài tập"
           >
             <RotateCcw className="w-3 h-3" />
@@ -255,13 +256,14 @@ export default function EditorPanel({
             <button
               onClick={onOpenVisualizer}
               disabled={isBusy}
+              aria-label="Chạy từng bước để xem biến đổi khi thực thi"
               type="button"
-              className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-medium text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-all disabled:opacity-50 cursor-pointer shadow-sm group"
+              className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-medium text-amber-200 hover:text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
               title="Trực quan hóa từng bước thực thi code và xem biến thiên giá trị biến số (Visualizer)"
             >
               <Eye className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline">👁️ Chạy từng bước</span>
-              <span className="sm:hidden">👁️ Từng bước</span>
+              <span className="hidden sm:inline">Chạy từng bước</span>
+              <span className="sm:hidden">Từng bước</span>
             </button>
           )}
 
@@ -269,8 +271,10 @@ export default function EditorPanel({
           <button
             onClick={onRunTest}
             disabled={isBusy}
+            aria-label={isRunningTest ? 'Đang chạy kiểm thử' : 'Chạy thử code (Ctrl + Enter)'}
+            aria-busy={isRunningTest}
             type="button"
-            className="flex items-center space-x-1.5 px-3 py-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200 bg-slate-800 hover:bg-slate-750 border border-cyan-500/40 hover:border-cyan-500/60 rounded-lg transition-all disabled:opacity-50 cursor-pointer shadow-sm group"
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:text-white bg-slate-800 hover:bg-slate-700 border border-cyan-400/50 hover:border-cyan-300/70 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
             title="Chạy thử code nhanh với các bộ test cases mẫu trong sandbox (Phím tắt: Ctrl + Enter)"
           >
             {isRunningTest ? (
@@ -281,7 +285,7 @@ export default function EditorPanel({
             ) : (
               <Play className="w-3.5 h-3.5 fill-current text-cyan-400 group-hover:scale-110 transition-transform" />
             )}
-            <span>▶ Chạy thử</span>
+            <span>Chạy thử</span>
             <span className="text-[10px] text-slate-500 font-mono hidden md:inline">(Ctrl+↵)</span>
           </button>
 
@@ -290,8 +294,10 @@ export default function EditorPanel({
             <button
               onClick={onAskAI}
               disabled={isBusy}
+              aria-label={isAskingAI ? 'Đang nhận gợi ý từ gia sư AI' : 'Hỏi gia sư AI'}
+              aria-busy={isAskingAI}
               type="button"
-              className="flex items-center space-x-1.5 px-3 py-1 text-xs font-semibold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 hover:border-amber-500/60 rounded-lg transition-all disabled:opacity-50 cursor-pointer shadow-sm group"
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/50 hover:border-amber-300/70 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
               title="Phân tích code và nhận gợi ý sư phạm ở Cột 3 từ Gia sư AI"
             >
               {isAskingAI ? (
@@ -305,7 +311,7 @@ export default function EditorPanel({
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span>🤖 Hỏi Gia sư AI</span>
+                  <span>Hỏi gia sư AI</span>
                 </>
               )}
             </button>
@@ -315,8 +321,10 @@ export default function EditorPanel({
           <button
             onClick={onSubmit}
             disabled={isBusy}
+            aria-label={isSubmitting ? 'Đang chấm và ghi nhận bài nộp' : 'Nộp bài chính thức (Ctrl + Shift + Enter)'}
+            aria-busy={isSubmitting}
             type="button"
-            className="flex items-center space-x-1.5 px-3.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-md shadow-emerald-900/50 hover:shadow-emerald-900/70 border border-emerald-400/30 transition-all disabled:opacity-50 cursor-pointer group"
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-950/40 border border-emerald-300/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer group"
             title="Chính thức nộp bài, chấm điểm, ghi nhận số sao năng lực và mở khóa bài tiếp theo (Phím tắt: Ctrl + Shift + Enter)"
           >
             {isSubmitting ? (
@@ -330,7 +338,7 @@ export default function EditorPanel({
             ) : (
               <>
                 <Send className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-emerald-200" />
-                <span>🚀 Nộp bài</span>
+                <span>Nộp bài</span>
                 <span className="text-[10px] text-emerald-200/80 font-mono hidden md:inline">(Ctrl+Shift+↵)</span>
               </>
             )}
@@ -374,13 +382,13 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={() => setActiveBottomTab('tests')}
-              className={`px-3 py-1 font-semibold rounded-t border-b-2 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 font-semibold rounded-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                 activeBottomTab === 'tests'
-                  ? 'border-emerald-400 text-emerald-400 bg-slate-800/60'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'text-emerald-100 bg-slate-800'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <span>🧪 Bộ test chuẩn</span>
+              <span>Bộ kiểm thử chuẩn</span>
               {testResults && (
                 <span className="ml-1.5 text-[10.5px] px-1.5 py-0.2 rounded-full bg-slate-800 font-mono">
                   {testResults.passed_tests}/{testResults.total_tests}
@@ -392,13 +400,13 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={() => setActiveBottomTab('custom')}
-              className={`px-3 py-1 font-semibold rounded-t border-b-2 transition-all cursor-pointer ${
+              className={`px-3 py-1.5 font-semibold rounded-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                 activeBottomTab === 'custom'
-                  ? 'border-cyan-400 text-cyan-300 bg-slate-800/60'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'text-cyan-100 bg-slate-800'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <span>💻 Tự nhập dữ liệu (Custom Stdin)</span>
+              <span>Tự nhập dữ liệu</span>
             </button>
           </div>
 
@@ -417,7 +425,7 @@ export default function EditorPanel({
                 <Terminal className="w-6 h-6 opacity-40 mb-1" />
                 <span className="font-medium text-slate-400">Chưa có kết quả kiểm thử.</span>
                 <span className="text-[11px] text-slate-500">
-                  Nhấn <span className="text-cyan-400">"▶ Chạy thử"</span> để kiểm tra hoặc <span className="text-emerald-400">"🚀 Nộp bài"</span> để chấm điểm chính thức.
+                  Nhấn <span className="text-cyan-300">"Chạy thử"</span> để kiểm tra hoặc <span className="text-emerald-300">"Nộp bài"</span> để chấm điểm chính thức.
                 </span>
               </div>
             ) : (
@@ -431,10 +439,10 @@ export default function EditorPanel({
                       </div>
                       <div>
                         <div className="font-bold text-emerald-300">
-                          🎉 Chúc mừng! Chương trình đã vượt qua toàn bộ {testResults.passed_tests}/{testResults.total_tests} kiểm thử.
+                          Chương trình đã vượt qua toàn bộ {testResults.passed_tests}/{testResults.total_tests} kiểm thử.
                         </div>
                         <div className="text-[11px] text-emerald-400/80">
-                          Hãy bấm nút <strong className="text-white">"🚀 Nộp bài"</strong> để hệ thống chính thức ghi nhận điểm số, sao năng lực và mở khóa bài tiếp theo!
+                          Hãy bấm nút <strong className="text-white">"Nộp bài"</strong> để hệ thống chính thức ghi nhận kết quả và mở khóa bài tiếp theo.
                         </div>
                       </div>
                     </div>
@@ -445,7 +453,7 @@ export default function EditorPanel({
                       className="ml-3 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-md flex items-center space-x-1.5 shrink-0 cursor-pointer transition-all hover:scale-105"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>🚀 Nộp bài ngay</span>
+                      <span>Nộp bài ngay</span>
                     </button>
                   </div>
                 )}
@@ -563,7 +571,7 @@ export default function EditorPanel({
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>▶ Chạy với dữ liệu này</span>
+                    <span>Chạy với dữ liệu này</span>
                   </>
                 )}
               </button>

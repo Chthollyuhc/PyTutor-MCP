@@ -2,10 +2,10 @@
 Kịch bản Kiểm thử Tự động Phase 10: Gamification, 3-Star Autonomy & Senior Pythonic Code Review.
 Kiểm tra:
 1. calculate_autonomy_stars: Logic tính sao chính xác (0, 1, 2, 3 sao)
-2. check_and_unlock_badges: Tự động mở khóa FIRST_SOLVE và INDEPENDENT_HERO
+2. Huy hiệu không còn được cấp; dữ liệu sao tự lực vẫn được ghi nhận
 3. POST /api/tutor/pythonic-review: Senior Reviewer chấm điểm Clean Code (>= 70) và code Pythonic
 4. GET /api/leaderboard: Bảng xếp hạng lớp học sắp xếp theo tổng sao giảm dần
-5. GET /api/student/achievements: Truy xuất thành tích và huy hiệu học viên
+5. GET /api/student/achievements: Truy xuất số sao và bài đã hoàn thành
 6. POST /api/submit: Tích hợp tính sao tự động khi nộp bài giải đúng 100%
 """
 import sys
@@ -23,10 +23,10 @@ from backend.database import (
     init_db,
     calculate_autonomy_stars,
     save_exercise_stars,
-    check_and_unlock_badges,
     get_user_achievements,
     get_class_leaderboard
 )
+from backend.auth import create_token
 
 client = TestClient(app)
 
@@ -45,22 +45,20 @@ def test_phase10_comprehensive():
     assert calculate_autonomy_stars(attempt_count=5, max_hint_level_used=3, all_passed=True) == 1, "Hint level 3 phải 1 sao!"
     print("    ✅ PASS: Thuật toán tính sao tự lực đạt chuẩn 100% (0, 1, 2, 3 sao).")
 
-    # 2. Kiểm tra Hệ thống Mở Khóa Huy hiệu (Badges)
-    print("\n[2] Kiểm tra Cơ chế Mở khóa Huy hiệu Thành tích...")
+    # 2. Huy hiệu đã bị loại khỏi luồng cấp mới; sao tự lực vẫn được lưu.
+    print("\n[2] Kiểm tra không cấp huy hiệu mới và vẫn ghi nhận sao tự lực...")
     test_user = f"gamer_{int(time.time())}"
+    test_headers = {"Authorization": f"Bearer {create_token(test_user, 'student', 'Gamer Test')}"}
     # Hoàn thành bài 1 -> mở FIRST_SOLVE
     res1 = save_exercise_stars(test_user, "ex_01_sum_1_to_n", stars=3, clean_score=85)
-    badges1 = [b["code"] for b in res1.get("new_badges", [])]
-    assert "FIRST_SOLVE" in badges1, f"Kỳ vọng mở FIRST_SOLVE, thực tế: {badges1}"
-    print(f"    ✅ PASS: Mở khóa thành công huy hiệu đầu tiên: {badges1}")
+    assert res1.get("new_badges") == [], "Không được cấp huy hiệu mới"
+    assert res1["stars_earned"] == 3
 
     # Hoàn thành thêm 2 bài 3 sao -> mở INDEPENDENT_HERO
     save_exercise_stars(test_user, "ex_02_prime_check", stars=3, clean_score=88)
     res3 = save_exercise_stars(test_user, "ex_03_factorial", stars=3, clean_score=92)
-    badges3 = [b["code"] for b in res3.get("new_badges", [])]
-    assert "INDEPENDENT_HERO" in badges3, f"Kỳ vọng mở INDEPENDENT_HERO, thực tế: {badges3}"
-    assert "PYTHONIC_EXPLORER" in badges3, f"Kỳ vọng mở PYTHONIC_EXPLORER (score >= 90), thực tế: {badges3}"
-    print(f"    ✅ PASS: Mở khóa INDEPENDENT_HERO và PYTHONIC_EXPLORER: {badges3}")
+    assert res3.get("new_badges") == []
+    print("    ✅ PASS: Sao được ghi nhận; không có huy hiệu mới được cấp.")
 
     # 3. Kiểm tra POST /api/tutor/pythonic-review
     print("\n[3] Kiểm tra POST /api/tutor/pythonic-review (Senior Python Reviewer)...")
@@ -72,6 +70,7 @@ print(tong)
 """
     rev_res = client.post(
         "/api/tutor/pythonic-review",
+        headers=test_headers,
         json={
             "exercise_id": "ex_01_sum_1_to_n",
             "code": good_code,
@@ -89,7 +88,7 @@ print(tong)
 
     # 4. Kiểm tra GET /api/leaderboard (Bảng Xếp Hạng Lớp Học)
     print("\n[4] Kiểm tra GET /api/leaderboard (Bảng Vàng Lớp Học)...")
-    lead_res = client.get("/api/leaderboard?limit=10")
+    lead_res = client.get("/api/leaderboard?limit=10", headers=test_headers)
     assert lead_res.status_code == 200, f"Leaderboard thất bại: {lead_res.text}"
     lead_data = lead_res.json()
     leaderboard = lead_data.get("leaderboard", [])
@@ -103,20 +102,20 @@ print(tong)
 
     # 5. Kiểm tra GET /api/student/achievements
     print("\n[5] Kiểm tra GET /api/student/achievements (Hồ sơ Thành tích)...")
-    ach_res = client.get(f"/api/student/achievements?username={test_user}")
+    ach_res = client.get("/api/student/achievements", headers=test_headers)
     assert ach_res.status_code == 200, f"Achievements thất bại: {ach_res.text}"
     ach_data = ach_res.json()
     assert ach_data["total_stars"] == 9, f"Kỳ vọng 9 sao (3 bài x 3 sao), thực tế: {ach_data['total_stars']}"
     assert ach_data["completed_count"] == 3
-    assert len(ach_data["badges"]) >= 3
-    badge_titles = [b["badge_title"] for b in ach_data["badges"]]
-    print(f"    ✅ PASS: Học viên {test_user} đạt {ach_data['total_stars']} ⭐ | Huy hiệu: {', '.join(badge_titles)}")
+    assert ach_data["badges"] == []
+    print(f"    ✅ PASS: Học viên {test_user} đạt {ach_data['total_stars']} ⭐; không có huy hiệu mới.")
 
     # 6. Kiểm tra POST /api/submit tích hợp tính sao tự động
     print("\n[6] Kiểm tra POST /api/submit tích hợp tính sao tự động khi giải đúng...")
     correct_solution = "n = int(input())\nprint(n * (n + 1) // 2)"
     sub_res = client.post(
         "/api/submit",
+        headers=test_headers,
         json={
             "exercise_id": "ex_01_sum_1_to_n",
             "code": correct_solution,

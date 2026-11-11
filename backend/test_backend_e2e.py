@@ -17,6 +17,7 @@ if sys.platform == "win32":
         pass
 
 from backend.main import app
+from backend.auth import create_token
 
 
 async def run_backend_e2e_tests():
@@ -26,6 +27,7 @@ async def run_backend_e2e_tests():
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test", timeout=60.0) as client:
+        student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'E2E Student')}"}
 
         # -------------------------------------------------------------
         # 1. Test GET /api/health (True MCP Discovery)
@@ -46,7 +48,7 @@ async def run_backend_e2e_tests():
         # 2. Test GET /api/exercises
         # -------------------------------------------------------------
         print("\n[2] Kiểm thử GET /api/exercises (Lấy danh mục bài tập từ MCP)...")
-        res = await client.get("/api/exercises")
+        res = await client.get("/api/exercises", headers=student_headers)
         assert res.status_code == 200
         ex_list = res.json()
         print(f"    Số lượng bài tập: {len(ex_list)}")
@@ -59,7 +61,7 @@ async def run_backend_e2e_tests():
         # 3. Test GET /api/exercises/{id}
         # -------------------------------------------------------------
         print("\n[3] Kiểm thử GET /api/exercises/ex_01_sum_1_to_n...")
-        res = await client.get("/api/exercises/ex_01_sum_1_to_n")
+        res = await client.get("/api/exercises/ex_01_sum_1_to_n", headers=student_headers)
         assert res.status_code == 200
         ex_detail = res.json()
         print(f"    Tiêu đề: {ex_detail['title']}")
@@ -84,7 +86,7 @@ print(tong)
                 "code": wrong_code,
                 "hint_level": level
             }
-            res = await client.post("/api/submit", json=payload)
+            res = await client.post("/api/submit", json=payload, headers=student_headers)
             assert res.status_code == 200, f"Submit failed: {res.text}"
             sub_res = res.json()
             
@@ -116,7 +118,7 @@ print(tong)
             "code": correct_code,
             "hint_level": 1
         }
-        res = await client.post("/api/submit", json=payload_correct)
+        res = await client.post("/api/submit", json=payload_correct, headers=student_headers)
         assert res.status_code == 200
         sub_correct = res.json()
         t_res = sub_correct["test_results"]
@@ -141,7 +143,7 @@ for i in range(1, n + 1)
             "code": syntax_bad_code,
             "hint_level": 2
         }
-        res = await client.post("/api/submit", json=payload_syntax)
+        res = await client.post("/api/submit", json=payload_syntax, headers=student_headers)
         assert res.status_code == 200
         sub_syntax = res.json()
         print(f"    AST Valid: {sub_syntax['ast_analysis']['valid']}")

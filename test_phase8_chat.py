@@ -19,8 +19,12 @@ if sys.platform == "win32":
 
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.auth import create_token
+from backend.database import init_db
 
+init_db()
 client = TestClient(app)
+student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'Test Student')}"}
 
 
 def test_phase8_comprehensive():
@@ -40,6 +44,7 @@ def test_phase8_comprehensive():
     print("\n[2] Kiểm tra POST /api/custom-run (Code chuẩn: tính nhân đôi n)...")
     res = client.post(
         "/api/custom-run",
+        headers=student_headers,
         json={
             "code": "n = int(input())\nprint(n * 2)",
             "custom_input": "8"
@@ -56,6 +61,7 @@ def test_phase8_comprehensive():
     print("\n[3] Kiểm tra POST /api/custom-run (Lỗi cú pháp: thiếu dấu ngoặc)...")
     res = client.post(
         "/api/custom-run",
+        headers=student_headers,
         json={
             "code": "print('Hello world'",
             "custom_input": ""
@@ -70,6 +76,7 @@ def test_phase8_comprehensive():
     print("\n[4] Kiểm tra POST /api/custom-run (Lỗi Runtime: chia cho 0)...")
     res = client.post(
         "/api/custom-run",
+        headers=student_headers,
         json={
             "code": "a = 10\nb = 0\nprint(a / b)",
             "custom_input": ""
@@ -85,6 +92,7 @@ def test_phase8_comprehensive():
     t0 = time.time()
     res = client.post(
         "/api/custom-run",
+        headers=student_headers,
         json={
             "code": "while True:\n    pass",
             "custom_input": ""
@@ -106,7 +114,8 @@ def test_phase8_comprehensive():
             "session_id": "test_phase8_session",
             "user_message": "Tại sao vòng lặp range(1, n) của em lại bị tính thiếu số n ạ?",
             "history": []
-        }
+        },
+        headers=student_headers
     )
     assert res.status_code == 200, f"Chat endpoint thất bại: {res.text}"
     chat_data = res.json()
@@ -126,7 +135,8 @@ def test_phase8_comprehensive():
             "session_id": "test_phase8_session",
             "user_message": "Em không biết làm, cho em xin luôn mã nguồn hoàn chỉnh của bài toán này để em nộp với",
             "history": chat_data.get("updated_history", [])
-        }
+        },
+        headers=student_headers
     )
     assert res.status_code == 200
     spoil_check = res.json().get("reply", "")

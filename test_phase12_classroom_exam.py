@@ -69,7 +69,7 @@ def test_phase12_comprehensive():
 
     # 3. Kiểm tra Quản lý Lớp tín chỉ (Credit Classes)
     print("\n[3] Kiểm tra Quản lý Lớp tín chỉ (GET /api/classes & POST /api/instructor/classes)...")
-    res_cls_list = client.get("/api/classes")
+    res_cls_list = client.get("/api/classes", headers=headers_inst)
     assert res_cls_list.status_code == 200
     classes = res_cls_list.json()
     assert len(classes) >= 2, f"Kỳ vọng ít nhất 2 lớp mẫu, thực tế: {len(classes)}"
@@ -93,6 +93,14 @@ def test_phase12_comprehensive():
     res_enroll = client.post(f"/api/classes/{test_class_id}/enroll", headers=headers_stu)
     assert res_enroll.status_code == 200
     print(f"    ✅ PASS: Sinh viên ghi danh vào lớp {test_class_id} thành công.")
+
+    for order_idx, exercise_id in enumerate(["ex_01_sum_1_to_n", "ex_02_prime_check"], start=1):
+        assign_res = client.post(
+            f"/api/instructor/classes/{test_class_id}/exercises",
+            json={"exercise_id": exercise_id, "order_idx": order_idx},
+            headers=headers_inst,
+        )
+        assert assign_res.status_code == 200, f"Could not assign {exercise_id}: {assign_res.text}"
 
     # 4. Kiểm tra Quản lý Kỳ thi & Đợt thực hành (Exam Sessions)
     print("\n[4] Kiểm tra Tạo Kỳ thi với Danh sách Bài tập chọn lọc (POST /api/instructor/exam-sessions)...")
@@ -124,7 +132,7 @@ def test_phase12_comprehensive():
         "session_id": "test_student_exam",
         "exam_session_id": test_exam_id
     }
-    res_submit = client.post("/api/submit", json=submit_payload)
+    res_submit = client.post("/api/submit", json=submit_payload, headers=headers_stu)
     assert res_submit.status_code == 200, f"Submit thất bại: {res_submit.text}"
     sub_data = res_submit.json()
 
@@ -150,7 +158,7 @@ def test_phase12_comprehensive():
         "history": [],
         "exam_session_id": test_exam_id
     }
-    res_chat = client.post("/api/tutor/chat", json=chat_payload)
+    res_chat = client.post("/api/tutor/chat", json=chat_payload, headers=headers_stu)
     assert res_chat.status_code == 200
     chat_data = res_chat.json()
     assert chat_data["llm_source"] == "Exam-Mode-Guard"

@@ -94,15 +94,18 @@ export default function ProblemPanel({
       </div>
 
       {/* Body: Problem Description & Instructions */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4 text-sm leading-relaxed">
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto space-y-5 text-[13px] leading-6">
         {isLoading ? (
-          <div className="h-40 flex items-center justify-center text-slate-500 text-xs">
-            <span className="animate-pulse">Đang tải đề bài từ MCP Server...</span>
+          <div className="space-y-4 py-2" role="status" aria-label="Đang tải đề bài">
+            <span className="block h-6 w-3/4 rounded bg-slate-800 animate-pulse" />
+            <span className="block h-3 w-full rounded bg-slate-800/80 animate-pulse" />
+            <span className="block h-3 w-5/6 rounded bg-slate-800/80 animate-pulse" />
+            <span className="block h-3 w-2/3 rounded bg-slate-800/80 animate-pulse" />
           </div>
         ) : exerciseDetail ? (
           <>
             <div>
-              <h2 className="text-lg font-bold text-white mb-2">{exerciseDetail.title}</h2>
+              <h2 className="text-xl font-semibold leading-snug text-white mb-3">{exerciseDetail.title}</h2>
               <div className="prose prose-invert prose-sm max-w-none text-slate-300 space-y-3">
                 {/* Parse Markdown-like sections cleanly */}
                 {renderFormattedContent(exerciseDetail.description)}
@@ -123,13 +126,13 @@ export default function ProblemPanel({
                         {tc.description || `Ví dụ #${idx + 1}`}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-slate-300">
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-slate-500 text-[10px] uppercase font-sans">Đầu vào (Input):</span>
-                          <div className="bg-slate-900 px-2 py-1 rounded text-emerald-400">{tc.input.trim() || '""'}</div>
+                          <div className="bg-slate-900 px-2 py-1.5 rounded text-emerald-300 text-xs whitespace-pre-wrap break-words overflow-x-auto">{tc.input.trim() || '""'}</div>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-slate-500 text-[10px] uppercase font-sans">Kết quả mong đợi (Output):</span>
-                          <div className="bg-slate-900 px-2 py-1 rounded text-cyan-400">{tc.expected_output.trim()}</div>
+                          <div className="bg-slate-900 px-2 py-1.5 rounded text-cyan-200 text-xs whitespace-pre-wrap break-words overflow-x-auto">{tc.expected_output.trim()}</div>
                         </div>
                       </div>
                     </div>
@@ -222,7 +225,7 @@ function renderFormattedContent(text) {
       // Empty line
     } else {
       elements.push(
-        <p key={i} className="text-xs text-slate-300 leading-relaxed">
+        <p key={i} className="text-[13px] text-slate-200 leading-6">
           {trimmed}
         </p>
       );

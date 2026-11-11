@@ -16,8 +16,10 @@ if sys.platform.startswith("win"):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 from backend.main import app
+from backend.auth import create_token
 
 client = TestClient(app)
+student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'Student Test')}"}
 
 def test_phase15_4_actions():
     print("=" * 80)
@@ -40,10 +42,10 @@ def test_phase15_4_actions():
         "exercise_id": "ex_01_sum_1_to_n",
         "code": "n = int(input())\ntong = n * 2\nprint(tong)",
         "hint_level": 2,
-        "session_id": "test_phase15_4_user",
+        "session_id": "student",
         "action_type": "ask_ai"
     }
-    res_ask = client.post("/api/submit", json=payload_ask)
+    res_ask = client.post("/api/submit", json=payload_ask, headers=student_headers)
     assert res_ask.status_code == 200, f"Submit ask_ai thất bại: {res_ask.status_code}"
     ask_data = res_ask.json()
     assert ask_data["stars_earned"] == 0, f"ask_ai không được cấp sao nhưng lại có {ask_data['stars_earned']} sao"
@@ -57,10 +59,10 @@ def test_phase15_4_actions():
         "exercise_id": "ex_01_sum_1_to_n",
         "code": "n = int(input())\nprint(n * (n + 1) // 2)",
         "hint_level": 1,
-        "session_id": "test_phase15_4_user",
+        "session_id": "student",
         "action_type": "submit"
     }
-    res_submit = client.post("/api/submit", json=payload_submit)
+    res_submit = client.post("/api/submit", json=payload_submit, headers=student_headers)
     assert res_submit.status_code == 200, f"Submit nộp bài thất bại: {res_submit.status_code}"
     sub_data = res_submit.json()
     assert sub_data["test_results"]["all_passed"] is True, "Bài nộp phải pass 100% test cases"

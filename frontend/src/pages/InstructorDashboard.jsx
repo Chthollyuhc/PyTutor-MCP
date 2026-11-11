@@ -6,27 +6,27 @@ import {
   Eye, Download, X, Copy, Check, Sparkles, Terminal,
   School, Calendar, GraduationCap, CheckSquare, Square,
   Layers, ShieldAlert, FileText, ArrowLeft, ArrowRight,
-  LogOut, Cpu, HardDrive, ShieldCheck, ChevronRight
+  LogOut, Cpu, HardDrive, ShieldCheck, ChevronRight, Send
 } from 'lucide-react';
 import MCPInspectorModal from '../components/MCPInspectorModal';
+import TableControls, { getPage, TableLoading } from '../components/TableControls';
 import { 
   checkHealth, 
   fetchInstructorDashboard, 
   fetchInstructorExercises, 
   fetchInstructorSubmissions, 
   deleteInstructorExercise,
+  shareInstructorExercise,
   fetchClasses,
   createInstructorClass,
-  fetchExamSessions,
-  createInstructorExamSession,
-  deleteInstructorExamSession,
   fetchClassCurriculum,
   assignClassExercise,
-  updateClassExercise,
   removeClassExercise,
-  fetchClassStudents
+  fetchClassStudents,
+  askInstructorClassAI
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function InstructorDashboard() {
   const { user, isInstructor, logout } = useAuth();
@@ -38,20 +38,23 @@ export default function InstructorDashboard() {
   const [exercises, setExercises] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [creditClasses, setCreditClasses] = useState([]);
-  const [examSessions, setExamSessions] = useState([]);
   
   // Sidebar Tabs: 'classes' | 'exercises' | 'submissions' | 'system'
   const [sidebarTab, setSidebarTab] = useState('classes');
 
   // Selected Class in Class Management View
   const [selectedClass, setSelectedClass] = useState(null);
-  // Sub-tabs inside Selected Class: 'curriculum' | 'sessions' | 'students'
+  // Sub-tabs inside Selected Class: 'curriculum' | 'students'
   const [classSubTab, setClassSubTab] = useState('curriculum');
 
   const [isLoading, setIsLoading] = useState(true);
   const [isMCPInspectorOpen, setIsMCPInspectorOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiClassId, setAiClassId] = useState('');
+  const [isAskingClassAI, setIsAskingClassAI] = useState(false);
 
   // Forms state
   const [isCreatingClass, setIsCreatingClass] = useState(false);
@@ -75,7 +78,6 @@ export default function InstructorDashboard() {
     module_name: 'Chương 1: Biến & Vòng lặp cơ bản',
     order_idx: 1,
     prerequisite_id: '',
-    min_stars_required: 2,
     skill_tag: 'Tư duy thuật toán',
     weight_point: 10
   });
@@ -83,18 +85,16 @@ export default function InstructorDashboard() {
   const [studentRoster, setStudentRoster] = useState([]);
   const [isLoadingRoster, setIsLoadingRoster] = useState(false);
 
-  // Session Form
-  const [sessionForm, setSessionForm] = useState({
-    title: '',
-    class_id: '',
-    session_type: 'PRACTICE',
-    duration_minutes: 45,
-    exercise_ids: []
-  });
-  const [isSubmittingSession, setIsSubmittingSession] = useState(false);
-
   // Filter Submissions
   const [submissionFilter, setSubmissionFilter] = useState('ALL');
+  const [curriculumSearch, setCurriculumSearch] = useState('');
+  const [curriculumPage, setCurriculumPage] = useState(1);
+  const [rosterSearch, setRosterSearch] = useState('');
+  const [rosterPage, setRosterPage] = useState(1);
+  const [exerciseSearch, setExerciseSearch] = useState('');
+  const [exercisePage, setExercisePage] = useState(1);
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionPage, setSubmissionPage] = useState(1);
 
   // Route protection
   useEffect(() => {
@@ -106,24 +106,19 @@ export default function InstructorDashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      const [hData, sData, exData, subData, clsData, sessData] = await Promise.all([
+      const [hData, sData, exData, subData, clsData] = await Promise.all([
         checkHealth(),
         fetchInstructorDashboard(),
         fetchInstructorExercises(),
         fetchInstructorSubmissions(),
-        fetchClasses(),
-        fetchExamSessions()
+        fetchClasses()
       ]);
       setHealth(hData);
       setStats(sData);
       setExercises(exData || []);
       setSubmissions(subData || []);
       setCreditClasses(clsData || []);
-      setExamSessions(sessData || []);
-
-      if (clsData && clsData.length > 0 && !sessionForm.class_id) {
-        setSessionForm(prev => ({ ...prev, class_id: clsData[0].id }));
-      }
+      if (clsData?.length && !aiClassId) setAiClassId(clsData[0].id);
       if (exData && exData.length > 0 && !assignExerciseForm.exercise_id) {
         setAssignExerciseForm(prev => ({ ...prev, exercise_id: exData[0].id }));
       }
@@ -148,7 +143,10 @@ export default function InstructorDashboard() {
 
   const handleSelectClass = async (cls) => {
     setSelectedClass(cls);
-    setSessionForm(prev => ({ ...prev, class_id: cls.id }));
+    setCurriculumSearch('');
+    setCurriculumPage(1);
+    setRosterSearch('');
+    setRosterPage(1);
     setIsLoadingCurriculum(true);
     setIsLoadingRoster(true);
     try {
@@ -170,6 +168,22 @@ export default function InstructorDashboard() {
     setSelectedClass(null);
     if (routeClassId) {
       navigate('/instructor');
+    }
+  };
+
+  const handleAskClassAI = async (event) => {
+    event.preventDefault();
+    const targetClassId = selectedClass?.id || aiClassId;
+    if (!targetClassId || !aiQuestion.trim() || isAskingClassAI) return;
+    setIsAskingClassAI(true);
+    try {
+      const result = await askInstructorClassAI({ class_id: targetClassId, user_message: aiQuestion.trim(), days: 7 });
+      setAiAnswer(result.reply || 'Chưa có phản hồi.');
+      setAiQuestion('');
+    } catch (error) {
+      setAiAnswer(error.response?.data?.detail || 'Không thể phân tích tình hình lớp lúc này.');
+    } finally {
+      setIsAskingClassAI(false);
     }
   };
 
@@ -217,17 +231,6 @@ export default function InstructorDashboard() {
     }
   };
 
-  const handleUpdateClassExercise = async (exerciseId, minStars) => {
-    if (!selectedClass) return;
-    try {
-      await updateClassExercise(selectedClass.id, exerciseId, { min_stars_required: minStars });
-      const updatedCurr = await fetchClassCurriculum(selectedClass.id);
-      setCurriculumList(updatedCurr || []);
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Không thể cập nhật số sao.');
-    }
-  };
-
   const handleRemoveExercise = async (exerciseId) => {
     if (!selectedClass || !window.confirm('Bạn có chắc chắn muốn gỡ bài tập này khỏi lộ trình lớp?')) return;
     try {
@@ -240,41 +243,6 @@ export default function InstructorDashboard() {
       if (updatedClasses && updatedClasses.length > 0) setCreditClasses(updatedClasses);
     } catch (err) {
       alert(err.response?.data?.detail || 'Không thể gỡ bài tập.');
-    }
-  };
-
-  const handleCreateSession = async (e) => {
-    e.preventDefault();
-    if (!sessionForm.title.trim() || sessionForm.exercise_ids.length === 0) {
-      alert('Vui lòng nhập tên đợt và chọn ít nhất 1 bài tập!');
-      return;
-    }
-    setIsSubmittingSession(true);
-    try {
-      await createInstructorExamSession(sessionForm);
-      setSessionForm(prev => ({
-        ...prev,
-        title: '',
-        exercise_ids: []
-      }));
-      const sessList = await fetchExamSessions();
-      setExamSessions(sessList || []);
-      alert('Tạo đợt thực hành / kỳ thi thành công!');
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Không thể tạo kỳ thi.');
-    } finally {
-      setIsSubmittingSession(false);
-    }
-  };
-
-  const handleDeleteSession = async (sessId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa kỳ thi / đợt thực hành này?')) return;
-    try {
-      await deleteInstructorExamSession(sessId);
-      const sessList = await fetchExamSessions();
-      setExamSessions(sessList || []);
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Không thể xóa kỳ thi.');
     }
   };
 
@@ -320,25 +288,41 @@ export default function InstructorDashboard() {
   };
 
   // Filtered submissions
-  const filteredSubmissions = submissions.filter(s => {
+  const matchingSubmissions = submissions.filter(s => {
     if (submissionFilter === 'PASSED') return s.all_passed;
     if (submissionFilter === 'FAILED') return !s.all_passed;
     return true;
   });
 
-  // Sessions of selected class
-  const classSessions = selectedClass
-    ? examSessions.filter(s => !s.class_id || s.class_id === selectedClass.id)
-    : examSessions;
+  const containsQuery = (values, query) => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('vi');
+    return !normalizedQuery || values.some(value => String(value ?? '').toLocaleLowerCase('vi').includes(normalizedQuery));
+  };
+  const filteredCurriculum = curriculumList.filter(item => containsQuery(
+    [item.order_idx, item.module_name, item.title, item.exercise_id, item.prerequisite_id, item.skill_tag], curriculumSearch,
+  ));
+  const filteredRoster = studentRoster.filter(student => containsQuery(
+    [student.full_name, student.student_username, student.username], rosterSearch,
+  ));
+  const filteredExercises = exercises.filter(exercise => containsQuery(
+    [exercise.id, exercise.title, exercise.difficulty, exercise.category], exerciseSearch,
+  ));
+  const filteredSubmissions = matchingSubmissions.slice(0, 50).filter(submission => containsQuery(
+    [submission.session_id, submission.exercise_id, submission.llm_source, submission.timestamp, submission.submitted_at], submissionSearch,
+  ));
+  const curriculumPageData = getPage(filteredCurriculum, curriculumPage);
+  const rosterPageData = getPage(filteredRoster, rosterPage);
+  const exercisePageData = getPage(filteredExercises, exercisePage);
+  const submissionPageData = getPage(filteredSubmissions, submissionPage);
 
   return (
-    <div className="h-screen w-screen flex bg-slate-950 font-sans text-slate-100 select-text overflow-hidden">
+    <div className="h-screen w-screen flex flex-col lg:flex-row bg-slate-950 font-sans text-slate-100 select-text overflow-hidden">
       {/* 1. FIXED LEFT SIDEBAR */}
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0 select-none z-20">
-        <div>
+      <aside className="w-full lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-row lg:flex-col lg:justify-between shrink-0 select-none z-20">
+        <div className="min-w-0 flex-1 flex flex-col lg:block">
           {/* Logo & Portal Branding */}
-          <div className="p-5 border-b border-slate-800 flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-emerald-500 flex items-center justify-center text-white font-bold shadow-lg shadow-amber-950/30">
+          <div className="hidden lg:flex p-5 border-b border-slate-800 items-center space-x-3">
+            <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-white font-bold">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
@@ -351,75 +335,85 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Lecturer Info Card */}
-          <div className="p-4 mx-3 my-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+          <div className="hidden lg:block p-4 mx-3 my-3 rounded-lg bg-slate-950/70 border border-slate-800/80">
             <div className="text-[11px] text-slate-400 font-medium">Giảng viên phụ trách:</div>
             <div className="text-xs font-bold text-white mt-0.5">{user?.full_name || 'Nguyễn Văn A'}</div>
             <div className="text-[10px] text-amber-400 font-mono mt-0.5">Khoa Công nghệ thông tin</div>
           </div>
 
           {/* 4 Main Navigation Buttons */}
-          <nav className="p-3 space-y-1.5 text-xs font-semibold">
+          <nav aria-label="Khu vực giảng viên" className="flex min-w-0 items-center gap-1 overflow-x-auto p-1.5 text-xs font-semibold lg:block lg:space-y-1.5 lg:p-3">
             <button
               onClick={() => {
                 setSidebarTab('classes');
                 setSelectedClass(null);
               }}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+              aria-label="Quản lý lớp học phần"
+              title="Quản lý lớp học phần"
+              className={`w-10 h-10 shrink-0 flex items-center justify-center gap-2.5 px-2 py-2.5 rounded-md transition-colors cursor-pointer lg:w-full lg:justify-start lg:px-3 ${
                 sidebarTab === 'classes'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               <School className="w-4 h-4 shrink-0" />
-              <span>1. Quản lý Lớp học phần</span>
+              <span className="hidden lg:inline">Quản lý Lớp học phần</span>
             </button>
 
             <button
               onClick={() => setSidebarTab('exercises')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+              aria-label="Ngân hàng bài tập"
+              title="Ngân hàng bài tập"
+              className={`w-10 h-10 shrink-0 flex items-center justify-center gap-2.5 px-2 py-2.5 rounded-md transition-colors cursor-pointer lg:w-full lg:justify-start lg:px-3 ${
                 sidebarTab === 'exercises'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               <BookOpen className="w-4 h-4 shrink-0" />
-              <span>2. Ngân hàng Bài tập ({exercises.length})</span>
+              <span className="hidden lg:inline">Ngân hàng Bài tập ({exercises.length})</span>
             </button>
 
             <button
               onClick={() => setSidebarTab('submissions')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+              aria-label="Giám sát bài nộp và AI"
+              title="Giám sát bài nộp và AI"
+              className={`w-10 h-10 shrink-0 flex items-center justify-center gap-2.5 px-2 py-2.5 rounded-md transition-colors cursor-pointer lg:w-full lg:justify-start lg:px-3 ${
                 sidebarTab === 'submissions'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               <BarChart3 className="w-4 h-4 shrink-0" />
-              <span>3. Giám sát Bài nộp & AI</span>
+              <span className="hidden lg:inline">Giám sát Bài nộp & AI</span>
             </button>
 
             <button
               onClick={() => setSidebarTab('system')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+              aria-label="Hạ tầng MCP và trình biên dịch"
+              title="Hạ tầng MCP và trình biên dịch"
+              className={`w-10 h-10 shrink-0 flex items-center justify-center gap-2.5 px-2 py-2.5 rounded-md transition-colors cursor-pointer lg:w-full lg:justify-start lg:px-3 ${
                 sidebarTab === 'system'
                   ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
             >
               <Terminal className="w-4 h-4 shrink-0" />
-              <span>4. Hạ tầng MCP & Trình biên dịch</span>
+              <span className="hidden lg:inline">Hạ tầng MCP & Trình biên dịch</span>
             </button>
           </nav>
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-slate-800 space-y-2">
+        <div className="flex shrink-0 items-center gap-1 border-l border-slate-800 p-1.5 lg:block lg:border-l-0 lg:border-t lg:p-4 lg:space-y-2">
           <Link
             to="/student"
-            className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-all"
+            aria-label="Xem Cổng Sinh Viên"
+            title="Xem Cổng Sinh Viên"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors lg:h-auto lg:w-full lg:justify-center lg:gap-2 lg:px-3 lg:py-2"
           >
             <Code2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Xem Cổng Sinh Viên</span>
+            <span className="hidden lg:inline">Xem Cổng Sinh Viên</span>
           </Link>
 
           <button
@@ -427,28 +421,31 @@ export default function InstructorDashboard() {
               logout();
               navigate('/login');
             }}
-            className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold transition-all cursor-pointer"
+            aria-label="Đăng xuất"
+            title="Đăng xuất"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold transition-colors cursor-pointer lg:h-auto lg:w-full lg:justify-center lg:gap-2 lg:px-3 lg:py-2"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Đăng xuất</span>
+            <span className="hidden lg:inline">Đăng xuất</span>
           </button>
         </div>
       </aside>
 
       {/* 2. MAIN WORKSPACE CONTAINER */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="min-h-0 min-w-0 flex-1 flex flex-col overflow-hidden lg:h-screen">
         {/* Top Workspace Header */}
-        <header className="h-14 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-base font-bold text-white flex items-center space-x-2">
-              {sidebarTab === 'classes' && <span>🏫 Quản Lý Lớp Học Phần Tín Chỉ NEU</span>}
-              {sidebarTab === 'exercises' && <span>📚 Ngân Hàng Câu Hỏi & Bài Tập Lập Trình Python</span>}
-              {sidebarTab === 'submissions' && <span>📊 Giám Sát Lịch Sử Nộp Bài & Lời Khuyên Gia Sư AI</span>}
-              {sidebarTab === 'system' && <span>🔌 Trạng Thái Hạ Tầng MCP & Cấu Hình Trình Biên Dịch</span>}
+        <header className="min-h-14 bg-slate-900 border-b border-slate-800 px-2 sm:px-4 lg:px-6 py-2 flex items-center justify-between gap-2 shrink-0">
+          <div className="min-w-0 flex items-center gap-2">
+            <h2 className="truncate text-xs sm:text-sm font-semibold text-white flex items-center gap-2">
+              {sidebarTab === 'classes' && <><School aria-hidden="true" className="size-4 shrink-0 text-primary" /><span>Quản lý Lớp học phần NEU</span></>}
+              {sidebarTab === 'exercises' && <><BookOpen aria-hidden="true" className="size-4 shrink-0 text-primary" /><span>Ngân hàng Bài tập Python</span></>}
+              {sidebarTab === 'submissions' && <><BarChart3 aria-hidden="true" className="size-4 shrink-0 text-primary" /><span>Giám sát Bài nộp & AI</span></>}
+              {sidebarTab === 'system' && <><Cpu aria-hidden="true" className="size-4 shrink-0 text-primary" /><span>Hạ tầng MCP & Trình biên dịch</span></>}
             </h2>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             <button
               onClick={loadDashboardData}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all cursor-pointer"
@@ -459,10 +456,10 @@ export default function InstructorDashboard() {
 
             <Link
               to="/instructor/exercises/new"
-              className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-950 flex items-center space-x-1.5 cursor-pointer"
+              className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-emerald-700 px-2 sm:px-3 text-xs font-semibold text-white transition-colors hover:bg-emerald-600 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Thêm bài tập mới</span>
+              <span className="hidden sm:inline">Thêm bài tập mới</span>
             </Link>
 
             <button
@@ -478,7 +475,9 @@ export default function InstructorDashboard() {
         {/* Scrollable Workspace Body */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {isLoading ? (
-            <div className="p-16 text-center text-slate-500 text-sm">Đang tải dữ liệu giảng viên...</div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900" aria-busy="true">
+              <TableLoading label="Đang tải dữ liệu giảng viên" />
+            </div>
           ) : (
             <>
               {/* =========================================================================
@@ -488,18 +487,34 @@ export default function InstructorDashboard() {
                 !selectedClass ? (
                   /* 1.1 DANH SÁCH LỚP HỌC PHẦN */
                   <div className="space-y-6">
+                    <section className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-emerald-300" /> Hỏi AI về tình hình lớp học</h3>
+                        <p className="text-[11px] text-slate-400 mt-1">AI trả lời dựa trên số liệu tổng hợp 7 ngày gần nhất của các lớp bạn phụ trách.</p>
+                      </div>
+                      <form onSubmit={handleAskClassAI} className="flex flex-wrap gap-2">
+                        <select value={aiClassId} onChange={event => setAiClassId(event.target.value)}
+                          aria-label="Chọn lớp cần phân tích"
+                          className="rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40">
+                          {creditClasses.map(cls => <option key={cls.id} value={cls.id}>{cls.class_code} · {cls.class_name}</option>)}
+                        </select>
+                        <input value={aiQuestion} onChange={event => setAiQuestion(event.target.value)} maxLength={2000}
+                          placeholder="Ví dụ: Sinh viên thường gặp khó khăn ở chủ đề nào tuần qua?"
+                          aria-label="Câu hỏi về tình hình lớp"
+                          className="flex-1 min-h-10 rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40" />
+                        <button disabled={isAskingClassAI || !aiQuestion.trim() || !aiClassId} className="min-h-10 px-3 rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-semibold flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">
+                          <Send className="w-3.5 h-3.5" /> {isAskingClassAI ? 'Đang phân tích' : 'Hỏi AI'}
+                        </button>
+                      </form>
+                      {aiAnswer && <div className="whitespace-pre-wrap rounded-lg bg-slate-950 border border-slate-800 p-3 text-xs text-slate-200 leading-relaxed">{aiAnswer}</div>}
+                    </section>
                     {/* Top KPI row */}
                     {stats && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
                           <div className="text-xs text-slate-400 mb-1">Lớp học phần phụ trách</div>
                           <div className="text-2xl font-bold text-white font-mono">{creditClasses.length}</div>
                           <p className="text-[11px] text-slate-500 mt-0.5">Khoa Công nghệ thông tin</p>
-                        </div>
-                        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
-                          <div className="text-xs text-slate-400 mb-1">Kỳ thi & Thực hành</div>
-                          <div className="text-2xl font-bold text-cyan-400 font-mono">{examSessions.length}</div>
-                          <p className="text-[11px] text-slate-500 mt-0.5">Đã lên lịch</p>
                         </div>
                         <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
                           <div className="text-xs text-slate-400 mb-1">Tổng SV ghi danh</div>
@@ -672,7 +687,7 @@ export default function InstructorDashboard() {
                         </p>
                       </div>
 
-                      {/* 3 Sub-tabs Pills */}
+                      {/* Class management sections */}
                       <div className="flex items-center space-x-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800 shrink-0">
                         <button
                           onClick={() => setClassSubTab('curriculum')}
@@ -683,16 +698,6 @@ export default function InstructorDashboard() {
                           }`}
                         >
                           📚 Lộ trình ({curriculumList.length})
-                        </button>
-                        <button
-                          onClick={() => setClassSubTab('sessions')}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            classSubTab === 'sessions'
-                              ? 'bg-emerald-600 text-white shadow'
-                              : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          📝 Kỳ thi ({classSessions.length})
                         </button>
                         <button
                           onClick={() => setClassSubTab('students')}
@@ -777,19 +782,6 @@ export default function InstructorDashboard() {
                               </div>
 
                               <div>
-                                <label className="block text-slate-400 mb-1">Sao tối thiểu (Rubric)</label>
-                                <select
-                                  value={assignExerciseForm.min_stars_required}
-                                  onChange={(e) => setAssignExerciseForm({ ...assignExerciseForm, min_stars_required: Number(e.target.value) })}
-                                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-300 font-bold"
-                                >
-                                  <option value={1}>⭐ (1 Sao)</option>
-                                  <option value={2}>⭐⭐ (2 Sao)</option>
-                                  <option value={3}>⭐⭐⭐ (3 Sao - Tự lực 100%)</option>
-                                </select>
-                              </div>
-
-                              <div>
                                 <label className="block text-slate-400 mb-1">Kỹ năng đầu ra</label>
                                 <input
                                   type="text"
@@ -816,30 +808,42 @@ export default function InstructorDashboard() {
                         {/* Curriculum Table */}
                         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
                           <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                            Lộ Trình Kỹ Năng & Thang Đo Sao Hiện Tại ({curriculumList.length} bài)
+                            Danh Sách Bài Tập Học Phần ({curriculumList.length} bài)
                           </h4>
 
                           {isLoadingCurriculum ? (
-                            <div className="py-8 text-center text-slate-500 text-xs">Đang tải ma trận kỹ năng...</div>
+                            <TableLoading label="Đang tải bài tập trong lộ trình lớp" />
                           ) : curriculumList.length === 0 ? (
                             <div className="py-8 text-center text-slate-500 text-xs">Chưa có bài tập nào trong lộ trình lớp.</div>
                           ) : (
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-left text-xs">
-                                <thead>
+                            <>
+                            <TableControls
+                              label="Tìm bài tập trong lộ trình lớp"
+                              query={curriculumSearch}
+                              onQueryChange={(value) => { setCurriculumSearch(value); setCurriculumPage(1); }}
+                              placeholder="Tìm theo tên bài, mã bài, chương hoặc kỹ năng"
+                              total={filteredCurriculum.length}
+                              page={curriculumPageData.page}
+                              pageCount={curriculumPageData.pageCount}
+                              onPageChange={setCurriculumPage}
+                            />
+                            <div className="max-h-[min(60vh,36rem)] overflow-auto rounded-lg border border-slate-800">
+                              <table className="min-w-[52rem] w-full text-left text-xs">
+                                <thead className="sticky top-0 z-10 bg-slate-900">
                                   <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                                     <th className="py-2.5 px-3">#</th>
                                     <th className="py-2.5 px-3">Chương / Module</th>
                                     <th className="py-2.5 px-3">Bài tập</th>
                                     <th className="py-2.5 px-3">Tiên quyết</th>
-                                    <th className="py-2.5 px-3">Sao tối thiểu (Inline Edit)</th>
                                     <th className="py-2.5 px-3">Kỹ năng</th>
                                     <th className="py-2.5 px-3 text-right">Thao tác</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
-                                  {curriculumList.map((item) => (
-                                    <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
+                                  {curriculumPageData.items.length === 0 ? (
+                                    <tr><td colSpan={6} className="px-3 py-8 text-center text-slate-300">Không tìm thấy bài tập phù hợp. Hãy thử từ khóa khác.</td></tr>
+                                  ) : curriculumPageData.items.map((item) => (
+                                    <tr key={item.id} className="transition-colors hover:bg-slate-800/50 focus-within:bg-slate-800/50">
                                       <td className="py-3 px-3 font-mono font-bold text-slate-400">#{item.order_idx}</td>
                                       <td className="py-3 px-3 font-medium text-emerald-400">{item.module_name}</td>
                                       <td className="py-3 px-3">
@@ -849,23 +853,13 @@ export default function InstructorDashboard() {
                                       <td className="py-3 px-3 font-mono text-slate-400">
                                         {item.prerequisite_id || '(Không)'}
                                       </td>
-                                      <td className="py-3 px-3">
-                                        <select
-                                          value={item.min_stars_required || 1}
-                                          onChange={(e) => handleUpdateClassExercise(item.exercise_id, Number(e.target.value))}
-                                          className="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-amber-300 font-bold"
-                                        >
-                                          <option value={1}>⭐ (1 Sao)</option>
-                                          <option value={2}>⭐⭐ (2 Sao)</option>
-                                          <option value={3}>⭐⭐⭐ (3 Sao)</option>
-                                        </select>
-                                      </td>
                                       <td className="py-3 px-3 text-slate-300">{item.skill_tag}</td>
                                       <td className="py-3 px-3 text-right">
                                         <button
                                           onClick={() => handleRemoveExercise(item.exercise_id)}
                                           className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors"
                                           title="Gỡ khỏi lớp"
+                                          aria-label={`Gỡ ${item.title} khỏi lớp`}
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -875,13 +869,14 @@ export default function InstructorDashboard() {
                                 </tbody>
                               </table>
                             </div>
+                            </>
                           )}
                         </div>
                       </div>
                     )}
 
                     {/* Sub-tab 2: Exam & Practice Sessions */}
-                    {classSubTab === 'sessions' && (
+                    {false && classSubTab === 'sessions' && (
                       <div className="space-y-6">
                         {/* Form Tạo Kỳ Thi Mới cho Lớp */}
                         <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
@@ -1026,13 +1021,24 @@ export default function InstructorDashboard() {
                         </div>
 
                         {isLoadingRoster ? (
-                          <div className="py-8 text-center text-slate-500 text-xs">Đang tải danh sách sinh viên...</div>
+                          <TableLoading label="Đang tải danh sách sinh viên" />
                         ) : studentRoster.length === 0 ? (
                           <div className="py-8 text-center text-slate-500 text-xs">Chưa có sinh viên nào ghi danh vào lớp.</div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                              <thead>
+                          <>
+                          <TableControls
+                            label="Tìm sinh viên trong lớp"
+                            query={rosterSearch}
+                            onQueryChange={(value) => { setRosterSearch(value); setRosterPage(1); }}
+                            placeholder="Tìm theo tên hoặc tài khoản sinh viên"
+                            total={filteredRoster.length}
+                            page={rosterPageData.page}
+                            pageCount={rosterPageData.pageCount}
+                            onPageChange={setRosterPage}
+                          />
+                          <div className="max-h-[min(60vh,36rem)] overflow-auto rounded-lg border border-slate-800">
+                            <table className="min-w-[52rem] w-full text-left text-xs">
+                              <thead className="sticky top-0 z-10 bg-slate-900">
                                 <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                                   <th className="py-2.5 px-3">#</th>
                                   <th className="py-2.5 px-3">Sinh Viên</th>
@@ -1043,9 +1049,11 @@ export default function InstructorDashboard() {
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-800">
-                                {studentRoster.map((st, idx) => (
-                                  <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                                    <td className="py-3 px-3 font-mono text-slate-500">{idx + 1}</td>
+                                {rosterPageData.items.length === 0 ? (
+                                  <tr><td colSpan={6} className="px-3 py-8 text-center text-slate-300">Không tìm thấy sinh viên phù hợp. Hãy thử tên hoặc tài khoản khác.</td></tr>
+                                ) : rosterPageData.items.map((st, idx) => (
+                                  <tr key={st.student_username || st.username || idx} className="transition-colors hover:bg-slate-800/50">
+                                    <td className="py-3 px-3 font-mono text-slate-300">{rosterPageData.startIndex + idx + 1}</td>
                                     <td className="py-3 px-3 font-semibold text-white">{st.full_name || st.student_username || st.username}</td>
                                     <td className="py-3 px-3 font-mono text-emerald-400">@{st.student_username || st.username}</td>
                                     <td className="py-3 px-3 text-center">
@@ -1063,6 +1071,7 @@ export default function InstructorDashboard() {
                               </tbody>
                             </table>
                           </div>
+                          </>
                         )}
                       </div>
                     )}
@@ -1090,21 +1099,35 @@ export default function InstructorDashboard() {
                     </Link>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead>
+                  <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+                    <TableControls
+                      label="Tìm trong ngân hàng bài tập"
+                      query={exerciseSearch}
+                      onQueryChange={(value) => { setExerciseSearch(value); setExercisePage(1); }}
+                      placeholder="Tìm theo mã bài, tiêu đề, độ khó hoặc chủ đề"
+                      total={filteredExercises.length}
+                      page={exercisePageData.page}
+                      pageCount={exercisePageData.pageCount}
+                      onPageChange={setExercisePage}
+                    />
+                    <div className="max-h-[min(65vh,40rem)] overflow-auto">
+                    <table className="min-w-[52rem] w-full text-left text-xs">
+                      <thead className="sticky top-0 z-10 bg-slate-900">
                         <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                           <th className="py-2.5 px-3">Mã Bài</th>
                           <th className="py-2.5 px-3">Tiêu Đề</th>
                           <th className="py-2.5 px-3">Độ Khó</th>
                           <th className="py-2.5 px-3">Chủ Đề</th>
+                          <th className="py-2.5 px-3">Người thêm</th>
                           <th className="py-2.5 px-3 text-center">Test Cases</th>
                           <th className="py-2.5 px-3 text-right">Thao Tác</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800">
-                        {exercises.map((ex) => (
-                          <tr key={ex.id} className="hover:bg-slate-800/40 transition-colors">
+                        {exercisePageData.items.length === 0 ? (
+                          <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-300">Không tìm thấy bài tập phù hợp. Hãy thử từ khóa khác.</td></tr>
+                        ) : exercisePageData.items.map((ex) => (
+                          <tr key={ex.id} className="transition-colors hover:bg-slate-800/50 focus-within:bg-slate-800/50">
                             <td className="py-3 px-3 font-mono text-emerald-400">{ex.id}</td>
                             <td className="py-3 px-3 font-semibold text-white">{ex.title}</td>
                             <td className="py-3 px-3">
@@ -1116,12 +1139,15 @@ export default function InstructorDashboard() {
                               </span>
                             </td>
                             <td className="py-3 px-3 text-slate-300">{ex.category}</td>
+                            <td className="py-3 px-3 text-slate-300">{ex.created_by_name || (['system', 'seed', ''].includes(ex.created_by) ? 'Hệ thống' : ex.created_by)}</td>
                             <td className="py-3 px-3 text-center font-mono text-slate-400">{ex.test_cases_count}</td>
                             <td className="py-3 px-3 text-right space-x-2">
+                              {ex.can_manage && <>
                               <Link
                                 to={`/instructor/exercises/${ex.id}/edit`}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 inline-block"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                                 title="Chỉnh sửa"
+                                aria-label={`Chỉnh sửa ${ex.title}`}
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </Link>
@@ -1129,14 +1155,34 @@ export default function InstructorDashboard() {
                                 onClick={() => handleDeleteExercise(ex.id)}
                                 className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors cursor-pointer"
                                 title="Xóa"
+                                aria-label={`Xóa bài tập ${ex.title}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
+                              <button
+                                onClick={async () => {
+                                  const recipient = window.prompt('Nhập tài khoản giảng viên được phép sử dụng bài tập này:');
+                                  if (!recipient?.trim()) return;
+                                  try {
+                                    await shareInstructorExercise(ex.id, recipient.trim());
+                                    alert(`Đã chia sẻ bài tập với ${recipient.trim()}.`);
+                                  } catch (error) {
+                                    alert(error.response?.data?.detail || 'Không thể chia sẻ bài tập.');
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 transition-colors cursor-pointer"
+                                title="Cho phép giảng viên khác sử dụng"
+                                aria-label={`Chia sẻ ${ex.title}`}
+                              >
+                                <Users className="w-3.5 h-3.5" />
+                              </button>
+                              </>}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1155,7 +1201,7 @@ export default function InstructorDashboard() {
                     <div className="flex items-center space-x-2">
                       <select
                         value={submissionFilter}
-                        onChange={(e) => setSubmissionFilter(e.target.value)}
+                        onChange={(e) => { setSubmissionFilter(e.target.value); setSubmissionPage(1); }}
                         className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
                       >
                         <option value="ALL">Tất cả trạng thái</option>
@@ -1173,9 +1219,20 @@ export default function InstructorDashboard() {
                     </div>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead>
+                  <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden">
+                    <TableControls
+                      label="Tìm trong lịch sử nộp bài"
+                      query={submissionSearch}
+                      onQueryChange={(value) => { setSubmissionSearch(value); setSubmissionPage(1); }}
+                      placeholder="Tìm theo sinh viên, bài tập hoặc nguồn AI"
+                      total={filteredSubmissions.length}
+                      page={submissionPageData.page}
+                      pageCount={submissionPageData.pageCount}
+                      onPageChange={setSubmissionPage}
+                    />
+                    <div className="max-h-[min(65vh,40rem)] overflow-auto">
+                    <table className="min-w-[60rem] w-full text-left text-xs">
+                      <thead className="sticky top-0 z-10 bg-slate-900">
                         <tr className="border-b border-slate-800 text-slate-400 font-semibold">
                           <th className="py-2.5 px-3">Thời Gian</th>
                           <th className="py-2.5 px-3">Sinh Viên</th>
@@ -1187,8 +1244,10 @@ export default function InstructorDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800">
-                        {filteredSubmissions.slice(0, 50).map((sub) => (
-                          <tr key={sub.id} className="hover:bg-slate-800/40 transition-colors">
+                        {submissionPageData.items.length === 0 ? (
+                          <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-300">Không tìm thấy bài nộp phù hợp. Hãy đổi từ khóa hoặc bộ lọc.</td></tr>
+                        ) : submissionPageData.items.map((sub) => (
+                          <tr key={sub.id} className="transition-colors hover:bg-slate-800/50 focus-within:bg-slate-800/50">
                             <td className="py-3 px-3 text-slate-400 text-[11px] font-mono">
                               {(sub.timestamp || sub.submitted_at)?.slice(5, 16) || 'Vừa xong'}
                             </td>
@@ -1210,8 +1269,9 @@ export default function InstructorDashboard() {
                             <td className="py-3 px-3 text-right">
                               <button
                                 onClick={() => setSelectedSubmission(sub)}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                                 title="Xem chi tiết"
+                                aria-label={`Xem bài nộp của ${sub.session_id}`}
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
@@ -1220,6 +1280,7 @@ export default function InstructorDashboard() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1324,7 +1385,7 @@ export default function InstructorDashboard() {
 
       {/* MODAL CHI TIẾT BÀI NỘP */}
       {selectedSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm select-text">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 select-text">
           <div className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <h3 className="font-bold text-sm text-white flex items-center space-x-2">

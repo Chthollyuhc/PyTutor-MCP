@@ -4,13 +4,14 @@ Module truy vấn dữ liệu và lưu trữ sự kiện học tập cho MCP Ser
 import sqlite3
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger("pytutor.mcp.storage")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = PROJECT_ROOT / "pytutor.db"
+DB_PATH = Path(os.getenv("PYTUTOR_DB_PATH", PROJECT_ROOT / "pytutor.db")).expanduser().resolve()
 
 
 def get_conn() -> sqlite3.Connection:
@@ -84,15 +85,16 @@ def save_submission(
     total_tests: int,
     all_passed: bool,
     llm_source: str,
-    tutor_hint: str
+    tutor_hint: str,
+    action_type: str = "submit"
 ) -> int:
     """Lưu sự kiện học tập vào SQLite."""
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO submissions (
-            session_id, exercise_id, code, hint_level, passed_tests, total_tests, all_passed, llm_source, tutor_hint
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            session_id, exercise_id, code, hint_level, passed_tests, total_tests, all_passed, llm_source, tutor_hint, action_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         session_id,
         exercise_id,
@@ -102,7 +104,8 @@ def save_submission(
         total_tests,
         1 if all_passed else 0,
         llm_source,
-        tutor_hint
+        tutor_hint,
+        action_type if action_type in {"submit", "ask_ai"} else "submit"
     ))
     last_id = cursor.lastrowid
     conn.commit()
@@ -164,7 +167,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     cursor.execute("""
         SELECT id, exercise_id, hint_level, passed_tests, total_tests, all_passed, timestamp
         FROM submissions
-        WHERE session_id = ?
+        WHERE session_id = ? AND action_type = 'submit'
         ORDER BY id ASC
     """, (session_id,))
     sub_rows = [dict(r) for r in cursor.fetchall()]

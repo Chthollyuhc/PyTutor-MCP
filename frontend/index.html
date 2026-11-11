@@ -4,9 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        let saved = null;
+        try {
+          saved = localStorage.getItem('pytutor_theme');
+        } catch { /* Use the system preference when storage is unavailable. */ }
+        let systemTheme = 'light';
+        try {
+          systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        } catch { /* Keep the light default when matchMedia is unavailable. */ }
+        const theme = saved === 'light' || saved === 'dark' ? saved : systemTheme;
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <title>PyTutor - Intelligent Tutoring System (MCP Architecture)</title>
   </head>
-  <body class="bg-slate-900 text-slate-100 antialiased overflow-x-hidden">
+  <body class="bg-canvas text-foreground antialiased overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -7,6 +7,7 @@ import {
   Search, LayoutGrid, List, Trophy
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { 
   fetchMyClasses, 
   fetchClasses, 
@@ -48,7 +49,7 @@ export default function StudentPortalPage() {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
-  // Dữ liệu mở rộng: Đợt thi tín chỉ & Huy hiệu/sao thành tích
+  // Dữ liệu mở rộng: Đợt thi tín chỉ và sao tự lực
   const [examSessions, setExamSessions] = useState([]);
   const [achievements, setAchievements] = useState(null);
 
@@ -154,48 +155,54 @@ export default function StudentPortalPage() {
   const totalSolved = achievements?.completed_count || profile?.mastered_exercises?.length || 0;
   const totalStars = achievements?.total_stars || 0;
   const autonomyScore = profile?.analytics_metrics?.autonomy_score ?? 85;
+  const studentDisplayName = (user?.full_name || user?.username || 'bạn').split(' - ')[0];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans select-none flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans select-text flex flex-col">
       {/* 1. TOP NAVIGATION BAR */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+      <header className="sticky top-0 z-30 bg-slate-900 border-b border-slate-800 px-3 py-2.5 sm:px-6 sm:py-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="w-9 h-9 shrink-0 rounded-md bg-primary flex items-center justify-center text-white">
             <School className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-base text-white tracking-tight">PyTutor-MCP</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-medium">NEU LMS</span>
+              <span className="truncate font-semibold text-sm sm:text-base text-white">PyTutor-MCP</span>
+              <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">NEU LMS</span>
             </div>
-            <p className="text-[11px] text-slate-400">Khoa Công nghệ thông tin • ĐH Kinh tế Quốc dân</p>
+            <p className="hidden md:block text-[11px] text-slate-400">Khoa Công nghệ thông tin • ĐH Kinh tế Quốc dân</p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <ThemeToggle className="size-9 sm:size-10" />
           {/* Nút Hồ sơ Năng lực 4D */}
           <button
             onClick={() => setIsProfileOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 hover:text-white transition-all flex items-center space-x-1.5 cursor-pointer"
+            aria-label="Mở Hồ sơ và Năng lực 4D"
+            title="Mở Hồ sơ và Năng lực 4D"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Award className="w-3.5 h-3.5 text-amber-400" />
-            <span>Hồ sơ & Năng lực 4D</span>
+            <span className="hidden xl:inline">Hồ sơ & Năng lực 4D</span>
           </button>
 
           {/* Nút Kết nối MCP */}
           <button
             onClick={() => setIsInspectorOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono text-emerald-400 transition-all flex items-center space-x-1.5 cursor-pointer"
+            aria-label="Mở công cụ MCP"
+            title="Mở công cụ MCP"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>MCP (8)</span>
+            <span className="hidden sm:inline">MCP (8)</span>
           </button>
 
           {/* User Info & Logout */}
           <div className="h-6 w-px bg-slate-800 mx-1" />
           <div className="text-right hidden sm:block">
-            <div className="text-xs font-semibold text-white">Trần Minh Khánh</div>
-            <div className="text-[10px] text-slate-400 font-mono">SV K65 CNTT • MSV: 11236131</div>
+            <div className="text-xs font-semibold text-white">{studentDisplayName}</div>
+            <div className="text-[10px] text-slate-400">Sinh viên NEU</div>
           </div>
 
           <button
@@ -212,60 +219,18 @@ export default function StudentPortalPage() {
       </header>
 
       {/* 2. MAIN CONTAINER */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-5 sm:px-6 sm:py-7 space-y-7">
         {/* Banner Chào Mừng & KPIs */}
-        <div className="relative rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/50 border border-slate-800 p-6 sm:p-8 overflow-hidden shadow-xl">
-          <div className="absolute right-0 top-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl mb-6">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-semibold mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>CỔNG HỌC TẬP TÍN CHỈ SINH VIÊN NEU</span>
+        <div className="border-b border-slate-800 pb-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-white tracking-tight">Xin chào, {studentDisplayName}</h1>
+              <p className="mt-1 text-sm text-slate-300">Tiếp tục bài học của bạn hoặc tham gia một lớp học phần.</p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Xin chào, Trần Minh Khánh! 👋
-            </h1>
-            <p className="text-sm text-slate-300 mt-2 leading-relaxed">
-              Chào mừng bạn đến với môi trường rèn luyện lập trình thích ứng. Hãy chọn một lớp học phần bên dưới để tiếp tục lộ trình học tập hoặc tham gia các đợt thực hành & kỳ thi tín chỉ.
-            </p>
-          </div>
-
-          {/* 4 Thẻ KPI */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-800/80">
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-xs font-medium">Lớp học phần</span>
-                <School className="w-4 h-4 text-blue-400" />
-              </div>
-              <div className="text-2xl font-bold text-white">{totalClasses}</div>
-              <div className="text-[11px] text-blue-400/90 mt-0.5">Đã ghi danh kỳ này</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-xs font-medium">Bài đã hoàn thành</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="text-2xl font-bold text-white">{totalSolved}</div>
-              <div className="text-[11px] text-emerald-400/90 mt-0.5">Đạt 100% test cases</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-xs font-medium">Sao tự lực</span>
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              </div>
-              <div className="text-2xl font-bold text-white">{totalStars} ⭐</div>
-              <div className="text-[11px] text-amber-400/90 mt-0.5">Không dùng code giải</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-xs font-medium">Chỉ số Tự lực</span>
-                <TrendingUp className="w-4 h-4 text-purple-400" />
-              </div>
-              <div className="text-2xl font-bold text-white">{autonomyScore}<span className="text-sm text-slate-400 font-normal">/100</span></div>
-              <div className="text-[11px] text-purple-400/90 mt-0.5">Độc lập tư duy thuật toán</div>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
+              <span><strong className="text-white tabular-nums">{totalClasses}</strong> lớp học phần</span>
+              <span><strong className="text-white tabular-nums">{totalSolved}</strong> bài hoàn thành</span>
+              <span><strong className="text-amber-300 tabular-nums">{totalStars}</strong> sao tự lực</span>
             </div>
           </div>
         </div>
@@ -301,7 +266,7 @@ export default function StudentPortalPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm lớp học phần theo tên môn, mã lớp (CNTT...), giảng viên..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-9 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-sans"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-sans"
               />
               {searchQuery && (
                 <button
@@ -370,19 +335,13 @@ export default function StudentPortalPage() {
                 const solved = cls.completed_in_class !== undefined ? cls.completed_in_class : (cls.progress ? cls.progress.solved_count : 0);
                 const total = cls.exercise_count !== undefined ? cls.exercise_count : (cls.progress ? cls.progress.total_exercises : 0);
 
-                // Xác định màu gradient theo mã môn
-                const isPythonBasic = cls.course_code?.includes('CNTT1116') || cls.course_code?.includes('CNTT1128');
-                const gradHeader = isPythonBasic
-                  ? 'from-emerald-700 via-teal-800 to-slate-900'
-                  : 'from-blue-700 via-indigo-800 to-slate-900';
-
                 return (
                   <div
                     key={cls.id}
-                    className="flex flex-col justify-between rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all shadow-lg overflow-hidden group hover:-translate-y-0.5 duration-200"
+                    className="flex flex-col justify-between rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-600 transition-colors overflow-hidden group"
                   >
                     {/* Header Card */}
-                    <div className={`p-5 bg-gradient-to-r ${gradHeader} border-b border-slate-800/80`}>
+                    <div className="p-5 bg-slate-900 border-b border-slate-800">
                       <div className="flex items-center justify-between text-xs text-slate-200/90 mb-2 font-mono">
                         <span className="font-bold px-2 py-0.5 bg-black/30 rounded border border-white/10">{cls.class_code}</span>
                         <span>{cls.credits || 3} Tín chỉ</span>
@@ -391,7 +350,7 @@ export default function StudentPortalPage() {
                         {cls.class_name}
                       </h3>
                       <p className="text-xs text-slate-300 mt-1 flex items-center space-x-1.5">
-                        <span>👨‍🏫 {cls.instructor_name || 'Nguyễn Văn A'}</span>
+                        <span>{cls.instructor_name || 'Nguyễn Văn A'}</span>
                       </p>
                     </div>
 
@@ -422,7 +381,7 @@ export default function StudentPortalPage() {
                           onClick={() => navigate(`/student/classes/${cls.id}`)}
                           className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950 flex items-center justify-center space-x-1.5 cursor-pointer"
                         >
-                          <span>👉 Vào Lớp Học Phần</span>
+                          <span>Vào lớp học phần</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                         <button
@@ -465,7 +424,7 @@ export default function StudentPortalPage() {
                           </h3>
                         </div>
                         <div className="flex items-center space-x-3 text-xs text-slate-400 flex-wrap">
-                          <span>👨‍🏫 {cls.instructor_name || 'Nguyễn Văn A'}</span>
+                          <span>{cls.instructor_name || 'Nguyễn Văn A'}</span>
                           <span>•</span>
                           <span>Mã tham gia: <strong className="text-emerald-400 font-mono">{cls.enrollment_code}</strong></span>
                           <span>•</span>
@@ -571,7 +530,7 @@ export default function StudentPortalPage() {
                             <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">{ac.class_code}</span>
                           </div>
                           <div className="text-[11px] text-slate-400">
-                            👨‍🏫 {ac.instructor_name || 'Nguyễn Văn A'} • Mã: <span className="font-mono text-emerald-400">{ac.enrollment_code}</span>
+                            {ac.instructor_name || 'Nguyễn Văn A'} • Mã: <span className="font-mono text-emerald-400">{ac.enrollment_code}</span>
                           </div>
                         </div>
 
@@ -602,7 +561,7 @@ export default function StudentPortalPage() {
                 ) : (
                   <>
                     <Trophy className="w-4 h-4 text-amber-400" />
-                    <span>Vinh Danh & Năng Lực</span>
+                    <span>Tiến độ & bảng xếp hạng</span>
                   </>
                 )}
               </div>
@@ -689,7 +648,7 @@ export default function StudentPortalPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-amber-300 flex items-center space-x-1.5">
                         <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                        <span>Thành Tích Học Phần</span>
+                        <span>Tiến độ học tập</span>
                       </span>
                       <span className="text-xs font-mono font-bold text-white">{totalStars} ⭐</span>
                     </div>
@@ -702,21 +661,6 @@ export default function StudentPortalPage() {
 
               {/* Tóm tắt năng lực tích lũy & Nút mở nhanh */}
               <div className="pt-3 border-t border-slate-800/80 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Huy hiệu đạt được:</span>
-                  <div className="flex items-center space-x-1 text-base">
-                    {achievements?.badges && achievements.badges.length > 0 ? (
-                      achievements.badges.slice(0, 4).map((b, i) => (
-                        <span key={i} title={b.badge_title || b.title} className="cursor-default hover:scale-125 transition-transform">
-                          {b.badge_icon || b.icon || '🏅'}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-slate-500 text-xs">Chưa có huy hiệu</span>
-                    )}
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
                     onClick={() => setIsLeaderboardOpen(true)}

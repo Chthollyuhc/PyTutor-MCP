@@ -77,12 +77,14 @@ export default function StudentProfileModal({
     syntax_error_percent: 0
   };
 
-  const autonomyScore = am.autonomy_score !== undefined ? am.autonomy_score : 70;
-  const firstTryPassRate = am.first_try_pass_rate !== undefined ? am.first_try_pass_rate : 0;
-  const avgAttempts = am.avg_attempts_to_solve !== undefined ? am.avg_attempts_to_solve : 1.0;
+  const dataStatus = profile?.data_status || am.data_status || (profile?.total_submissions ? 'limited' : 'no_data');
+  const hasMetrics = dataStatus !== 'no_data';
+  const autonomyScore = hasMetrics ? am.autonomy_score : null;
+  const firstTryPassRate = hasMetrics ? am.first_try_pass_rate : null;
+  const avgAttempts = hasMetrics ? am.avg_attempts_to_solve : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md select-text animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/55 select-text animate-fade-in">
       <div className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         
         {/* Header */}
@@ -139,6 +141,13 @@ export default function StudentProfileModal({
             </div>
           ) : profile ? (
             <>
+              {dataStatus !== 'sufficient' && (
+                <div role="status" className="rounded-lg border border-amber-700/60 bg-amber-950/30 px-4 py-3 text-amber-100">
+                  {dataStatus === 'no_data'
+                    ? 'Chưa có bài nộp để tính các chỉ số. Hãy hoàn thành bài đầu tiên để bắt đầu theo dõi tiến độ.'
+                    : `Dữ liệu hiện còn hạn chế (${am.sample_size ?? profile.total_exercises_attempted ?? 0} bài đã thử); các nhận xét chỉ mang tính tham khảo.`}
+                </div>
+              )}
               {/* PHẦN 1: 4D QUANTITATIVE LEARNING ANALYTICS */}
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
@@ -152,13 +161,13 @@ export default function StudentProfileModal({
                     <div>
                       <span className="text-slate-400 text-[10.5px] block mb-1">Điểm Tự Lực (Autonomy)</span>
                       <div className="text-2xl font-bold font-mono text-emerald-400">
-                        {autonomyScore}<span className="text-xs text-slate-500 font-normal">/100</span>
+                        {autonomyScore ?? '—'}<span className="text-xs text-slate-500 font-normal">{autonomyScore == null ? '' : '/100'}</span>
                       </div>
                     </div>
                     <div className="w-full bg-slate-900 rounded-full h-1.5 mt-2 overflow-hidden">
                       <div
                         className="bg-emerald-500 h-1.5 rounded-full"
-                        style={{ width: `${Math.min(100, Math.max(0, autonomyScore))}%` }}
+                        style={{ width: `${autonomyScore == null ? 0 : Math.min(100, Math.max(0, autonomyScore))}%` }}
                       />
                     </div>
                   </div>
@@ -168,13 +177,13 @@ export default function StudentProfileModal({
                     <div>
                       <span className="text-slate-400 text-[10.5px] block mb-1">Pass Ngay Lần Đầu</span>
                       <div className="text-2xl font-bold font-mono text-sky-400">
-                        {firstTryPassRate}<span className="text-xs text-slate-500 font-normal">%</span>
+                        {firstTryPassRate ?? '—'}<span className="text-xs text-slate-500 font-normal">{firstTryPassRate == null ? '' : '%'}</span>
                       </div>
                     </div>
                     <div className="w-full bg-slate-900 rounded-full h-1.5 mt-2 overflow-hidden">
                       <div
                         className="bg-sky-500 h-1.5 rounded-full"
-                        style={{ width: `${Math.min(100, Math.max(0, firstTryPassRate))}%` }}
+                        style={{ width: `${firstTryPassRate == null ? 0 : Math.min(100, Math.max(0, firstTryPassRate))}%` }}
                       />
                     </div>
                   </div>
@@ -184,7 +193,7 @@ export default function StudentProfileModal({
                     <div>
                       <span className="text-slate-400 text-[10.5px] block mb-1">Số Lần Nộp TB / Bài</span>
                       <div className="text-2xl font-bold font-mono text-amber-400">
-                        {avgAttempts}<span className="text-xs text-slate-500 font-normal"> lượt</span>
+                        {avgAttempts ?? '—'}<span className="text-xs text-slate-500 font-normal">{avgAttempts == null ? '' : ' lượt'}</span>
                       </div>
                     </div>
                     <span className="text-[10px] text-slate-500 mt-2 block">

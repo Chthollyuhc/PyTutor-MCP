@@ -103,7 +103,7 @@ export const fetchStudentProfile = async (sessionId, exerciseId = '', classId = 
 // PHASE 8: MULTI-TURN CHAT & CUSTOM INPUT RUN
 // ==============================================================================
 
-export const sendTutorChatMessage = async ({ exercise_id, code, session_id, user_message, history, exam_session_id = null }) => {
+export const sendTutorChatMessage = async ({ exercise_id, code, session_id, user_message, history, exam_session_id = null, class_id = null }) => {
   const payload = {
     exercise_id,
     code,
@@ -114,7 +114,18 @@ export const sendTutorChatMessage = async ({ exercise_id, code, session_id, user
   if (exam_session_id) {
     payload.exam_session_id = exam_session_id;
   }
+  if (class_id) payload.class_id = class_id;
   const response = await apiClient.post('/tutor/chat', payload);
+  return response.data;
+};
+
+export const submitTutorFeedback = async ({ interaction_id, rating }) => {
+  const response = await apiClient.post('/tutor/feedback', { interaction_id, rating });
+  return response.data;
+};
+
+export const askInstructorClassAI = async ({ class_id, user_message, days = 7 }) => {
+  const response = await apiClient.post('/instructor/ai/class-chat', { class_id, user_message, days });
   return response.data;
 };
 
@@ -168,6 +179,16 @@ export const deleteInstructorExercise = async (exerciseId) => {
   return response.data;
 };
 
+export const shareInstructorExercise = async (exerciseId, instructor_username) => {
+  const response = await apiClient.post(`/instructor/exercises/${exerciseId}/shares`, { instructor_username });
+  return response.data;
+};
+
+export const unshareInstructorExercise = async (exerciseId, instructorUsername) => {
+  const response = await apiClient.delete(`/instructor/exercises/${exerciseId}/shares/${encodeURIComponent(instructorUsername)}`);
+  return response.data;
+};
+
 // ==============================================================================
 // PHASE 9: EXECUTION STEP VISUALIZER & SKILL ROADMAP
 // ==============================================================================
@@ -181,15 +202,8 @@ export const fetchExecutionTrace = async ({ code, stdin_input = '', max_steps = 
   return response.data;
 };
 
-export const fetchSkillRoadmap = async (sessionId = 'default_session', classId = null) => {
-  const params = { session_id: sessionId };
-  if (classId) params.class_id = classId;
-  const response = await apiClient.get('/skill-roadmap', { params });
-  return response.data;
-};
-
 // ==============================================================================
-// PHASE 10: GAMIFICATION, STARS, BADGES & PYTHONIC REVIEW
+// PHASE 10: SELF-RELIANCE STARS & PYTHONIC REVIEW
 // ==============================================================================
 
 export const fetchLeaderboard = async (limit = 20) => {

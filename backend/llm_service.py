@@ -14,6 +14,9 @@ import asyncio
 from typing import Optional
 from pathlib import Path
 import httpx
+from backend.prompt_templates import render_socratic_prompt, render_instructor_prompt, render_reviewer_prompt
+from backend.rag.retriever import retrieve_knowledge
+from backend.guardrails import check_student_output
 
 logger = logging.getLogger("pytutor.llm")
 
@@ -49,7 +52,8 @@ def build_scaffolding_prompt(
     ast_analysis: dict,
     hint_level: int,
     attempt_history: list[dict] = None,
-    student_model: dict = None
+    student_model: dict = None,
+    adaptive_strategy: dict = None
 ) -> str:
     """
     Đóng gói Context Bundle và thiết lập System Prompt sư phạm theo cấp độ và mô hình thích ứng.
@@ -98,6 +102,22 @@ def build_scaffolding_prompt(
 [HỒ SƠ HỌC SINH THÍCH ỨNG (STUDENT MODEL)]:
 - Tóm tắt năng lực: {student_model.get('summary', '')}
 - Mức độ cần hỗ trợ trung bình: Level {student_model.get('average_hint_level', 1.0)}
+"""
+
+    strategy = adaptive_strategy or {}
+    strategy_names = {
+        "solution_review": "Sinh viên đã vượt qua bài; tập trung phản hồi và củng cố.",
+        "recurring_difficulty": "Có nhiều lần thử; tránh lặp nguyên văn gợi ý trước và chia nhỏ bước tiếp theo.",
+        "failed_case_diagnosis": "Có test thất bại; ưu tiên giải thích dựa trên bằng chứng test.",
+        "conceptual_start": "Chưa có đủ lịch sử; bắt đầu bằng gợi mở khái niệm an toàn.",
+    }
+    strategy_section = f"""
+[CHIẾN LƯỢC PHẢN HỒI]
+- Mã lý do: {strategy.get('reason_code', 'conceptual_start')}
+- Căn cứ: {', '.join(strategy.get('evidence', [])) or 'Chưa đủ dữ liệu lịch sử'}
+- Trạng thái dữ liệu: {strategy.get('data_status', 'insufficient')}
+- Hướng dẫn: {strategy_names.get(strategy.get('strategy'), strategy_names['conceptual_start'])}
+- Giữ nguyên cấp độ người học yêu cầu: Level {hint_level}; không tự tăng mức tiết lộ.
 """
 
     # Chỉ dẫn sư phạm theo Level
@@ -174,7 +194,7 @@ Tên bài: {title}
 
 [KẾT QUẢ PHÂN TÍCH CẤU TRÚC CÚ PHÁP TỪ MCP AST]:
 - {ast_summary}
-{history_section}{student_model_section}
+{history_section}{student_model_section}{strategy_section}
 {level_instruction}
 
 [QUY TẮC BẮT BUỘC]:
@@ -350,6 +370,38 @@ async def call_gemini_api(prompt: str) -> Optional[tuple[str, str]]:
         return None
 
 
+async def call_gemini_with_usage(prompt: str) -> tuple[Optional[tuple[str, str]], dict]:
+    """Call Gemini and return provider usage counts when the SDK exposes them."""
+    if not GEMINI_API_KEY:
+        return None, {"prompt_tokens": None, "completion_tokens": None}
+    try:
+        result = await asyncio.to_thread(_sync_call_gemini_with_usage, prompt)
+        return result
+    except Exception as exc:
+        logger.warning("Gemini usage metadata unavailable: %s", exc)
+        return None, {"prompt_tokens": None, "completion_tokens": None}
+
+
+def _sync_call_gemini_with_usage(prompt: str) -> tuple[Optional[tuple[str, str]], dict]:
+    try:
+        from google import genai
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        for model_name in GEMINI_MODELS:
+            try:
+                response = client.models.generate_content(model=model_name, contents=prompt)
+                if response.text and response.text.strip():
+                    usage = getattr(response, "usage_metadata", None)
+                    return (response.text.strip(), f"Google {model_name}"), {
+                        "prompt_tokens": getattr(usage, "prompt_token_count", None),
+                        "completion_tokens": getattr(usage, "candidates_token_count", None),
+                    }
+            except Exception as exc:
+                logger.warning("Gemini %s failed: %s", model_name, exc)
+        return None, {"prompt_tokens": None, "completion_tokens": None}
+    except Exception:
+        return None, {"prompt_tokens": None, "completion_tokens": None}
+
+
 def sanitize_spoil_code(response_text: str, hint_level: int, all_passed: bool) -> str:
     """
     Bộ lọc hậu kiểm chống lộ lời giải (Anti-Spoil Guard).
@@ -380,8 +432,9 @@ async def generate_tutor_hint(
     ast_analysis: dict,
     hint_level: int,
     attempt_history: list[dict] = None,
-    student_model: dict = None
-) -> tuple[str, str]:
+    student_model: dict = None,
+    adaptive_strategy: dict = None
+) -> tuple[str, str, dict]:
     """
     Hàm điều phối sinh gợi ý gia sư sư phạm:
     1. Đóng gói Context Bundle, Lịch sử nộp bài, Mô hình học sinh & Prompt
@@ -397,13 +450,15 @@ async def generate_tutor_hint(
         ast_analysis=ast_analysis,
         hint_level=hint_level,
         attempt_history=attempt_history,
-        student_model=student_model
+        student_model=student_model,
+        adaptive_strategy=adaptive_strategy
     )
     
     all_passed = test_results.get("all_passed", False)
 
     # 1. Ưu tiên hàng đầu: Gọi Google Gemini AI
-    gemini_res = await call_gemini_api(prompt)
+    started = asyncio.get_running_loop().time()
+    gemini_res, usage = await call_gemini_with_usage(prompt)
     if gemini_res:
         raw_hint, model_name = gemini_res
         sanitized_hint = sanitize_spoil_code(
@@ -411,7 +466,16 @@ async def generate_tutor_hint(
             hint_level=hint_level,
             all_passed=all_passed
         )
-        return sanitized_hint, model_name
+        safe, reason = check_student_output(sanitized_hint)
+        if not safe and hint_level in (1, 2) and not all_passed:
+            fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level)
+            return fallback, "Pedagogical-Rule-Engine (Output Guard Fallback)", {
+                "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                "model_name": model_name, **usage, "input_guard": "allowed",
+                "output_guard": reason, "status": "blocked_fallback"}
+        return sanitized_hint, model_name, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                "model_name": model_name, **usage, "input_guard": "allowed",
+                "output_guard": "allowed" if safe else "post_acceptance_review", "status": "success"}
 
     # 2. Dự phòng: Thử Qwen2.5-14B (nếu server trường mở)
     qwen_response = await call_qwen_api(prompt, timeout_seconds=15.0)
@@ -421,7 +485,9 @@ async def generate_tutor_hint(
             hint_level=hint_level,
             all_passed=all_passed
         )
-        return sanitized_hint, QWEN_MODEL
+        return sanitized_hint, QWEN_MODEL, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                "model_name": QWEN_MODEL, "prompt_tokens": None, "completion_tokens": None,
+                "input_guard": "allowed", "output_guard": "checked", "status": "success"}
 
     # 3. Dự phòng cấp cuối: Rule-based Fallback
     fallback_hint = generate_rule_based_fallback(
@@ -431,7 +497,10 @@ async def generate_tutor_hint(
         ast_analysis=ast_analysis,
         hint_level=hint_level
     )
-    return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)"
+    return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)", {
+        "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+        "model_name": "Pedagogical-Rule-Engine", "prompt_tokens": None, "completion_tokens": None,
+        "input_guard": "allowed", "output_guard": "fallback", "status": "fallback"}
 
 
 async def generate_chat_followup(
@@ -439,8 +508,9 @@ async def generate_chat_followup(
     code: str,
     user_message: str,
     history: list = None,
-    ast_summary: str = ""
-) -> tuple[str, str]:
+    ast_summary: str = "",
+    student_model: dict = None,
+) -> tuple[str, str, dict]:
     """
     Sinh phản hồi cho câu hỏi làm rõ của sinh viên trong phiên chat đa lượt (Phase 8).
     Tuân thủ nghiêm ngặt nguyên tắc Socratic và Anti-Spoil Guard (Không giải hộ).
@@ -459,51 +529,80 @@ async def generate_chat_followup(
 
     history_text = "\n".join(history_turns) if history_turns else "(Bắt đầu cuộc trò chuyện làm rõ)"
 
-    prompt = f"""
-Bạn là PyTutor AI — Gia sư Sư phạm Thông minh Hỗ trợ Học Lập trình Python.
-Sinh viên đang làm bài tập: "{title}".
-[MÔ TẢ BÀI TẬP]:
-{desc}
+    rag_docs = retrieve_knowledge(user_message, top_k=4)
+    rag_context = "\n\n".join(
+        f"Nguồn: {doc['source']} (đoạn {doc['path']})\n{doc['content']}" for doc in rag_docs
+    ) or "Không tìm thấy tài liệu nội bộ liên quan; chỉ giải thích ở mức khái niệm chung."
+    metrics = (student_model or {}).get("analytics_metrics") or {}
+    prompt = render_socratic_prompt(
+        exercise={"title": title, "description": desc}, code=code,
+        user_message=user_message, history=history_text, rag_context=rag_context,
+        hint_level=1,
+        autonomy_score=float(metrics.get("autonomy_score", 0) or 0),
+        first_try_pass_rate=float(metrics.get("first_try_pass_rate", 0) or 0),
+    )
+    if ast_summary:
+        prompt += f"\n<ast_summary>{ast_summary}</ast_summary>\n"
 
-[MÃ NGUỒN HIỆN TẠI CỦA SINH VIÊN]:
-```python
-{code}
-```
-{f"[PHÂN TÍCH CẤU TRÚC CODE (AST)]:\n{ast_summary}" if ast_summary else ""}
-
-[LỊCH SỬ TRAO ĐỔI TRƯỚC ĐÓ]:
-{history_text}
-
-[CÂU HỎI TIẾP THEO CỦA SINH VIÊN]:
-"{user_message}"
-
-[CHỈ DẪN SƯ PHẠM & NGUYÊN TẮC BẢO VỆ (ANTI-SPOIL GUARD)]:
-1. Trả lời trực tiếp, thân thiện, dễ hiểu bằng tiếng Việt về câu hỏi/thắc mắc của sinh viên.
-2. TUYỆT ĐỐI KHÔNG BAO GIỜ viết code giải hoàn chỉnh của bài toán dù sinh viên có yêu cầu hay nài nỉ.
-3. Nếu sinh viên hỏi cú pháp (như vòng lặp for, range, split, len...), hãy giải thích cơ chế hoạt động và chỉ đưa ra 1 ví dụ trừu tượng ngắn (1-2 dòng) KHÔNG liên quan trực tiếp đến dữ liệu bài tập để sinh viên tự áp dụng.
-4. Động viên sinh viên tự viết tiếp và thử chạy lại chương trình.
-"""
-
+    started = asyncio.get_running_loop().time()
     # Gọi Gemini
-    gemini_res = await call_gemini_api(prompt)
+    gemini_res, usage = await call_gemini_with_usage(prompt)
     if gemini_res:
         raw_reply, model_name = gemini_res
+        safe, reason = check_student_output(raw_reply)
         sanitized = sanitize_spoil_code(raw_reply, hint_level=1, all_passed=False)
-        return sanitized, model_name
+        if safe:
+            safe, reason = check_student_output(sanitized)
+        telemetry = {
+            "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+            "model_name": model_name, **usage,
+            "input_guard": "allowed", "output_guard": "allowed" if safe else reason,
+            "status": "success" if safe else "blocked",
+            "rag_sources": [doc["source"] for doc in rag_docs],
+        }
+        if safe:
+            return sanitized, model_name, telemetry
+        return ("Mình chưa thể gửi phản hồi đó vì có thể chứa quá nhiều nội dung giải sẵn. "
+                "Bạn hãy hỏi về một khái niệm hoặc bước cụ thể để mình gợi mở nhé!"), model_name, telemetry
 
     # Dự phòng offline
-    return (
+    fallback = (
         "Chào bạn! Gia sư PyTutor đã ghi nhận câu hỏi của bạn. "
         "Hãy đối chiếu với gợi ý ở các mức 1, 2, 3 bên trên và thử chạy lại từng bước để quan sát kết quả nhé! "
         "Nếu gặp lỗi cú pháp, bạn hãy chú ý thụt dòng (indentation) và dấu hai chấm ':' ở cuối câu lệnh.",
         "Rule-Based Assistant"
     )
+    return fallback[0], fallback[1], {
+        "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+        "model_name": fallback[1], "prompt_tokens": None, "completion_tokens": None,
+        "input_guard": "allowed", "output_guard": "fallback", "status": "fallback",
+        "rag_sources": [doc["source"] for doc in rag_docs],
+    }
+
+
+async def generate_instructor_answer(summary: dict, user_message: str) -> tuple[str, str, dict]:
+    prompt = render_instructor_prompt(summary=summary, user_message=user_message)
+    started = asyncio.get_running_loop().time()
+    result, usage = await call_gemini_with_usage(prompt)
+    if result:
+        reply, source = result
+        safe, reason = check_student_output(reply)
+        if safe and 0 < len(reply) <= 5000:
+            return reply, source, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                                  "model_name": source, **usage,
+                                  "input_guard": "allowed", "output_guard": "allowed", "status": "success"}
+        logger.warning("Instructor output blocked by output guard: %s", reason)
+    return ("Chưa thể phân tích hoặc câu trả lời chưa qua kiểm tra an toàn. Dữ liệu tổng hợp vẫn được giữ an toàn; vui lòng thử lại sau.",
+            "Rule-Based Assistant",
+            {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+             "model_name": "Rule-Based Assistant", "prompt_tokens": None, "completion_tokens": None,
+             "input_guard": "allowed", "output_guard": "fallback", "status": "fallback"})
 
 
 async def generate_pythonic_review(
     exercise: dict,
     student_code: str
-) -> tuple[dict, str]:
+) -> tuple[dict, str, dict]:
     """
     [Phase 10: Senior Pythonista Code Review Engine]
     Đóng vai trò Senior Python Tech Lead đánh giá mã nguồn sinh viên đã giải đúng (Passed):
@@ -516,31 +615,10 @@ async def generate_pythonic_review(
     title = exercise.get("title", "Bài tập lập trình Python")
     desc = exercise.get("description", "")
 
-    prompt = f"""
-Bạn là một Senior Python Architect và Giảng viên Cao cấp tận tâm của hệ thống PyTutor.
-Học viên vừa hoàn thành xuất sắc (Passed 100% test cases) bài tập: "{title}".
+    prompt = render_reviewer_prompt(exercise={"title": title, "description": desc}, code=student_code)
 
-[MÔ TẢ BÀI TẬP]:
-{desc}
-
-[MÃ NGUỒN CỦA HỌC VIÊN ĐÃ GIẢI ĐÚNG]:
-```python
-{student_code}
-```
-
-Nhiệm vụ của bạn là thực hiện "Post-Acceptance Code Review" để giúp học viên nâng tầm phong cách lập trình từ "người mới học viết code chạy được" thành "Pythonista chuyên nghiệp viết code thanh lịch, chuẩn mực và tối ưu".
-
-YÊU CẦU ĐÁNH GIÁ (BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON HỢP LỆ VỚI CÁC TRƯỜNG SAU):
-1. "clean_score": Một số nguyên từ 70 đến 98 đánh giá độ sạch, tuân thủ PEP 8 và tính Pythonic (không chấm dưới 70 vì học viên đã giải đúng).
-2. "strengths": Nhận xét 1-2 câu khen ngợi cụ thể về điểm tốt trong code của học viên (ví dụ: tư duy thuật toán đúng, đặt tên biến rõ ràng, xử lý logic mạch lạc).
-3. "improvements": 1-2 điểm cụ thể có thể làm code ngắn gọn, thanh lịch hơn bằng các đặc trưng tinh hoa của Python (ví dụ: dùng sum() thay vì for loop, dùng list comprehension, toán tử ba ngôi ternary, chuỗi f-string, built-in functions...).
-4. "pythonic_code": Đoạn mã Python viết lại hoàn chỉnh nhất theo phong cách Pythonic chuẩn mực (ngắn gọn, tối ưu, dễ đọc).
-5. "explanation": Lời giải thích dễ hiểu (2-3 câu) tại sao đoạn mã Pythonic này lại tốt hơn (ví dụ: chạy ở tầng C tối ưu, không tốn biến trung gian, tuân thủ Zen of Python "Readability counts").
-
-LƯU Ý: Chỉ trả về duy nhất chuỗi JSON hợp lệ với đúng 5 khóa trên, không kèm lời dẫn giải bên ngoài.
-"""
-
-    gemini_res = await call_gemini_api(prompt)
+    started = asyncio.get_running_loop().time()
+    gemini_res, usage = await call_gemini_with_usage(prompt)
     if gemini_res:
         raw_text, model_name = gemini_res
         try:
@@ -552,13 +630,19 @@ LƯU Ý: Chỉ trả về duy nhất chuỗi JSON hợp lệ với đúng 5 khó
             if cleaned.endswith("```"):
                 cleaned = cleaned[:-3]
             data = json.loads(cleaned.strip())
+            def as_review_text(value, fallback: str) -> str:
+                if isinstance(value, list):
+                    return "\n".join(str(item) for item in value)
+                return str(value) if value is not None else fallback
             return {
                 "clean_score": int(data.get("clean_score", 85)),
-                "strengths": data.get("strengths", "Bạn đã áp dụng tư duy thuật toán rất chính xác và giải quyết trọn vẹn bài toán."),
-                "improvements": data.get("improvements", "Có thể sử dụng các hàm built-in của Python để mã nguồn ngắn gọn và tối ưu hơn."),
+                "strengths": as_review_text(data.get("strengths"), "Bạn đã áp dụng tư duy thuật toán chính xác và giải quyết trọn vẹn bài toán."),
+                "improvements": as_review_text(data.get("improvements"), "Có thể tận dụng các hàm built-in để mã nguồn ngắn gọn hơn."),
                 "pythonic_code": data.get("pythonic_code", student_code),
                 "explanation": data.get("explanation", "Phiên bản Pythonic tận dụng tối đa các hàm cốt lõi tối ưu của Python.")
-            }, model_name
+            }, model_name, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                           "model_name": model_name, **usage, "input_guard": "allowed",
+                           "output_guard": "review_checked", "status": "success"}
         except Exception as e:
             logger.warning(f"Lỗi phân tích JSON từ phản hồi review của Gemini: {e}")
 
@@ -570,7 +654,9 @@ LƯU Ý: Chỉ trả về duy nhất chuỗi JSON hợp lệ với đúng 5 khó
         "improvements": "Trong Python hiện đại, bạn có thể tận dụng các hàm tích hợp sẵn (built-in) như sum() hoặc slicing để mã nguồn tinh gọn hơn.",
         "pythonic_code": student_code.strip(),
         "explanation": "Viết mã nguồn chuẩn Pythonic giúp tiết kiệm bộ nhớ, tăng tốc độ thực thi và thể hiện phong cách của một lập trình viên chuyên nghiệp."
-    }, "Pedagogical-Rule-Reviewer"
+    }, "Pedagogical-Rule-Reviewer", {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+        "model_name": "Pedagogical-Rule-Reviewer", "prompt_tokens": None, "completion_tokens": None,
+        "input_guard": "allowed", "output_guard": "fallback", "status": "fallback"}
 
 
 

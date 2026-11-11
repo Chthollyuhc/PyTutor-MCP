@@ -1,6 +1,6 @@
 """
 Bộ Kiểm Thử Tự Động QA Audit Hotfix (Phase 15.3) - PyTutor-MCP.
-Kiểm tra 5 điểm sửa lỗi logic, API methods, đồng bộ dữ liệu và Mastery Rubric.
+Kiểm tra API methods, đồng bộ dữ liệu và tiến trình theo bài đã hoàn thành.
 """
 import sys
 import os
@@ -15,9 +15,11 @@ if sys.platform.startswith("win"):
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.auth import create_token
-from backend.database import get_db_connection
+from backend.database import get_db_connection, init_db
 
+init_db()
 client = TestClient(app)
+student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'Trần Minh Khánh')}"}
 
 def run_tests():
     print("=" * 80)
@@ -48,18 +50,24 @@ def run_tests():
     assert res_post.status_code == 200, f"Expected 200 for POST, got {res_post.status_code}"
     print("    ✅ PASS: Tuyệt đối tương thích cả DELETE và POST /api/classes/{class_id}/leave.")
 
-    # 3. Kiểm tra Mastery Rubric trong GET /api/classes/{class_id}/curriculum
-    print("\n[3] Kiểm tra Mastery Rubric trong Curriculum Matrix...")
-    res_curr = client.get("/api/classes/cls_neu_cntt1128_02/curriculum?student_username=student")
+    # 3. Kiểm tra tiến trình theo kết quả hoàn thành trong curriculum
+    print("\n[3] Kiểm tra tiến trình Curriculum theo trạng thái hoàn thành...")
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO user_exercise_stars (username, exercise_id, stars_earned) VALUES ('student', 'ex_01_sum_1_to_n', 3)")
+    c.execute("INSERT INTO submissions (session_id, exercise_id, code, hint_level, passed_tests, total_tests, all_passed, llm_source, tutor_hint) VALUES ('student', 'ex_01_sum_1_to_n', '# seeded passing submission', 1, 5, 5, 1, 'test', 'hint')")
+    conn.commit()
+    conn.close()
+    res_curr = client.get("/api/classes/cls_neu_cntt1128_02/curriculum", headers=student_headers)
     assert res_curr.status_code == 200
     curr_items = {item["exercise_id"]: item for item in res_curr.json()}
     
-    # ex_01_sum_1_to_n phải là MASTERED vì đạt 3 sao >= min_stars (2)
+    # ex_01_sum_1_to_n phải là MASTERED khi đã pass, độc lập với số sao.
     ex1 = curr_items["ex_01_sum_1_to_n"]
     assert ex1["status"] == "MASTERED", f"Expected MASTERED, got {ex1['status']}"
     assert ex1["stars_earned"] == 3
     assert ex1["is_unlocked"] is True
-    print(f"    ✅ PASS: ex_01 đạt {ex1['stars_earned']}/{ex1['min_stars_required']} ⭐ -> Trạng thái: {ex1['status']}")
+    print(f"    ✅ PASS: ex_01 đã pass ({ex1['stars_earned']} ⭐ tự lực) -> Trạng thái: {ex1['status']}")
 
     # ex_03_factorial phải là AVAILABLE vì tiên quyết ex_01 đã MASTERED
     ex3 = curr_items["ex_03_factorial"]
@@ -73,19 +81,18 @@ def run_tests():
     assert ex4["is_unlocked"] is False
     print(f"    ✅ PASS: ex_04 (tiên quyết ex_03) -> Trạng thái: {ex4['status']} ({ex4['status_description']})")
 
-    # 4. Kiểm tra Mastery Rubric trong GET /api/skill-roadmap
-    print("\n[4] Kiểm tra Mastery Rubric trong Skill Roadmap DAG Tree...")
-    res_map = client.get("/api/skill-roadmap?session_id=student&class_id=cls_neu_cntt1128_02")
+    # 4. Kiểm tra endpoint cũ phản ánh cùng trạng thái hoàn thành
+    print("\n[4] Kiểm tra tương thích endpoint roadmap cũ...")
+    res_map = client.get("/api/skill-roadmap?class_id=cls_neu_cntt1128_02", headers=student_headers)
     assert res_map.status_code == 200
     map_nodes = {n["id"]: n for n in res_map.json()["nodes"]}
     assert map_nodes["ex_01_sum_1_to_n"]["status"] == "MASTERED"
     assert map_nodes["ex_03_factorial"]["status"] == "AVAILABLE"
     assert map_nodes["ex_04_reverse_string"]["status"] == "LOCKED"
-    print("    ✅ PASS: Cây Kỹ năng DAG phản ánh 100% nhất quán với Curriculum Matrix.")
+    print("    ✅ PASS: Endpoint cũ phản ánh nhất quán trạng thái curriculum.")
 
-    # 5. Kiểm tra trường hợp NEEDS_MORE_STARS
-    print("\n[5] Kiểm thử mô phỏng nhánh trạng thái NEEDS_MORE_STARS...")
-    # Tạo học sinh tạm thời có 1 sao cho bài yêu cầu 2 sao
+    # 5. Một sao vẫn đủ ghi nhận bài đã hoàn thành; sao không khóa bài tiên quyết.
+    print("\n[5] Kiểm thử bỏ ngưỡng sao khỏi điều kiện hoàn thành...")
     conn = get_db_connection()
     c = conn.cursor()
     c.execute("INSERT OR REPLACE INTO user_exercise_stars (username, exercise_id, stars_earned) VALUES ('temp_test_student', 'ex_01_sum_1_to_n', 1)")
@@ -93,18 +100,20 @@ def run_tests():
     conn.commit()
     conn.close()
 
-    res_needs = client.get("/api/classes/cls_neu_cntt1128_02/curriculum?student_username=temp_test_student")
+    temp_student_headers = {"Authorization": f"Bearer {create_token('temp_test_student', 'student', 'Temporary Student')}"}
+    enroll_temp = client.post("/api/classes/cls_neu_cntt1128_02/enroll", headers=temp_student_headers)
+    assert enroll_temp.status_code == 200, f"Could not enroll isolated test student: {enroll_temp.text}"
+    res_needs = client.get("/api/classes/cls_neu_cntt1128_02/curriculum", headers=temp_student_headers)
     assert res_needs.status_code == 200
     temp_items = {item["exercise_id"]: item for item in res_needs.json()}
     ex1_temp = temp_items["ex_01_sum_1_to_n"]
-    assert ex1_temp["status"] == "NEEDS_MORE_STARS", f"Expected NEEDS_MORE_STARS, got {ex1_temp['status']}"
+    assert ex1_temp["status"] == "MASTERED", f"Expected MASTERED, got {ex1_temp['status']}"
     assert ex1_temp["stars_earned"] == 1
-    assert ex1_temp["min_stars_required"] == 2
-    # Bài ex_03 phụ thuộc ex_01 chưa đạt 2 sao nên phải bị LOCKED!
+    # Bài ex_03 chỉ cần bài tiên quyết đã hoàn thành; số sao không ảnh hưởng.
     ex3_temp = temp_items["ex_03_factorial"]
-    assert ex3_temp["status"] == "LOCKED", f"Expected LOCKED for ex_03 when prereq only has 1 star, got {ex3_temp['status']}"
-    print(f"    ✅ PASS: Đạt 1/2 ⭐ -> Trạng thái: {ex1_temp['status']} ({ex1_temp['status_description']})")
-    print(f"    ✅ PASS: Bài phụ thuộc kế tiếp được khóa chặt (LOCKED) theo đúng quy tắc sư phạm.")
+    assert ex3_temp["status"] == "AVAILABLE", f"Expected AVAILABLE after prerequisite pass, got {ex3_temp['status']}"
+    print(f"    ✅ PASS: Đạt 1 ⭐ nhưng đã pass -> Trạng thái: {ex1_temp['status']}")
+    print("    ✅ PASS: Bài tiếp theo được mở khóa theo bài tiên quyết đã hoàn thành.")
 
     # Dọn dẹp dữ liệu học sinh tạm
     conn = get_db_connection()
@@ -116,7 +125,7 @@ def run_tests():
 
     # 6. Kiểm tra Profile Analytics Metrics
     print("\n[6] Kiểm tra Điểm Tự lực trong GET /api/student/profile...")
-    res_prof = client.get("/api/student/profile?session_id=student")
+    res_prof = client.get("/api/student/profile?session_id=student", headers=student_headers)
     assert res_prof.status_code == 200
     prof_data = res_prof.json()
     assert "analytics_metrics" in prof_data

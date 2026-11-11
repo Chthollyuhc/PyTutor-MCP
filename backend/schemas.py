@@ -124,11 +124,13 @@ class SubmitResponse(BaseModel):
     hint_level: int
     discovered_mcp_tools: list[str] = Field(default_factory=list)
     llm_source: str = Field("gemini-3.5-flash-lite", description="Nguồn sinh gợi ý")
+    interaction_id: Optional[str] = Field(None, description="ID phản hồi AI, dùng cho feedback")
+    adaptive_strategy: Optional[dict] = None
     attempt_history: list[dict] = Field(default_factory=list, description="Lịch sử nộp bài gần nhất")
     student_model: Optional[dict] = Field(default=None, description="Mô hình học sinh thích ứng")
     mcp_trace: list[MCPTraceItem] = Field(default_factory=list, description="Nhật ký các lệnh MCP JSON-RPC 2.0")
     stars_earned: int = Field(0, description="Số sao tự lực đạt được (0-3 ⭐)")
-    new_badges: list[dict] = Field(default_factory=list, description="Danh sách huy hiệu mới mở khóa")
+    new_badges: list[dict] = Field(default_factory=list, description="Trường tương thích cũ; luôn rỗng")
 
 
 
@@ -145,6 +147,7 @@ class StudentProfileResponse(BaseModel):
     recent_attempts: list[dict] = Field(default_factory=list)
     analytics_metrics: Optional[dict] = None
     diagnostic_evaluation: Optional[dict] = None
+    data_status: str = "unknown"
 
 
 # ==============================================================================
@@ -158,6 +161,9 @@ class ExerciseSummary(BaseModel):
     category: str
     test_cases_count: int
     is_active: Optional[bool] = True
+    created_by: str = "system"
+    created_by_name: str = "Hệ thống"
+    can_manage: bool = False
 
 
 class ExerciseDetail(BaseModel):
@@ -169,6 +175,7 @@ class ExerciseDetail(BaseModel):
     starter_code: str
     test_cases: list[TestCase]
     is_active: Optional[bool] = True
+    created_by: str = "system"
 
 
 class ExerciseUpsertRequest(BaseModel):
@@ -179,6 +186,10 @@ class ExerciseUpsertRequest(BaseModel):
     description: str = Field(..., description="Đề bài định dạng Markdown")
     starter_code: str = Field(..., description="Mã nguồn mẫu khởi tạo")
     test_cases: list[TestCase] = Field(..., description="Danh sách các test case")
+
+
+class ExerciseShareRequest(BaseModel):
+    instructor_username: str = Field(..., min_length=2, max_length=80)
 
 
 # ==============================================================================
@@ -244,12 +255,32 @@ class TutorChatRequest(BaseModel):
     user_message: str = Field(..., description="Câu hỏi của sinh viên")
     history: list[ChatMessage] = Field(default_factory=list, description="Lịch sử hội thoại trước đó")
     exam_session_id: Optional[str] = Field(None, description="Mã kỳ thi / đợt thực hành nếu đang làm bài trong lớp")
+    class_id: Optional[str] = Field(None, description="Lớp học phần hiện tại nếu có")
 
 
 class TutorChatResponse(BaseModel):
     reply: str
     llm_source: str = "gemini-3.5-flash-lite"
     updated_history: list[ChatMessage]
+    interaction_id: Optional[str] = None
+
+
+class TutorFeedbackRequest(BaseModel):
+    interaction_id: str
+    rating: int = Field(..., description="1 = hữu ích, -1 = chưa hữu ích")
+
+
+class InstructorAIChatRequest(BaseModel):
+    class_id: str
+    user_message: str = Field(..., min_length=1, max_length=2000)
+    days: int = Field(7, ge=1, le=90)
+
+
+class InstructorAIChatResponse(BaseModel):
+    reply: str
+    interaction_id: str
+    class_id: str
+    llm_source: str
 
 
 class CustomRunRequest(BaseModel):
@@ -300,8 +331,8 @@ class SkillNode(BaseModel):
     category: str
     difficulty: str
     prerequisites: list[str] = Field(default_factory=list)
-    status: str = Field("LOCKED", description="MASTERED | NEEDS_MORE_STARS | IN_PROGRESS | AVAILABLE | LOCKED")
-    min_stars_required: int = 2
+    status: str = Field("LOCKED", description="MASTERED | IN_PROGRESS | AVAILABLE | LOCKED")
+    min_stars_required: int = 0
     stars_earned: int = 0
     module_name: Optional[str] = None
     order_idx: int = 1
@@ -320,7 +351,7 @@ class SkillRoadmapResponse(BaseModel):
 
 
 # ==============================================================================
-# PHASE 10: GAMIFICATION, STARS, BADGES & PYTHONIC REVIEW SCHEMAS
+# PHASE 10: SELF-RELIANCE STARS & PYTHONIC REVIEW SCHEMAS
 # ==============================================================================
 
 class LeaderboardBadge(BaseModel):
@@ -373,7 +404,7 @@ class PythonicReviewResponse(BaseModel):
     pythonic_code: str = Field(..., description="Đoạn mã mẫu viết chuẩn Pythonic")
     explanation: str = Field(..., description="Giải thích lý do tối ưu")
     stars_earned: int = 0
-    new_badges: list[dict] = Field(default_factory=list)
+    new_badges: list[dict] = Field(default_factory=list, description="Trường tương thích cũ; luôn rỗng")
 
 
 # ==============================================================================
@@ -434,11 +465,11 @@ class ClassExerciseItem(BaseModel):
     module_name: str = "Chương 1: Cơ sở lập trình Python"
     order_idx: int = 1
     prerequisite_id: Optional[str] = None
-    min_stars_required: int = 2
+    min_stars_required: int = 0
     skill_tag: str = "Tư duy thuật toán"
     weight_point: int = 10
     stars_earned: int = 0
-    status: str = "AVAILABLE"  # MASTERED | NEEDS_MORE_STARS | IN_PROGRESS | AVAILABLE | LOCKED
+    status: str = "AVAILABLE"  # MASTERED | IN_PROGRESS | AVAILABLE | LOCKED
     status_description: Optional[str] = ""
     is_unlocked: bool = True
 
@@ -448,7 +479,6 @@ class ClassExerciseAssignRequest(BaseModel):
     module_name: str = Field("Chương 1: Cơ sở lập trình Python", description="Tên chương / Module học phần")
     order_idx: Optional[int] = Field(None, description="Thứ tự học trong lộ trình")
     prerequisite_id: Optional[str] = Field(None, description="Bài tập tiên quyết trong lớp")
-    min_stars_required: int = Field(2, ge=1, le=3, description="Thang đo số sao tối thiểu (1-3 ⭐)")
     skill_tag: str = Field("Tư duy thuật toán", description="Kỹ năng chuẩn đầu ra")
     weight_point: int = Field(10, description="Điểm trọng số bài tập")
 
@@ -457,7 +487,6 @@ class ClassExerciseUpdateRequest(BaseModel):
     module_name: Optional[str] = None
     order_idx: Optional[int] = None
     prerequisite_id: Optional[str] = None
-    min_stars_required: Optional[int] = Field(None, ge=1, le=3)
     skill_tag: Optional[str] = None
     weight_point: Optional[int] = None
 

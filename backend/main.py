@@ -4,6 +4,7 @@ FastAPI Backend Application cho PyTutor.
 """
 import sys
 import logging
+import uuid
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, status
@@ -23,6 +24,10 @@ from backend.database import (
     get_exercise_by_id as db_get_exercise_by_id,
     save_exercise as db_save_exercise,
     delete_exercise as db_delete_exercise,
+    get_exercise_owner,
+    instructor_can_use_exercise,
+    grant_exercise_share,
+    revoke_exercise_share,
     get_instructor_stats,
     get_all_submissions,
     get_submission_by_id,
@@ -30,7 +35,6 @@ from backend.database import (
     compute_student_model,
     calculate_autonomy_stars,
     save_exercise_stars,
-    check_and_unlock_badges,
     get_user_achievements,
     get_class_leaderboard,
     get_credit_classes,
@@ -42,6 +46,11 @@ from backend.database import (
     get_student_classes,
     get_class_students,
     get_class_students_with_progress,
+    get_class_learning_summary,
+    instructor_owns_class,
+    save_llm_interaction,
+    save_llm_interaction_sources,
+    save_tutor_feedback,
     get_class_exercises,
     add_exercise_to_class,
     update_class_exercise,
@@ -63,6 +72,7 @@ from backend.schemas import (
     ExerciseSummary,
     ExerciseDetail,
     ExerciseUpsertRequest,
+    ExerciseShareRequest,
     RunTestOnlyRequest,
     RunTestOnlyResponse,
     SubmitRequest,
@@ -79,6 +89,9 @@ from backend.schemas import (
     ChatMessage,
     TutorChatRequest,
     TutorChatResponse,
+    TutorFeedbackRequest,
+    InstructorAIChatRequest,
+    InstructorAIChatResponse,
     CustomRunRequest,
     CustomRunResponse,
     TraceExecutionRequest,
@@ -111,7 +124,9 @@ from backend.mcp_client import (
     run_custom_test_pipeline,
     execute_trace_pipeline
 )
-from backend.llm_service import generate_tutor_hint, generate_chat_followup, generate_pythonic_review
+from backend.llm_service import generate_tutor_hint, generate_chat_followup, generate_pythonic_review, generate_instructor_answer
+from backend.guardrails import check_student_input
+from backend.adaptive_policy import select_hint_strategy
 
 
 
@@ -122,6 +137,9 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.")
+        from backend.rag.retriever import ingest_knowledge_base
+        chunks = ingest_knowledge_base()
+        logger.info("RAG knowledge base ready: %s local chunks indexed.", chunks)
     except Exception as e:
         logger.error(f"Lỗi khởi tạo DB: {e}")
     yield
@@ -129,7 +147,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PyTutor API",
-    description="Hệ thống Gia sư Thông minh Hỗ trợ Học Lập trình Python Dựa trên Model Context Protocol (MCP)",
+    description="Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập. MCP được dùng làm giao thức tích hợp công cụ.",
     version="3.6",
     lifespan=lifespan
 )
@@ -142,6 +160,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def require_student(token_data: dict = Depends(verify_token)) -> dict:
+    """Role dependency for student-owned learning data and code execution."""
+    if token_data.get("role") != "student":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chức năng này dành cho sinh viên.")
+    return token_data
+
+
+def ensure_class_access(class_id: str, token_data: dict, *, hide_forbidden: bool = True) -> dict:
+    """Load a class only when the current account is enrolled or owns it."""
+    username = token_data.get("sub", "")
+    cls = get_credit_class_by_id(
+        class_id,
+        current_username=username if token_data.get("role") == "student" else None,
+    )
+    allowed = bool(cls) and (
+        (token_data.get("role") == "instructor" and instructor_owns_class(class_id, username))
+        or (token_data.get("role") == "student" and cls.get("is_enrolled", False))
+    )
+    if not allowed:
+        code = status.HTTP_404_NOT_FOUND if hide_forbidden else status.HTTP_403_FORBIDDEN
+        raise HTTPException(status_code=code, detail="Không tìm thấy lớp hoặc bạn không có quyền truy cập.")
+    return cls
 
 
 # ==============================================================================
@@ -237,7 +279,7 @@ async def health_check():
 # ==============================================================================
 
 @app.get("/api/exercises", response_model=list[ExerciseSummary])
-async def list_exercises():
+async def list_exercises(token_data: dict = Depends(verify_token)):
     """Lấy danh sách các bài tập lập trình Python có sẵn qua MCP Server."""
     try:
         exercises = await get_exercise_list()
@@ -251,7 +293,7 @@ async def list_exercises():
 
 
 @app.get("/api/exercises/{exercise_id}", response_model=ExerciseDetail)
-async def get_exercise(exercise_id: str):
+async def get_exercise(exercise_id: str, token_data: dict = Depends(verify_token)):
     """Lấy chi tiết một bài tập: đề bài, starter code, test cases chuẩn."""
     try:
         data = await get_exercise_details(exercise_id)
@@ -273,7 +315,7 @@ async def get_exercise(exercise_id: str):
 # ==============================================================================
 
 @app.post("/api/run-test", response_model=RunTestOnlyResponse)
-async def run_test_only(request: RunTestOnlyRequest):
+async def run_test_only(request: RunTestOnlyRequest, token_data: dict = Depends(verify_token)):
     """
     Chạy thử nhanh: Thực thi Sandbox và phân tích AST qua MCP
     mà KHÔNG gọi LLM (tiết kiệm quota AI, phản hồi dưới 1 giây, kèm MCP Trace).
@@ -286,6 +328,8 @@ async def run_test_only(request: RunTestOnlyRequest):
             ast_analysis=ASTAnalysis(**res["ast_analysis"]),
             mcp_trace=[MCPTraceItem(**t) for t in res.get("mcp_trace", [])]
         )
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(ve))
     except Exception as e:
@@ -301,7 +345,7 @@ async def run_test_only(request: RunTestOnlyRequest):
 # ==============================================================================
 
 @app.post("/api/submit", response_model=SubmitResponse)
-async def submit_solution(request: SubmitRequest):
+async def submit_solution(request: SubmitRequest, token_data: dict = Depends(require_student)):
     """
     Điểm chạm chính (Main E2E Route):
     1. Tiếp nhận mã nguồn, mức độ gợi ý và session_id
@@ -311,11 +355,22 @@ async def submit_solution(request: SubmitRequest):
     5. Trả về kết quả tổng hợp đầy đủ cho Frontend
     """
     try:
+        student_username = token_data["sub"]
+        is_exam_mode = False
+        if request.exam_session_id:
+            sess_info = get_exam_session_by_id(request.exam_session_id)
+            if not sess_info or not sess_info.get("is_active", False):
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy đợt học đang hoạt động.")
+            ensure_class_access(sess_info["class_id"], token_data)
+            if request.exercise_id not in sess_info.get("exercise_ids", []):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bài tập không thuộc đợt học đã chọn.")
+            is_exam_mode = sess_info.get("allow_ai_hints") == 0 or sess_info.get("session_type") == "EXAM"
+
         # 1. Thực thi pipeline qua MCP stdio
         pipeline_res = await execute_submission_pipeline(
             exercise_id=request.exercise_id,
             code=request.code,
-            session_id=request.session_id
+            session_id=student_username
         )
 
         exercise = pipeline_res["exercise"]
@@ -326,17 +381,9 @@ async def submit_solution(request: SubmitRequest):
         discovered_tools = pipeline_res["discovered_tools"]
         mcp_trace = [MCPTraceItem(**t) for t in pipeline_res.get("mcp_trace", [])]
 
-        # Kiểm tra Chốt chặn bảo mật Chế độ Thi (EXAM Mode Guard)
-        is_exam_mode = False
-        if request.exam_session_id:
-            try:
-                sess_info = get_exam_session_by_id(request.exam_session_id)
-                if sess_info and (sess_info.get("allow_ai_hints") == 0 or sess_info.get("session_type") == "EXAM"):
-                    is_exam_mode = True
-            except Exception as e:
-                logger.warning(f"Lỗi kiểm tra exam session {request.exam_session_id}: {e}")
-
         # 2. Sinh gợi ý sư phạm: Nếu ở chế độ thi thì khóa AI tutor, ngược lại xử lý theo action_type
+        hint_telemetry = None
+        adaptive_strategy = select_hint_strategy(request.hint_level, test_results_raw, attempt_history, student_model)
         if is_exam_mode:
             tutor_hint = "🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Hệ thống đã ghi nhận kết quả chấm điểm Test Cases của bạn. Trong chế độ Thi, tính năng gợi ý từ Gia sư AI được khóa để đảm bảo tính công bằng học thuật."
             llm_source = "Exam-Mode-Guard"
@@ -344,20 +391,27 @@ async def submit_solution(request: SubmitRequest):
             tutor_hint = "🎉 **Chúc mừng!** Bạn đã vượt qua 100% test cases và nộp bài thành công. Hãy tiếp tục thử thách với các bài tập tiếp theo trên lộ trình kỹ năng!"
             llm_source = "System-Celebration"
         else:
-            tutor_hint, llm_source = await generate_tutor_hint(
+            tutor_hint, llm_source, hint_telemetry = await generate_tutor_hint(
                 exercise=exercise,
                 code=request.code,
                 test_results=test_results_raw,
                 ast_analysis=ast_analysis_raw,
                 hint_level=request.hint_level,
                 attempt_history=attempt_history,
-                student_model=student_model
+                student_model=student_model,
+                adaptive_strategy=adaptive_strategy
             )
+
+        hint_interaction_id = None
+        if hint_telemetry:
+            hint_interaction_id = str(uuid.uuid4())
+            save_llm_interaction({"id": hint_interaction_id, "username": student_username,
+                                  "role": "student", "task_type": "adaptive_hint", **hint_telemetry})
 
         # 3. Ghi nhận sự kiện học tập vào cơ sở dữ liệu qua MCP Tool
         try:
             await save_learning_event_via_mcp(
-                session_id=request.session_id,
+                session_id=student_username,
                 exercise_id=request.exercise_id,
                 code=request.code,
                 hint_level=request.hint_level,
@@ -365,17 +419,18 @@ async def submit_solution(request: SubmitRequest):
                 total_tests=test_results_raw.get("total_tests", 0),
                 all_passed=test_results_raw.get("all_passed", False),
                 llm_source=llm_source,
-                tutor_hint=tutor_hint
+                tutor_hint=tutor_hint,
+                action_type=request.action_type
             )
         except Exception as e:
             logger.warning(f"Không thể lưu learning event qua MCP: {e}")
 
-        # 3.1. Tính sao tự lực & mở khóa huy hiệu
+        # 3.1. Tính và lưu sao tự lực
         stars_earned = 0
         new_badges = []
         # CHỈ tính và lưu sao khi là nộp bài chính thức (action_type == 'submit') và vượt qua toàn bộ test cases
         if request.action_type == "submit" and test_results_raw.get("all_passed", False):
-            effective_user = request.session_id or "student"
+            effective_user = student_username
             # Kiểm tra lịch sử các lần hỏi AI / thử trước đó của sinh viên ở bài tập này trong attempt_history
             max_hint_used = 1
             if attempt_history:
@@ -396,7 +451,7 @@ async def submit_solution(request: SubmitRequest):
                     stars=stars_earned,
                     clean_score=0
                 )
-                new_badges = star_res.get("new_badges", [])
+                # Response compatibility only; no achievement badges are awarded.
             except Exception as e:
                 logger.warning(f"Không thể cập nhật số sao bài tập: {e}")
 
@@ -413,9 +468,13 @@ async def submit_solution(request: SubmitRequest):
             student_model=student_model,
             mcp_trace=mcp_trace,
             stars_earned=stars_earned,
-            new_badges=new_badges
+            new_badges=new_badges,
+            interaction_id=hint_interaction_id,
+            adaptive_strategy=adaptive_strategy
         )
 
+    except HTTPException:
+        raise
     except ValueError as ve:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(ve))
     except Exception as e:
@@ -430,7 +489,7 @@ async def submit_solution(request: SubmitRequest):
 # ==============================================================================
 
 @app.post("/api/tutor/chat", response_model=TutorChatResponse)
-async def tutor_chat_endpoint(request: TutorChatRequest):
+async def tutor_chat_endpoint(request: TutorChatRequest, token_data: dict = Depends(verify_token)):
     """
     Trò chuyện làm rõ với Gia sư AI (Multi-turn Follow-up Chat):
     - Tiếp nhận câu hỏi làm rõ từ học viên kèm ngữ cảnh bài làm và lịch sử hội thoại
@@ -438,23 +497,30 @@ async def tutor_chat_endpoint(request: TutorChatRequest):
     - Trả về câu trả lời và lịch sử hội thoại đã cập nhật
     """
     try:
-        # Kiểm tra Chốt chặn bảo mật Chế độ Thi (EXAM Mode Guard)
+        if token_data.get("role") != "student":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chat này dành cho sinh viên.")
+        if request.class_id:
+            class_info = get_credit_class_by_id(request.class_id, current_username=token_data["sub"])
+            if not class_info or not class_info.get("is_enrolled", False):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bạn chưa ghi danh lớp học phần này.")
+        # EXAM policy takes precedence; do not process or expose the message to AI.
         if request.exam_session_id:
-            try:
-                sess_info = get_exam_session_by_id(request.exam_session_id)
-                if sess_info and (sess_info.get("allow_ai_hints") == 0 or sess_info.get("session_type") == "EXAM"):
-                    exam_reply = "🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Bạn đang trong thời gian làm bài thi. Tính năng trò chuyện và gợi ý từ Gia sư AI bị khóa để đảm bảo tính công bằng học thuật. Vui lòng tự hoàn thành bài làm và sử dụng nút Chạy thử code / Nộp bài."
-                    updated_history = list(request.history)
-                    updated_history.append(ChatMessage(role="user", content=request.user_message))
-                    updated_history.append(ChatMessage(role="assistant", content=exam_reply))
-                    return TutorChatResponse(
-                        reply=exam_reply,
-                        llm_source="Exam-Mode-Guard",
-                        updated_history=updated_history
-                    )
-            except Exception as e:
-                logger.warning(f"Lỗi kiểm tra exam session trong chat: {e}")
-
+            sess_info = get_exam_session_by_id(request.exam_session_id)
+            if not sess_info or not sess_info.get("is_active", False):
+                raise HTTPException(status_code=404, detail="Không tìm thấy đợt học đang hoạt động.")
+            ensure_class_access(sess_info["class_id"], token_data)
+            if request.class_id and request.class_id != sess_info["class_id"]:
+                raise HTTPException(status_code=403, detail="Đợt học không thuộc lớp đã chọn.")
+            if request.exercise_id and request.exercise_id not in sess_info.get("exercise_ids", []):
+                raise HTTPException(status_code=403, detail="Bài tập không thuộc đợt học đã chọn.")
+            if sess_info.get("allow_ai_hints") == 0 or sess_info.get("session_type") == "EXAM":
+                exam_reply = "🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Bạn đang trong thời gian làm bài thi. Tính năng trò chuyện và gợi ý từ Gia sư AI bị khóa để đảm bảo tính công bằng học thuật. Vui lòng tự hoàn thành bài làm và sử dụng nút Chạy thử code / Nộp bài."
+                updated_history = list(request.history)
+                updated_history.extend([ChatMessage(role="user", content=request.user_message), ChatMessage(role="assistant", content=exam_reply)])
+                return TutorChatResponse(reply=exam_reply, llm_source="Exam-Mode-Guard", updated_history=updated_history)
+        allowed, guard_reason = check_student_input(request.user_message)
+        if not allowed:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Câu hỏi chưa thuộc phạm vi hỗ trợ học Python.")
         ex_details = {}
         if request.exercise_id:
             try:
@@ -462,12 +528,18 @@ async def tutor_chat_endpoint(request: TutorChatRequest):
             except Exception:
                 pass
 
-        reply, llm_source = await generate_chat_followup(
+        sm_data = compute_student_model(token_data["sub"], class_id=request.class_id)
+        reply, llm_source, telemetry = await generate_chat_followup(
             exercise=ex_details,
             code=request.code,
             user_message=request.user_message,
-            history=request.history
+            history=request.history,
+            student_model=sm_data,
         )
+        interaction_id = str(uuid.uuid4())
+        save_llm_interaction({"id": interaction_id, "username": token_data["sub"], "role": "student",
+                              "task_type": "student_chat", **telemetry})
+        save_llm_interaction_sources(interaction_id, telemetry.get("rag_sources", []))
 
         updated_history = list(request.history)
         updated_history.append(ChatMessage(role="user", content=request.user_message))
@@ -476,18 +548,54 @@ async def tutor_chat_endpoint(request: TutorChatRequest):
         return TutorChatResponse(
             reply=reply,
             llm_source=llm_source,
-            updated_history=updated_history
+            updated_history=updated_history,
+            interaction_id=interaction_id
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi xử lý tutor chat: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Lỗi hệ thống khi trò chuyện với Gia sư AI: {e}"
-        )
+        raise HTTPException(status_code=500, detail="Không thể xử lý cuộc trò chuyện lúc này.")
+
+
+@app.post("/api/tutor/feedback", status_code=status.HTTP_201_CREATED)
+async def tutor_feedback_endpoint(request: TutorFeedbackRequest, token_data: dict = Depends(verify_token)):
+    if token_data.get("role") != "student":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chỉ sinh viên mới gửi feedback gia sư.")
+    if request.rating not in (-1, 1):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Rating phải là 1 hoặc -1.")
+    try:
+        saved = save_tutor_feedback(request.interaction_id, token_data["sub"], request.rating)
+    except Exception as exc:
+        if "UNIQUE constraint" in str(exc):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Bạn đã đánh giá phản hồi này rồi.")
+        raise
+    if not saved:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy phản hồi thuộc tài khoản này.")
+    return {"status": "saved"}
+
+
+@app.post("/api/instructor/ai/class-chat", response_model=InstructorAIChatResponse)
+async def instructor_class_ai_chat(request: InstructorAIChatRequest, token_data: dict = Depends(require_instructor)):
+    cls = get_credit_class_by_id(request.class_id)
+    if not cls or not instructor_owns_class(request.class_id, token_data.get("sub", "")):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy lớp hoặc bạn không có quyền truy cập.")
+    if len(request.user_message.strip()) > 2000:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Câu hỏi quá dài.")
+    allowed, _ = check_student_input(request.user_message)
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Câu hỏi chưa thuộc phạm vi phân tích học tập.")
+    summary = get_class_learning_summary(request.class_id, request.days)
+    reply, source, telemetry = await generate_instructor_answer(summary, request.user_message)
+    interaction_id = str(uuid.uuid4())
+    save_llm_interaction({"id": interaction_id, "username": token_data["sub"], "role": "instructor",
+                          "task_type": "instructor_class_analytics", **telemetry})
+    return InstructorAIChatResponse(reply=reply, interaction_id=interaction_id,
+                                    class_id=request.class_id, llm_source=source)
 
 
 @app.post("/api/custom-run", response_model=CustomRunResponse)
-async def custom_run_endpoint(request: CustomRunRequest):
+async def custom_run_endpoint(request: CustomRunRequest, token_data: dict = Depends(verify_token)):
     """
     Chạy thử chương trình với dữ liệu đầu vào tự chọn (Custom Stdin):
     - Thực thi qua MCP Sandbox cô lập với timeout 5.0s
@@ -511,7 +619,7 @@ async def custom_run_endpoint(request: CustomRunRequest):
 
 
 @app.post("/api/trace-execution", response_model=TraceExecutionResponse)
-async def trace_execution_endpoint(request: TraceExecutionRequest):
+async def trace_execution_endpoint(request: TraceExecutionRequest, token_data: dict = Depends(verify_token)):
     """
     [MCP Tool 8] Tracing từng bước thực thi (Execution Step Visualizer):
     - Ghi lại từng frame execution qua sys.settrace trong MCP Server
@@ -534,9 +642,9 @@ async def trace_execution_endpoint(request: TraceExecutionRequest):
 
 @app.get("/api/student-model/{session_id}")
 @app.get("/api/student/model")
-async def get_student_model_endpoint(session_id: str = "default_session"):
+async def get_student_model_endpoint(session_id: str = "default_session", token_data: dict = Depends(require_student)):
     """Lấy mô hình học sinh thích ứng theo session_id."""
-    return compute_student_model(session_id)
+    return compute_student_model(token_data["sub"])
 
 
 
@@ -544,7 +652,8 @@ async def get_student_model_endpoint(session_id: str = "default_session"):
 async def get_student_profile_endpoint(
     session_id: str,
     exercise_id: str = "",
-    class_id: Optional[str] = None
+    class_id: Optional[str] = None,
+    token_data: dict = Depends(require_student),
 ):
     """
     [Hồ sơ Thích ứng của Học viên - Phase 13/14 Quantitative Analytics]
@@ -552,6 +661,9 @@ async def get_student_profile_endpoint(
     trả về năng lực tổng hợp, 4D metrics, diagnostic evaluation và các lần nộp bài gần nhất.
     """
     try:
+        session_id = token_data["sub"]
+        if class_id:
+            ensure_class_access(class_id, token_data)
         data = await get_student_profile_via_mcp(session_id=session_id, exercise_id=exercise_id, class_id=class_id)
         sm = data.get("student_model", {})
         attempts = data.get("recent_attempts", [])
@@ -567,8 +679,11 @@ async def get_student_profile_endpoint(
             summary=sm.get("summary", "Đã nạp hồ sơ năng lực học sinh."),
             analytics_metrics=sm.get("analytics_metrics"),
             diagnostic_evaluation=sm.get("diagnostic_evaluation"),
+            data_status=(sm.get("analytics_metrics") or {}).get("data_status", "available" if sm.get("total_submissions", 0) else "no_data"),
             recent_attempts=attempts
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning(f"Lỗi truy xuất student profile qua MCP, dùng fallback: {e}")
         sm = compute_student_model(session_id, class_id=class_id)
@@ -585,6 +700,7 @@ async def get_student_profile_endpoint(
             summary=sm.get("summary", "Đã nạp hồ sơ năng lực."),
             analytics_metrics=sm.get("analytics_metrics"),
             diagnostic_evaluation=sm.get("diagnostic_evaluation"),
+            data_status=(sm.get("analytics_metrics") or {}).get("data_status", "available" if sm.get("total_submissions", 0) else "no_data"),
             recent_attempts=attempts
         )
 
@@ -592,19 +708,16 @@ async def get_student_profile_endpoint(
 @app.get("/api/skill-roadmap", response_model=SkillRoadmapResponse)
 async def get_skill_roadmap_endpoint(
     session_id: str = "default_session",
-    class_id: Optional[str] = None
+    class_id: Optional[str] = None,
+    token_data: dict = Depends(require_student),
 ):
     """
-    [Cây Lộ trình Kỹ năng Đồ họa - Skill Roadmap & Curriculum Matrix]
-    - Hỗ trợ xem lộ trình kỹ năng theo Lớp học phần tín chỉ NEU (class_id) hoặc toàn cục.
-    - Áp dụng Thang đo Định lượng (Mastery Rubric):
-      + MASTERED: Giải thành công và đạt tối thiểu min_stars_required (1-3 sao).
-      + NEEDS_MORE_STARS: Giải đúng nhưng chưa đủ số sao yêu cầu (dùng nhiều gợi ý AI).
-      + IN_PROGRESS: Đã thử nộp nhưng chưa pass hoàn toàn.
-      + AVAILABLE: Đã mở khóa (tiên quyết đã MASTERED).
-      + LOCKED: Khóa do bài tiên quyết chưa MASTERED.
+    [Legacy compatibility endpoint; progression is based on completion, not star thresholds.]
     """
     try:
+        session_id = token_data["sub"]
+        if class_id:
+            ensure_class_access(class_id, token_data)
         achievements = get_user_achievements(session_id)
         stars_by_ex = achievements.get("exercise_stars", achievements.get("stars_by_exercise", {}))
 
@@ -620,48 +733,32 @@ async def get_skill_roadmap_endpoint(
                 struggling_set = set(student_model.get("struggling_exercises", []))
                 in_prog_set = set(student_model.get("in_progress_exercises", []))
 
-                # 1. Xác định tập bài tập thực sự đạt chuẩn (True Mastered Set)
-                min_stars_map = {item["exercise_id"]: item.get("min_stars_required", 1) for item in class_exercises}
-                true_mastered_set = set()
-                for item in class_exercises:
-                    ex_id = item["exercise_id"]
-                    min_stars = min_stars_map.get(ex_id, 1)
-                    stars_earned = stars_by_ex.get(ex_id, 0)
-                    has_solved = (ex_id in mastered_set) or (stars_earned > 0)
-                    if has_solved and stars_earned >= min_stars:
-                        true_mastered_set.add(ex_id)
+                completed_set = set(mastered_set)
+                completed_set.update(ex_id for ex_id, stars in stars_by_ex.items() if stars > 0)
 
                 nodes = []
                 for item in class_exercises:
                     ex_id = item["exercise_id"]
-                    min_stars = item.get("min_stars_required", 1)
                     stars_earned = stars_by_ex.get(ex_id, 0)
                     prereq = item.get("prerequisite_id")
                     prereqs = [prereq] if prereq else []
-                    has_solved = (ex_id in mastered_set) or (stars_earned > 0)
-
-                    # Xác định trạng thái theo Mastery Rubric chuẩn
-                    if ex_id in true_mastered_set:
+                    if ex_id in completed_set:
                         st = "MASTERED"
-                        desc = f"Đạt chuẩn xuất sắc ({stars_earned}/{min_stars} ⭐)"
-                        unlocked = True
-                    elif has_solved and stars_earned < min_stars:
-                        st = "NEEDS_MORE_STARS"
-                        desc = f"Đã giải đúng nhưng mới đạt {stars_earned}/{min_stars} ⭐. Hãy tự giải lại với ít gợi ý hơn để đạt chuẩn!"
+                        desc = f"Đã hoàn thành ({stars_earned} ⭐ tự lực)"
                         unlocked = True
                     elif ex_id in in_prog_set or ex_id in struggling_set:
                         st = "IN_PROGRESS"
                         desc = "Đang thực hành (Chưa vượt qua tất cả test cases)"
                         unlocked = True
                     else:
-                        prereq_met = (not prereq) or (prereq in true_mastered_set)
+                        prereq_met = (not prereq) or (prereq in completed_set)
                         if prereq_met:
                             st = "AVAILABLE"
-                            desc = f"Sẵn sàng thử thách (Yêu cầu {min_stars} ⭐)"
+                            desc = "Sẵn sàng làm bài"
                             unlocked = True
                         else:
                             st = "LOCKED"
-                            desc = f"Khóa - Cần hoàn thành đạt chuẩn bài tiên quyết ({prereq})"
+                            desc = f"Khóa - Cần hoàn thành bài tiên quyết ({prereq})"
                             unlocked = False
 
                     nodes.append(SkillNode(
@@ -671,7 +768,7 @@ async def get_skill_roadmap_endpoint(
                         difficulty=item.get("difficulty", "EASY"),
                         prerequisites=prereqs,
                         status=st,
-                        min_stars_required=min_stars,
+                        min_stars_required=1,
                         stars_earned=stars_earned,
                         module_name=item.get("module_name", "Chung"),
                         order_idx=item.get("order_idx", 1),
@@ -752,6 +849,8 @@ async def get_skill_roadmap_endpoint(
             total_mastered=len([n for n in nodes if n.status == "MASTERED"]),
             total_exercises=len(nodes)
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi xây dựng skill roadmap: {e}", exc_info=True)
         raise HTTPException(
@@ -761,33 +860,36 @@ async def get_skill_roadmap_endpoint(
 
 
 # ==============================================================================
-# PHASE 10: GAMIFICATION, PYTHONIC REVIEW & LEADERBOARD ENDPOINTS
+# PHASE 10: SELF-RELIANCE STARS, PYTHONIC REVIEW & LEADERBOARD
 # ==============================================================================
 
 @app.post("/api/tutor/pythonic-review", response_model=PythonicReviewResponse)
-async def pythonic_review_endpoint(request: PythonicReviewRequest):
+async def pythonic_review_endpoint(request: PythonicReviewRequest, token_data: dict = Depends(require_student)):
     """
     [Phase 10: Thử thách Tối ưu Code Chuẩn Pythonic]
     Gia sư AI đóng vai trò Senior Python Tech Lead đánh giá mã nguồn đã pass 100%:
     - Chấm điểm Clean Code (0-100, sàn 70 khích lệ)
     - Chỉ ra điểm mạnh & cơ hội tối ưu (idiomatic Python)
     - Cung cấp đoạn code chuẩn mực mẫu và giải thích chuyên sâu
-    - Tự động mở khóa badge PYTHONIC_EXPLORER nếu điểm >= 90
     """
     try:
-        ex_details = await get_exercise_details(request.exercise_id)
-        if not ex_details or ex_details.get("error"):
-            raise HTTPException(status_code=404, detail=f"Không tìm thấy bài tập '{request.exercise_id}'")
-
-        review_dict, llm_source = await generate_pythonic_review(
-            exercise=ex_details,
+        ex_detail = await get_exercise_details(request.exercise_id)
+        if not ex_detail or ex_detail.get("error"):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Không tìm thấy bài tập '{request.exercise_id}'")
+        check = await run_test_only_pipeline(request.exercise_id, request.code)
+        if not check.get("test_results", {}).get("all_passed", False):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ có thể yêu cầu review sau khi vượt qua toàn bộ test.")
+        review_dict, llm_source, telemetry = await generate_pythonic_review(
+            exercise=ex_detail,
             student_code=request.code
         )
 
         clean_score = review_dict.get("clean_score", 85)
-        username = request.username or "student"
+        username = token_data["sub"]
+        save_llm_interaction({"id": str(uuid.uuid4()), "username": username, "role": "student",
+                              "task_type": "pythonic_review", **telemetry})
 
-        # Cập nhật điểm clean score và kiểm tra badge
+        # Cập nhật điểm clean score; huy hiệu không còn được cấp.
         save_res = save_exercise_stars(
             username=username,
             exercise_id=request.exercise_id,
@@ -815,7 +917,7 @@ async def pythonic_review_endpoint(request: PythonicReviewRequest):
 
 
 @app.get("/api/leaderboard", response_model=LeaderboardResponse)
-async def get_leaderboard_endpoint(limit: int = 20):
+async def get_leaderboard_endpoint(limit: int = 20, token_data: dict = Depends(verify_token)):
     """
     [Phase 10: Bảng Xếp Hạng Lớp Học (Classroom Leaderboard)]
     Xếp hạng học viên theo tổng số sao tự lực, số bài đã làm chủ và điểm Clean Code.
@@ -835,12 +937,12 @@ async def get_leaderboard_endpoint(limit: int = 20):
 
 
 @app.get("/api/student/achievements", response_model=UserAchievementsResponse)
-async def get_student_achievements_endpoint(username: str = "student"):
+async def get_student_achievements_endpoint(username: str = "student", token_data: dict = Depends(require_student)):
     """
-    [Phase 10: Hồ sơ Sao & Huy hiệu Thành tích]
-    Lấy tổng số sao, danh sách số sao từng bài tập và bộ sưu tập huy hiệu đã mở khóa.
+    Lấy tổng số sao tự lực và số sao theo từng bài tập.
     """
     try:
+        username = token_data["sub"]
         data = get_user_achievements(username)
         return UserAchievementsResponse(**data)
     except Exception as e:
@@ -858,14 +960,14 @@ async def get_student_achievements_endpoint(username: str = "student"):
 @app.get("/api/instructor/dashboard", response_model=InstructorDashboardStats)
 async def instructor_dashboard(token_data: dict = Depends(require_instructor)):
     """Thống kê tổng quan học tập dành cho Giảng viên."""
-    stats = get_instructor_stats()
+    stats = get_instructor_stats(instructor_username=token_data.get("sub", ""))
     return InstructorDashboardStats(**stats)
 
 
 @app.get("/api/instructor/submissions", response_model=list[SubmissionItem])
 async def list_recent_submissions(token_data: dict = Depends(require_instructor)):
     """Xem toàn bộ lịch sử các lần nộp bài của sinh viên (kèm code & tutor hint)."""
-    submissions = get_all_submissions(limit=100)
+    submissions = get_all_submissions(limit=100, instructor_username=token_data.get("sub", ""))
     return [SubmissionItem(**s) for s in submissions]
 
 
@@ -875,7 +977,7 @@ async def get_single_submission(
     token_data: dict = Depends(require_instructor)
 ):
     """Giảng viên xem chi tiết một bài nộp cụ thể (mã nguồn + kết quả + phản hồi AI)."""
-    sub = get_submission_by_id(submission_id)
+    sub = get_submission_by_id(submission_id, instructor_username=token_data.get("sub", ""))
     if not sub:
         raise HTTPException(status_code=404, detail="Không tìm thấy bài nộp.")
     return SubmissionItem(**sub)
@@ -883,8 +985,12 @@ async def get_single_submission(
 
 @app.get("/api/instructor/exercises", response_model=list[ExerciseSummary])
 async def instructor_list_all_exercises(token_data: dict = Depends(require_instructor)):
-    """Lấy toàn bộ bài tập (bao gồm cả bài ẩn) cho Giảng viên quản lý."""
-    return db_get_all_exercises(include_inactive=True)
+    """Chỉ trả bài hệ thống, bài sở hữu hoặc bài được chia sẻ với giảng viên."""
+    username = token_data.get("sub", "")
+    rows = db_get_all_exercises(include_inactive=True, instructor_username=username)
+    for row in rows:
+        row["can_manage"] = row.get("created_by") == username
+    return rows
 
 
 @app.post("/api/instructor/exercises", response_model=ExerciseDetail)
@@ -893,6 +999,9 @@ async def create_new_exercise(
     token_data: dict = Depends(require_instructor)
 ):
     """Giảng viên tạo mới một bài tập lập trình vào ngân hàng đề."""
+    owner = get_exercise_owner(exercise_data.id)
+    if owner:
+        raise HTTPException(status_code=409, detail="Mã bài tập đã tồn tại. Mỗi bài tập phải có một chủ sở hữu rõ ràng.")
     tc_dicts = [tc.model_dump() for tc in exercise_data.test_cases]
     saved = db_save_exercise(
         exercise_id=exercise_data.id,
@@ -916,6 +1025,8 @@ async def update_exercise(
     token_data: dict = Depends(require_instructor)
 ):
     """Giảng viên chỉnh sửa bài tập đã có."""
+    if get_exercise_owner(exercise_id) != token_data.get("sub"):
+        raise HTTPException(status_code=403, detail="Chỉ người tạo bài tập mới được chỉnh sửa.")
     tc_dicts = [tc.model_dump() for tc in exercise_data.test_cases]
     saved = db_save_exercise(
         exercise_id=exercise_id,
@@ -938,10 +1049,29 @@ async def remove_exercise(
     token_data: dict = Depends(require_instructor)
 ):
     """Giảng viên xóa một bài tập khỏi ngân hàng đề."""
+    if get_exercise_owner(exercise_id) != token_data.get("sub"):
+        raise HTTPException(status_code=403, detail="Chỉ người tạo bài tập mới được xóa.")
     deleted = db_delete_exercise(exercise_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Không tìm thấy bài tập để xóa.")
     return {"status": "success", "message": f"Đã xóa bài tập {exercise_id}"}
+
+
+@app.post("/api/instructor/exercises/{exercise_id}/shares", status_code=201)
+async def share_exercise_with_instructor(exercise_id: str, request: ExerciseShareRequest,
+                                         token_data: dict = Depends(require_instructor)):
+    recipient = request.instructor_username.strip()
+    if not grant_exercise_share(exercise_id, recipient, token_data.get("sub", "")):
+        raise HTTPException(status_code=404, detail="Bài không thuộc quyền sở hữu của bạn hoặc giảng viên nhận không hợp lệ.")
+    return {"status": "shared", "exercise_id": exercise_id, "instructor_username": recipient}
+
+
+@app.delete("/api/instructor/exercises/{exercise_id}/shares/{instructor_username}")
+async def unshare_exercise_from_instructor(exercise_id: str, instructor_username: str,
+                                          token_data: dict = Depends(require_instructor)):
+    if not revoke_exercise_share(exercise_id, instructor_username, token_data.get("sub", "")):
+        raise HTTPException(status_code=404, detail="Bài không thuộc quyền sở hữu của bạn.")
+    return {"status": "revoked", "exercise_id": exercise_id, "instructor_username": instructor_username}
 
 
 # ==============================================================================
@@ -951,12 +1081,25 @@ async def remove_exercise(
 @app.get("/api/classes", response_model=list[CreditClassSummary])
 async def list_credit_classes(
     instructor_username: Optional[str] = None,
-    student_username: Optional[str] = None
+    student_username: Optional[str] = None,
+    token_data: dict = Depends(verify_token),
 ):
     """Lấy danh sách các Lớp tín chỉ (kèm thông tin Học phần NEU, giảng viên, sĩ số, số bài tập và trạng thái ghi danh)."""
     try:
-        classes = get_credit_classes(instructor_username=instructor_username, current_username=student_username)
+        username = token_data["sub"]
+        if token_data.get("role") == "instructor":
+            if student_username and student_username != username:
+                raise HTTPException(status_code=403, detail="Không được truy vấn dữ liệu học viên theo tài khoản khác.")
+            classes = get_credit_classes(instructor_username=username)
+        elif token_data.get("role") == "student":
+            if instructor_username and instructor_username != username:
+                raise HTTPException(status_code=403, detail="Không được truy vấn lớp theo tài khoản giảng viên khác.")
+            classes = get_credit_classes(current_username=username)
+        else:
+            raise HTTPException(status_code=403, detail="Vai trò không được phép truy cập danh sách lớp.")
         return [CreditClassSummary(**c) for c in classes]
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi lấy danh sách lớp tín chỉ: {e}", exc_info=True)
         raise HTTPException(
@@ -966,7 +1109,7 @@ async def list_credit_classes(
 
 
 @app.get("/api/student/my-classes", response_model=list[CreditClassSummary])
-async def get_my_classes_endpoint(token_data: dict = Depends(verify_token)):
+async def get_my_classes_endpoint(token_data: dict = Depends(require_student)):
     """
     [Cổng Lớp học phần của Tôi - My NEU Classes]
     Lấy danh sách các lớp học phần mà sinh viên hiện tại đã ghi danh, kèm tiến độ hoàn thành (%).
@@ -1018,9 +1161,14 @@ async def enroll_class_endpoint(
 ):
     """Sinh viên hoặc Giảng viên ghi danh người học vào lớp tín chỉ."""
     try:
-        target_student = token_data.get("sub", "student")
-        if token_data.get("role") == "instructor" and body and body.student_username:
+        target_student = token_data.get("sub", "")
+        if token_data.get("role") == "instructor":
+            ensure_class_access(class_id, token_data)
+            if not body or not body.student_username:
+                raise HTTPException(status_code=422, detail="Giảng viên cần chỉ định sinh viên cần ghi danh.")
             target_student = body.student_username
+        elif token_data.get("role") != "student":
+            raise HTTPException(status_code=403, detail="Vai trò không được phép ghi danh.")
 
         success = enroll_student_in_class(class_id=class_id, student_username=target_student)
         return {
@@ -1031,6 +1179,8 @@ async def enroll_class_endpoint(
             "message": f"Đã ghi danh {target_student} vào lớp {class_id} thành công."
         }
     except Exception as e:
+        if isinstance(e, HTTPException):
+            raise
         logger.error(f"Lỗi khi ghi danh lớp tín chỉ: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1045,7 +1195,9 @@ async def enroll_class_by_code_endpoint(
 ):
     """Sinh viên ghi danh vào Lớp học phần bằng Mã tham gia lớp (Enrollment Code)."""
     try:
-        target_student = token_data.get("sub", "student")
+        if token_data.get("role") != "student":
+            raise HTTPException(status_code=403, detail="Chỉ sinh viên mới được ghi danh bằng mã lớp.")
+        target_student = token_data["sub"]
         cls = get_class_by_enrollment_code(request.enrollment_code)
         if not cls:
             raise HTTPException(
@@ -1081,7 +1233,9 @@ async def leave_class_endpoint(
 ):
     """Sinh viên rời khỏi (hủy ghi danh) một Lớp học phần."""
     try:
-        target_student = token_data.get("sub", "student")
+        if token_data.get("role") != "student":
+            raise HTTPException(status_code=403, detail="Chỉ sinh viên mới được rời lớp bằng chức năng này.")
+        target_student = token_data["sub"]
         success = unenroll_student_from_class(class_id=class_id, student_username=target_student)
         return {
             "status": "success",
@@ -1091,6 +1245,8 @@ async def leave_class_endpoint(
             "message": f"Đã hủy ghi danh khỏi lớp {class_id} thành công."
         }
     except Exception as e:
+        if isinstance(e, HTTPException):
+            raise
         logger.error(f"Lỗi khi hủy ghi danh: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1101,12 +1257,19 @@ async def leave_class_endpoint(
 @app.get("/api/classes/{class_id}/curriculum", response_model=list[ClassExerciseItem])
 async def get_class_curriculum_endpoint(
     class_id: str,
-    student_username: Optional[str] = None
+    student_username: Optional[str] = None,
+    token_data: dict = Depends(verify_token),
 ):
     """Lấy danh sách bài tập và cấu hình Lộ trình kỹ năng (Curriculum & Skill Matrix) của lớp học phần."""
     try:
-        exercises = get_class_exercises(class_id, student_username=student_username)
+        ensure_class_access(class_id, token_data)
+        if student_username and student_username != token_data.get("sub"):
+            raise HTTPException(status_code=403, detail="Không được xem tiến độ của tài khoản khác.")
+        own_student = token_data["sub"] if token_data.get("role") == "student" else None
+        exercises = get_class_exercises(class_id, student_username=own_student)
         return [ClassExerciseItem(**e) for e in exercises]
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi tải chương trình học của lớp: {e}", exc_info=True)
         raise HTTPException(
@@ -1121,15 +1284,17 @@ async def assign_exercise_to_class_endpoint(
     body: ClassExerciseAssignRequest,
     token_data: dict = Depends(require_instructor)
 ):
-    """Giảng viên gán bài tập vào Lớp học phần với cấu hình Module, Thứ tự, Tiên quyết và Số sao tối thiểu."""
+    """Giảng viên gán bài tập vào lớp học phần, có thể cấu hình bài tiên quyết."""
     try:
+        ensure_class_access(class_id, token_data)
+        if not instructor_can_use_exercise(body.exercise_id, token_data.get("sub", "")):
+            raise HTTPException(status_code=403, detail="Bài tập thuộc giảng viên khác và chưa được chia sẻ với bạn.")
         success = add_exercise_to_class(
             class_id=class_id,
             exercise_id=body.exercise_id,
             module_name=body.module_name,
             order_idx=body.order_idx,
             prerequisite_id=body.prerequisite_id,
-            min_stars_required=body.min_stars_required,
             skill_tag=body.skill_tag,
             weight_point=body.weight_point
         )
@@ -1156,8 +1321,9 @@ async def update_class_exercise_endpoint(
     body: ClassExerciseUpdateRequest,
     token_data: dict = Depends(require_instructor)
 ):
-    """Giảng viên cập nhật cấu hình bài tập trong Lớp học phần (sửa Module, Thứ tự, Tiên quyết, Sao yêu cầu)."""
+    """Giảng viên cập nhật cấu hình bài tập trong lớp học phần."""
     try:
+        ensure_class_access(class_id, token_data)
         updates = body.model_dump(exclude_unset=True)
         success = update_class_exercise(class_id=class_id, exercise_id=exercise_id, **updates)
         if not success:
@@ -1184,6 +1350,7 @@ async def remove_exercise_from_class_endpoint(
 ):
     """Giảng viên gỡ bỏ bài tập khỏi Lớp học phần."""
     try:
+        ensure_class_access(class_id, token_data)
         success = remove_exercise_from_class(class_id=class_id, exercise_id=exercise_id)
         if not success:
             raise HTTPException(status_code=404, detail="Không tìm thấy bài tập trong lớp để gỡ bỏ.")
@@ -1208,8 +1375,11 @@ async def get_class_students_endpoint(
 ):
     """Giảng viên xem danh sách sinh viên trong lớp kèm bảng đo lường tiến độ học tập thực tế."""
     try:
+        ensure_class_access(class_id, token_data)
         students = get_class_students_with_progress(class_id)
         return [ClassStudentProgressItem(**s) for s in students]
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi lấy danh sách sinh viên của lớp: {e}", exc_info=True)
         raise HTTPException(
@@ -1221,12 +1391,26 @@ async def get_class_students_endpoint(
 @app.get("/api/exam-sessions", response_model=list[ExamSessionItem])
 async def list_exam_sessions(
     class_id: Optional[str] = None,
-    session_type: Optional[str] = None
+    session_type: Optional[str] = None,
+    token_data: dict = Depends(verify_token),
 ):
     """Lấy danh sách các Đợt thực hành & Kỳ thi (hỗ trợ lọc theo class_id và session_type)."""
     try:
+        username = token_data.get("sub", "")
+        role = token_data.get("role")
+        if class_id:
+            ensure_class_access(class_id, token_data)
         sessions = get_exam_sessions(class_id=class_id, session_type=session_type)
+        if role == "instructor":
+            sessions = [s for s in sessions if instructor_owns_class(s["class_id"], username)]
+        elif role == "student":
+            enrolled_ids = {c["id"] for c in get_student_classes(username)}
+            sessions = [s for s in sessions if s["class_id"] in enrolled_ids]
+        else:
+            raise HTTPException(status_code=403, detail="Vai trò không được phép truy cập các đợt học.")
         return [ExamSessionItem(**s) for s in sessions]
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi lấy danh sách đợt thực hành & kỳ thi: {e}", exc_info=True)
         raise HTTPException(
@@ -1242,6 +1426,10 @@ async def create_new_exam_session(
 ):
     """Giảng viên tạo mới một Kỳ thi hoặc Đợt thực hành cho lớp tín chỉ."""
     try:
+        ensure_class_access(session_data.class_id, token_data)
+        assigned_ids = {item["exercise_id"] for item in get_class_exercises(session_data.class_id)}
+        if not set(session_data.exercise_ids).issubset(assigned_ids):
+            raise HTTPException(status_code=400, detail="Chỉ được chọn bài tập đã gán cho lớp này.")
         created = create_exam_session(
             title=session_data.title,
             class_id=session_data.class_id,
@@ -1252,6 +1440,8 @@ async def create_new_exam_session(
             created_by=token_data.get("sub", "gv_tran")
         )
         return ExamSessionItem(**created)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Lỗi khi tạo kỳ thi / đợt thực hành: {e}", exc_info=True)
         raise HTTPException(
@@ -1267,6 +1457,10 @@ async def delete_exam_session_endpoint(
 ):
     """Giảng viên xóa một Kỳ thi / Đợt thực hành."""
     try:
+        session_info = get_exam_session_by_id(session_id)
+        if not session_info:
+            raise HTTPException(status_code=404, detail="Không tìm thấy kỳ thi / đợt thực hành để xóa.")
+        ensure_class_access(session_info["class_id"], token_data)
         deleted = delete_exam_session(session_id)
         if not deleted:
             raise HTTPException(status_code=404, detail="Không tìm thấy kỳ thi / đợt thực hành để xóa.")

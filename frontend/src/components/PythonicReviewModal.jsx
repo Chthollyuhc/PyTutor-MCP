@@ -3,7 +3,6 @@ import {
   X,
   Sparkles,
   CheckCircle2,
-  Award,
   Zap,
   Code2,
   Copy,
@@ -73,7 +72,7 @@ export default function PythonicReviewModal({
   const badgeInfo = getScoreBadge(cleanScore);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md select-text animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
       <div className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
@@ -250,18 +249,6 @@ export default function PythonicReviewModal({
                 </p>
               </div>
 
-              {/* New Badges Notice if any */}
-              {review.new_badges && review.new_badges.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center space-x-3 text-xs text-amber-300 animate-bounce">
-                  <Award className="w-5 h-5 text-amber-400 shrink-0" />
-                  <div>
-                    <span className="font-bold">🎉 Chúc mừng bạn đã mở khóa huy hiệu mới: </span>
-                    <span>
-                      {review.new_badges.map(b => `${b.icon} ${b.title}`).join(', ')}!
-                    </span>
-                  </div>
-                </div>
-              )}
             </>
           ) : null}
         </div>

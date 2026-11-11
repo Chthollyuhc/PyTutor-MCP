@@ -8,13 +8,14 @@ Quản lý:
 import sqlite3
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Optional, Any
 
 logger = logging.getLogger("pytutor.database")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = PROJECT_ROOT / "pytutor.db"
+DB_PATH = Path(os.getenv("PYTUTOR_DB_PATH", PROJECT_ROOT / "pytutor.db")).expanduser().resolve()
 
 
 def get_db_connection() -> sqlite3.Connection:
@@ -59,9 +60,23 @@ def init_db():
             all_passed INTEGER DEFAULT 0,
             llm_source TEXT DEFAULT '',
             tutor_hint TEXT DEFAULT '',
+            action_type TEXT NOT NULL DEFAULT 'submit',
             timestamp TEXT DEFAULT (datetime('now', 'localtime'))
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS exercise_shares (
+            exercise_id TEXT NOT NULL,
+            instructor_username TEXT NOT NULL,
+            granted_by TEXT NOT NULL,
+            granted_at TEXT DEFAULT (datetime('now', 'localtime')),
+            PRIMARY KEY (exercise_id, instructor_username),
+            FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
+        )
+    """)
+    submission_columns = {row[1] for row in cursor.execute("PRAGMA table_info(submissions)").fetchall()}
+    if "action_type" not in submission_columns:
+        cursor.execute("ALTER TABLE submissions ADD COLUMN action_type TEXT NOT NULL DEFAULT 'submit'")
 
     # 3. Bảng người dùng (users)
     cursor.execute("""
@@ -181,6 +196,45 @@ def init_db():
             UNIQUE(class_id, exercise_id)
         )
     """)
+
+    # Phase 16: structured LLM telemetry, chat ownership, and learner feedback.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS llm_interactions (
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            role TEXT NOT NULL,
+            task_type TEXT NOT NULL,
+            model_name TEXT NOT NULL DEFAULT '',
+            latency_ms REAL NOT NULL DEFAULT 0,
+            prompt_tokens INTEGER,
+            completion_tokens INTEGER,
+            input_guard TEXT NOT NULL DEFAULT 'allowed',
+            output_guard TEXT NOT NULL DEFAULT 'allowed',
+            status TEXT NOT NULL DEFAULT 'success',
+            created_at TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tutor_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            interaction_id TEXT NOT NULL UNIQUE,
+            username TEXT NOT NULL,
+            rating INTEGER NOT NULL CHECK (rating IN (-1, 1)),
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            FOREIGN KEY (interaction_id) REFERENCES llm_interactions(id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS llm_interaction_sources (
+            interaction_id TEXT NOT NULL,
+            source TEXT NOT NULL,
+            PRIMARY KEY (interaction_id, source),
+            FOREIGN KEY (interaction_id) REFERENCES llm_interactions(id) ON DELETE CASCADE
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_interactions_user_time ON llm_interactions(username, created_at)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_interactions_task_time ON llm_interactions(task_type, created_at)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_credit_classes_owner ON credit_classes(instructor_username)")
 
     conn.commit()
 
@@ -684,14 +738,25 @@ def init_db():
 # HÀM TRUY VẤN VÀ THAO TÁC BÀI TẬP (EXERCISES)
 # ==============================================================================
 
-def get_all_exercises(include_inactive: bool = False) -> list[dict]:
+def get_all_exercises(include_inactive: bool = False, instructor_username: Optional[str] = None) -> list[dict]:
     """Lấy danh sách tóm tắt tất cả bài tập."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    if include_inactive:
-        cursor.execute("SELECT id, title, difficulty, category, test_cases, is_active FROM exercises ORDER BY id ASC")
-    else:
-        cursor.execute("SELECT id, title, difficulty, category, test_cases FROM exercises WHERE is_active = 1 ORDER BY id ASC")
+    query = """SELECT e.id, e.title, e.difficulty, e.category, e.test_cases, e.is_active, e.created_by,
+                      owner.full_name AS created_by_name
+               FROM exercises e LEFT JOIN users owner ON owner.username=e.created_by"""
+    params: list[Any] = []
+    if instructor_username:
+        query += " LEFT JOIN exercise_shares sh ON sh.exercise_id=e.id AND sh.instructor_username=?"
+        params.append(instructor_username)
+        query += " WHERE (e.created_by IN ('system','seed','') OR e.created_by=? OR sh.instructor_username IS NOT NULL)"
+        params.append(instructor_username)
+        if not include_inactive:
+            query += " AND e.is_active=1"
+    elif not include_inactive:
+        query += " WHERE e.is_active=1"
+    query += " ORDER BY e.id ASC"
+    cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
 
@@ -709,6 +774,9 @@ def get_all_exercises(include_inactive: bool = False) -> list[dict]:
             "difficulty": r["difficulty"],
             "category": r["category"],
             "test_cases_count": tc_count,
+            "created_by": r["created_by"] or "system",
+            "created_by_name": r["created_by_name"] or ("Hệ thống" if (r["created_by"] or "system") in {"system", "seed", ""} else r["created_by"]),
+            "can_manage": bool(instructor_username and r["created_by"] == instructor_username),
         }
         if include_inactive:
             item["is_active"] = bool(r["is_active"])
@@ -721,7 +789,7 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active FROM exercises WHERE id = ?",
+        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active, created_by FROM exercises WHERE id = ?",
         (exercise_id,)
     )
     row = cursor.fetchone()
@@ -743,8 +811,48 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
         "description": row["description"],
         "starter_code": row["starter_code"],
         "test_cases": test_cases,
-        "is_active": bool(row["is_active"])
+        "is_active": bool(row["is_active"]),
+        "created_by": row["created_by"] or "system",
     }
+
+
+def get_exercise_owner(exercise_id: str) -> Optional[str]:
+    conn = get_db_connection()
+    row = conn.execute("SELECT created_by FROM exercises WHERE id=?", (exercise_id,)).fetchone()
+    conn.close()
+    return (row["created_by"] or "system") if row else None
+
+
+def instructor_can_use_exercise(exercise_id: str, instructor_username: str) -> bool:
+    conn = get_db_connection()
+    row = conn.execute("""SELECT 1 FROM exercises e LEFT JOIN exercise_shares sh
+        ON sh.exercise_id=e.id AND sh.instructor_username=? WHERE e.id=?
+        AND (e.created_by IN ('system','seed','') OR e.created_by=? OR sh.instructor_username IS NOT NULL)""",
+        (instructor_username, exercise_id, instructor_username)).fetchone()
+    conn.close()
+    return bool(row)
+
+
+def grant_exercise_share(exercise_id: str, instructor_username: str, granted_by: str) -> bool:
+    conn = get_db_connection()
+    owner = conn.execute("SELECT created_by FROM exercises WHERE id=?", (exercise_id,)).fetchone()
+    recipient = conn.execute("SELECT role FROM users WHERE username=?", (instructor_username,)).fetchone()
+    if not owner or owner["created_by"] != granted_by or not recipient or recipient["role"] != "instructor":
+        conn.close()
+        return False
+    conn.execute("INSERT OR IGNORE INTO exercise_shares(exercise_id,instructor_username,granted_by) VALUES(?,?,?)",
+                 (exercise_id, instructor_username, granted_by))
+    conn.commit(); conn.close()
+    return True
+
+
+def revoke_exercise_share(exercise_id: str, instructor_username: str, granted_by: str) -> bool:
+    conn = get_db_connection()
+    owner = conn.execute("SELECT created_by FROM exercises WHERE id=?", (exercise_id,)).fetchone()
+    if not owner or owner["created_by"] != granted_by:
+        conn.close(); return False
+    conn.execute("DELETE FROM exercise_shares WHERE exercise_id=? AND instructor_username=?", (exercise_id, instructor_username))
+    conn.commit(); conn.close(); return True
 
 
 def save_exercise(
@@ -861,19 +969,31 @@ def get_attempts(session_id: str, exercise_id: str, limit: int = 5) -> list[dict
     ]
 
 
-def get_all_submissions(limit: int = 100) -> list[dict]:
+def get_all_submissions(limit: int = 100, instructor_username: Optional[str] = None) -> list[dict]:
     """Lấy danh sách các lần nộp bài mới nhất phục vụ Dashboard Giảng viên (kèm code & tutor_hint)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    scope = """
         SELECT s.id, s.session_id, s.exercise_id, e.title as exercise_title,
                s.code, s.hint_level, s.passed_tests, s.total_tests, s.all_passed,
                s.llm_source, s.tutor_hint, s.timestamp
         FROM submissions s
         LEFT JOIN exercises e ON s.exercise_id = e.id
-        ORDER BY s.id DESC
-        LIMIT ?
-    """, (limit,))
+    """
+    params: list[Any] = []
+    if instructor_username:
+        scope += """
+        WHERE EXISTS (
+            SELECT 1 FROM class_exercises ce
+            JOIN credit_classes c ON c.id = ce.class_id
+            JOIN class_enrollments en ON en.class_id = c.id AND en.student_username = s.session_id
+            WHERE c.instructor_username = ? AND ce.exercise_id = s.exercise_id
+        )
+        """
+        params.append(instructor_username)
+    scope += " ORDER BY s.id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(scope, params)
     rows = cursor.fetchall()
     conn.close()
 
@@ -896,18 +1016,30 @@ def get_all_submissions(limit: int = 100) -> list[dict]:
     ]
 
 
-def get_submission_by_id(submission_id: int) -> Optional[dict]:
+def get_submission_by_id(submission_id: int, instructor_username: Optional[str] = None) -> Optional[dict]:
     """Lấy chi tiết đầy đủ của một bài nộp theo ID."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    query = """
         SELECT s.id, s.session_id, s.exercise_id, e.title as exercise_title,
                s.code, s.hint_level, s.passed_tests, s.total_tests, s.all_passed,
                s.llm_source, s.tutor_hint, s.timestamp
         FROM submissions s
         LEFT JOIN exercises e ON s.exercise_id = e.id
         WHERE s.id = ?
-    """, (submission_id,))
+    """
+    params: list[Any] = [submission_id]
+    if instructor_username:
+        query += """
+          AND EXISTS (
+              SELECT 1 FROM class_exercises ce
+              JOIN credit_classes c ON c.id = ce.class_id
+              JOIN class_enrollments en ON en.class_id = c.id AND en.student_username = s.session_id
+              WHERE c.instructor_username = ? AND ce.exercise_id = s.exercise_id
+          )
+        """
+        params.append(instructor_username)
+    cursor.execute(query, params)
     r = cursor.fetchone()
     conn.close()
 
@@ -953,7 +1085,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     cursor.execute("""
         SELECT id, exercise_id, hint_level, passed_tests, total_tests, all_passed, timestamp
         FROM submissions
-        WHERE session_id = ?
+        WHERE session_id = ? AND action_type = 'submit'
         ORDER BY id ASC
     """, (session_id,))
     sub_rows = [dict(r) for r in cursor.fetchall()]
@@ -1115,7 +1247,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             )
         else:
             weaknesses_and_bottlenecks = "Cần rèn luyện tính độc lập, tránh leo thang lên gợi ý Mức 3 ở các bài khó để giữ vững điểm tự lực."
-        recommended_next_action = "Tập trung giải quyết bài tập tiếp theo trên Cây kỹ năng hoặc tự giải lại các bài đạt 1-2 sao để nâng lên 3 sao trọn vẹn."
+        recommended_next_action = "Tiếp tục bài tập kế tiếp và xem lại các bước giải để củng cố tính độc lập khi lập trình."
     else:
         level_classification = "Đang rèn luyện nền tảng - Cần chú ý kiểm tra điều kiện biên"
         strengths_analysis = (
@@ -1127,6 +1259,13 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             f"Đang gặp khó khăn ở các bài: {', '.join(struggling_exercises) if struggling_exercises else 'các bài xử lý mảng và chuỗi'}."
         )
         recommended_next_action = "Nên sử dụng tính năng 'Chạy từng bước (Visualizer)' để soi biến số và luồng rẽ nhánh, đọc kỹ bảng test case mẫu trước khi nộp."
+
+    evidence_status = "no_data" if total_submissions == 0 else ("limited" if distinct_count < 3 else "sufficient")
+    if evidence_status == "limited":
+        level_classification = "Chưa đủ dữ liệu để phân loại"
+        strengths_analysis = "Đã ghi nhận hoạt động học tập; cần thêm bài làm để nhận diện điểm mạnh ổn định."
+        weaknesses_and_bottlenecks = "Chưa đủ dữ liệu để kết luận về điểm nghẽn hoặc dạng lỗi thường gặp."
+        recommended_next_action = "Tiếp tục luyện thêm bài tập trong học phần để hồ sơ có đủ dữ liệu phân tích."
 
     diagnostic_evaluation = {
         "level_classification": level_classification,
@@ -1146,7 +1285,10 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
         "avg_attempts_to_solve": avg_attempts_to_solve,
         "average_hint_level": avg_hint,
         "error_breakdown": error_breakdown,
-        "topic_mastery": topic_mastery
+        "topic_mastery": topic_mastery,
+        "data_status": evidence_status,
+        "sample_size": distinct_count,
+        "metric_definition_version": "1"
     }
 
     summary = (
@@ -1171,22 +1313,43 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     }
 
 
-def get_instructor_stats() -> dict:
+def get_instructor_stats(instructor_username: Optional[str] = None) -> dict:
     """Tổng hợp thống kê học tập cho Giảng viên."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM exercises WHERE is_active = 1")
-    total_exercises = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM submissions")
-    total_submissions = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(DISTINCT session_id) FROM submissions")
-    active_students = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM submissions WHERE all_passed = 1")
-    passed_submissions = cursor.fetchone()[0]
+    if instructor_username:
+        params = (instructor_username,)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.id)
+            FROM exercises e
+            JOIN class_exercises ce ON ce.exercise_id = e.id
+            JOIN credit_classes c ON c.id = ce.class_id
+            WHERE c.instructor_username = ? AND e.is_active = 1
+        """, params)
+        total_exercises = cursor.fetchone()[0]
+        scoped = """
+            SELECT COUNT(DISTINCT s.id), COUNT(DISTINCT s.session_id),
+                   SUM(CASE WHEN s.all_passed = 1 THEN 1 ELSE 0 END)
+            FROM submissions s
+            WHERE EXISTS (
+                SELECT 1 FROM class_exercises ce
+                JOIN credit_classes c ON c.id = ce.class_id
+                JOIN class_enrollments en ON en.class_id = c.id AND en.student_username = s.session_id
+                WHERE c.instructor_username = ? AND ce.exercise_id = s.exercise_id
+            )
+        """
+        cursor.execute(scoped, params)
+        total_submissions, active_students, passed_submissions = cursor.fetchone()
+    else:
+        cursor.execute("SELECT COUNT(*) FROM exercises WHERE is_active = 1")
+        total_exercises = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM submissions")
+        total_submissions = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(DISTINCT session_id) FROM submissions")
+        active_students = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM submissions WHERE all_passed = 1")
+        passed_submissions = cursor.fetchone()[0]
 
     pass_rate = round((passed_submissions / total_submissions * 100), 1) if total_submissions > 0 else 0.0
 
@@ -1201,37 +1364,8 @@ def get_instructor_stats() -> dict:
 
 
 # ==============================================================================
-# PHASE 10: GAMIFICATION, AUTONOMY STARS & ACHIEVEMENTS
+# PHASE 10: AUTONOMY STARS & PYTHONIC REVIEW
 # ==============================================================================
-
-BADGE_DEFINITIONS = {
-    "FIRST_SOLVE": {
-        "title": "Bước Chân Đầu Tiên",
-        "icon": "🌟",
-        "description": "Hoàn thành xuất sắc bài tập lập trình đầu tiên."
-    },
-    "INDEPENDENT_HERO": {
-        "title": "Bậc Thầy Tự Lực",
-        "icon": "🏆",
-        "description": "Đạt 3 Sao tự lực ở ít nhất 3 bài tập khác nhau."
-    },
-    "BUG_HUNTER": {
-        "title": "Thợ Săn Lỗi Tự Thân",
-        "icon": "⚡",
-        "description": "Sửa đúng bài sau ít nhất một lần nộp trước đó bị lỗi."
-    },
-    "PYTHONIC_EXPLORER": {
-        "title": "Nhà Khai Phá Pythonic",
-        "icon": "🐍",
-        "description": "Đạt điểm Clean Code trên 90 điểm trong phần review chuyên sâu."
-    },
-    "MARATHON_CODER": {
-        "title": "Kiên Trì Bền Bỉ",
-        "icon": "🧗",
-        "description": "Hoàn thành một bài tập sau hơn 5 lần kiên trì thử sức."
-    }
-}
-
 
 def calculate_autonomy_stars(attempt_count: int, max_hint_level_used: int, all_passed: bool) -> int:
     """
@@ -1250,76 +1384,6 @@ def calculate_autonomy_stars(attempt_count: int, max_hint_level_used: int, all_p
         return 2
     else:
         return 1
-
-
-def check_and_unlock_badges(username: str) -> list[dict]:
-    """Kiểm tra điều kiện và tự động mở khóa các huy hiệu mới cho học viên."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # 1. Lấy danh sách badge đã có
-    cursor.execute("SELECT badge_code FROM user_achievements WHERE username = ?", (username,))
-    existing_badges = {r["badge_code"] for r in cursor.fetchall()}
-
-    # 2. Thống kê bài tập đã làm chủ & số sao
-    cursor.execute("""
-        SELECT COUNT(*) as solved_count,
-               SUM(CASE WHEN stars_earned = 3 THEN 1 ELSE 0 END) as three_star_count,
-               MAX(highest_clean_score) as max_clean
-        FROM user_exercise_stars
-        WHERE username = ?
-    """, (username,))
-    star_stats = cursor.fetchone()
-    solved_count = star_stats["solved_count"] or 0
-    three_star_count = star_stats["three_star_count"] or 0
-    max_clean = star_stats["max_clean"] or 0
-
-    # 3. Thống kê số lần nộp cho bài tập
-    cursor.execute("""
-        SELECT exercise_id, COUNT(*) as attempts, MAX(all_passed) as passed, MIN(all_passed) as had_fail
-        FROM submissions
-        WHERE session_id = ?
-        GROUP BY exercise_id
-    """, (username,))
-    sub_stats = cursor.fetchall()
-
-    has_recovered_from_fail = any(s["passed"] == 1 and s["had_fail"] == 0 for s in sub_stats)
-    max_attempts_on_any = max([s["attempts"] for s in sub_stats], default=0)
-
-    unlocked_now = []
-
-    def award(code):
-        if code not in existing_badges and code in BADGE_DEFINITIONS:
-            info = BADGE_DEFINITIONS[code]
-            cursor.execute("""
-                INSERT OR IGNORE INTO user_achievements (username, badge_code, badge_title, badge_icon, description)
-                VALUES (?, ?, ?, ?, ?)
-            """, (username, code, info["title"], info["icon"], info["description"]))
-            unlocked_now.append({"code": code, **info})
-
-    # Điều kiện FIRST_SOLVE
-    if solved_count >= 1:
-        award("FIRST_SOLVE")
-
-    # Điều kiện INDEPENDENT_HERO
-    if three_star_count >= 3:
-        award("INDEPENDENT_HERO")
-
-    # Điều kiện BUG_HUNTER
-    if has_recovered_from_fail:
-        award("BUG_HUNTER")
-
-    # Điều kiện PYTHONIC_EXPLORER
-    if max_clean >= 90:
-        award("PYTHONIC_EXPLORER")
-
-    # Điều kiện MARATHON_CODER
-    if max_attempts_on_any >= 5 and solved_count >= 1:
-        award("MARATHON_CODER")
-
-    conn.commit()
-    conn.close()
-    return unlocked_now
 
 
 def save_exercise_stars(
@@ -1360,29 +1424,20 @@ def save_exercise_stars(
     conn.commit()
     conn.close()
 
-    newly_unlocked = check_and_unlock_badges(username)
-
     return {
         "username": username,
         "exercise_id": exercise_id,
         "stars_earned": new_stars,
         "highest_clean_score": new_clean,
-        "new_badges": newly_unlocked
+        # Keep the response field for older clients; achievements are no longer awarded.
+        "new_badges": []
     }
 
 
 def get_user_achievements(username: str) -> dict:
-    """Lấy danh sách huy hiệu và sao bài tập của học viên."""
+    """Lấy thống kê sao tự lực của học viên (tên hàm giữ lại để tương thích)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT badge_code, badge_title, badge_icon, description, unlocked_at
-        FROM user_achievements
-        WHERE username = ?
-        ORDER BY id ASC
-    """, (username,))
-    badges = [dict(r) for r in cursor.fetchall()]
 
     cursor.execute("""
         SELECT exercise_id, stars_earned, highest_clean_score, updated_at
@@ -1400,7 +1455,8 @@ def get_user_achievements(username: str) -> dict:
         "completed_count": len(stars),
         "exercise_stars": {s["exercise_id"]: s["stars_earned"] for s in stars},
         "clean_scores": {s["exercise_id"]: s["highest_clean_score"] for s in stars},
-        "badges": badges
+        # Keep the API field for compatibility; historical badge rows remain stored but hidden.
+        "badges": []
     }
 
 
@@ -1428,18 +1484,13 @@ def get_class_leaderboard(limit: int = 20) -> list[dict]:
 
     leaderboard = []
     for rank, r in enumerate(rows, start=1):
-        cursor.execute("SELECT badge_icon, badge_title FROM user_achievements WHERE username = ?", (r["username"],))
-        b_rows = cursor.fetchall()
-        badges = [{"icon": b["badge_icon"], "title": b["badge_title"]} for b in b_rows]
-
         leaderboard.append({
             "rank": rank,
             "username": r["username"],
             "full_name": r["full_name"],
             "total_stars": r["total_stars"],
             "completed_exercises": r["completed_exercises"],
-            "highest_clean_score": r["highest_clean_score"],
-            "badges": badges
+            "highest_clean_score": r["highest_clean_score"]
         })
 
     conn.close()
@@ -1536,6 +1587,18 @@ def get_credit_class_by_id(class_id: str, current_username: Optional[str] = None
     item["progress_percent"] = round((completed_in_class / max(1, ex_cnt)) * 100) if ex_cnt > 0 else 0
     conn.close()
     return item
+
+
+def instructor_owns_class(class_id: str, instructor_username: str) -> bool:
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT 1 FROM credit_classes WHERE id = ? AND instructor_username = ?",
+            (class_id, instructor_username),
+        ).fetchone()
+        return row is not None
+    finally:
+        conn.close()
 
 
 def get_class_by_enrollment_code(enrollment_code: str) -> Optional[dict]:
@@ -1751,6 +1814,94 @@ def get_class_students_with_progress(class_id: str) -> list[dict]:
     return students
 
 
+def save_llm_interaction(record: dict[str, Any]) -> None:
+    conn = get_db_connection()
+    try:
+        conn.execute("""
+            INSERT INTO llm_interactions (
+                id, username, role, task_type, model_name, latency_ms,
+                prompt_tokens, completion_tokens, input_guard, output_guard, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            record["id"], record["username"], record["role"], record["task_type"],
+            record.get("model_name", ""), record.get("latency_ms", 0),
+            record.get("prompt_tokens"), record.get("completion_tokens"),
+            record.get("input_guard", "allowed"), record.get("output_guard", "allowed"),
+            record.get("status", "success"),
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def save_llm_interaction_sources(interaction_id: str, sources: list[str]) -> None:
+    conn = get_db_connection()
+    try:
+        conn.executemany("INSERT OR IGNORE INTO llm_interaction_sources(interaction_id, source) VALUES (?, ?)",
+                         [(interaction_id, source) for source in set(sources)])
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def save_tutor_feedback(interaction_id: str, username: str, rating: int) -> bool:
+    conn = get_db_connection()
+    try:
+        owner = conn.execute("SELECT username FROM llm_interactions WHERE id = ?", (interaction_id,)).fetchone()
+        if not owner or owner["username"] != username:
+            return False
+        before_changes = conn.total_changes
+        conn.execute("""
+            INSERT OR IGNORE INTO tutor_feedback(interaction_id, username, rating)
+            VALUES (?, ?, ?)
+        """, (interaction_id, username, rating))
+        if conn.total_changes == before_changes:
+            existing = conn.execute("SELECT username FROM tutor_feedback WHERE interaction_id = ?", (interaction_id,)).fetchone()
+            if existing and existing["username"] == username:
+                return True
+            return False
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def get_class_learning_summary(class_id: str, days: int = 7) -> dict[str, Any]:
+    """Read-only aggregate for instructor AI; never exposes raw student code or identities."""
+    conn = get_db_connection()
+    try:
+        class_row = conn.execute("SELECT id, class_code, class_name FROM credit_classes WHERE id = ?", (class_id,)).fetchone()
+        if not class_row:
+            return {}
+        summary = conn.execute("""
+            SELECT COUNT(*) AS submissions,
+                   SUM(CASE WHEN s.all_passed = 1 THEN 1 ELSE 0 END) AS passed,
+                   COUNT(DISTINCT s.session_id) AS active_students,
+                   COUNT(DISTINCT s.exercise_id) AS exercises_attempted
+            FROM submissions s
+            JOIN class_exercises ce ON ce.exercise_id = s.exercise_id AND ce.class_id = ?
+            JOIN class_enrollments en ON en.class_id = ce.class_id AND en.student_username = s.session_id
+            WHERE s.timestamp >= datetime('now', ?) AND s.action_type = 'submit'
+        """, (class_id, f"-{max(1, min(int(days), 90))} days")).fetchone()
+        topics = conn.execute("""
+            SELECT ce.module_name AS topic, COUNT(*) AS attempts,
+                   SUM(CASE WHEN s.all_passed = 0 THEN 1 ELSE 0 END) AS unsuccessful
+            FROM submissions s
+            JOIN class_exercises ce ON ce.exercise_id = s.exercise_id AND ce.class_id = ?
+            JOIN class_enrollments en ON en.class_id = ce.class_id AND en.student_username = s.session_id
+            WHERE s.timestamp >= datetime('now', ?) AND s.action_type = 'submit'
+            GROUP BY ce.module_name ORDER BY unsuccessful DESC, attempts DESC LIMIT 8
+        """, (class_id, f"-{max(1, min(int(days), 90))} days")).fetchall()
+        totals = dict(summary) if summary else {}
+        submissions = totals.get("submissions") or 0
+        totals["pass_rate"] = round((totals.get("passed") or 0) / submissions * 100, 1) if submissions else 0
+        totals["data_status"] = "no_data" if submissions == 0 else "available"
+        totals["sample_size"] = totals.get("active_students") or 0
+        return {"class": dict(class_row), "days": days, "metrics": totals, "topics": [dict(row) for row in topics]}
+    finally:
+        conn.close()
+
+
 # ==============================================================================
 # HÀM QUẢN LÝ BÀI TẬP VÀ CÂY KỸ NĂNG THEO LỚP (CLASS CURRICULUM & SKILL TREE)
 # ==============================================================================
@@ -1758,9 +1909,8 @@ def get_class_students_with_progress(class_id: str) -> list[dict]:
 def get_class_exercises(class_id: str, student_username: Optional[str] = None) -> list[dict]:
     """
     Lấy danh sách các bài tập thuộc một Lớp học phần kèm cấu hình Lộ trình kỹ năng (Curriculum).
-    Nếu có student_username, tính toán trạng thái thích ứng của sinh viên theo Thang đo Rubric:
-    - MASTERED: Đã pass 100% test cases VÀ đạt stars_earned >= min_stars_required
-    - NEEDS_MORE_STARS: Đã pass 100% nhưng chưa đạt đủ min_stars_required
+    Nếu có student_username, tính toán trạng thái theo kết quả hoàn thành bài:
+    - MASTERED: Đã pass 100% test cases (số sao không phải điều kiện mở khóa)
     - IN_PROGRESS: Đã thử nộp nhưng chưa pass 100%
     - AVAILABLE: Chưa nộp, nhưng không có bài tiên quyết HOẶC bài tiên quyết đã MASTERED
     - LOCKED: Chưa nộp và bài tiên quyết chưa MASTERED
@@ -1804,19 +1954,12 @@ def get_class_exercises(class_id: str, student_username: Optional[str] = None) -
 
     conn.close()
 
-    mastered_set = set()
-    for r in rows:
-        eid = r["exercise_id"]
-        min_stars = r["min_stars_required"] or 2
-        st_stars = student_stars.get(eid, 0)
-        has_passed = (eid in passed_exercises) or (st_stars > 0)
-        if has_passed and st_stars >= min_stars:
-            mastered_set.add(eid)
+    mastered_set = set(passed_exercises)
+    mastered_set.update(eid for eid, stars in student_stars.items() if stars > 0)
 
     items = []
     for r in rows:
         eid = r["exercise_id"]
-        min_stars = r["min_stars_required"] or 2
         st_stars = student_stars.get(eid, 0)
         prereq = r["prerequisite_id"]
 
@@ -1825,24 +1968,19 @@ def get_class_exercises(class_id: str, student_username: Optional[str] = None) -
         except Exception:
             tc_count = 0
 
-        has_passed = (eid in passed_exercises) or (st_stars > 0)
-
         if eid in mastered_set:
             status_val = "MASTERED"
-            status_desc = f"Đạt chuẩn xuất sắc ({st_stars}/{min_stars} ⭐)"
-        elif has_passed and st_stars < min_stars:
-            status_val = "NEEDS_MORE_STARS"
-            status_desc = f"Đã giải đúng nhưng mới đạt {st_stars}/{min_stars} ⭐. Hãy tự giải lại với ít gợi ý hơn để đạt chuẩn!"
+            status_desc = f"Đã hoàn thành bài ({st_stars} ⭐ tự lực)" if st_stars else "Đã vượt qua tất cả bộ kiểm thử"
         elif eid in attempted_exercises:
             status_val = "IN_PROGRESS"
             status_desc = "Đang thực hành (Chưa vượt qua tất cả test cases)"
         else:
             if not prereq or prereq in mastered_set:
                 status_val = "AVAILABLE"
-                status_desc = f"Sẵn sàng thử thách (Yêu cầu {min_stars} ⭐)"
+                status_desc = "Sẵn sàng làm bài"
             else:
                 status_val = "LOCKED"
-                status_desc = f"Khóa - Cần hoàn thành đạt chuẩn bài tiên quyết ({prereq})"
+                status_desc = f"Khóa - Cần hoàn thành bài tiên quyết ({prereq})"
 
         items.append({
             "class_exercise_id": r["class_exercise_id"],
@@ -1857,7 +1995,7 @@ def get_class_exercises(class_id: str, student_username: Optional[str] = None) -
             "module_name": r["module_name"],
             "order_idx": r["order_idx"],
             "prerequisite_id": prereq,
-            "min_stars_required": min_stars,
+            "min_stars_required": 0,
             "skill_tag": r["skill_tag"],
             "weight_point": r["weight_point"],
             "stars_earned": st_stars,
@@ -1875,11 +2013,10 @@ def add_exercise_to_class(
     module_name: str = "Chương 1: Cơ sở lập trình Python",
     order_idx: Optional[int] = None,
     prerequisite_id: Optional[str] = None,
-    min_stars_required: int = 2,
     skill_tag: str = "Tư duy thuật toán",
     weight_point: int = 10
 ) -> dict:
-    """Giảng viên gán một bài tập vào Lớp học phần."""
+    """Giảng viên gán một bài tập vào lớp; cột rubric cũ được giữ ở giá trị trung tính."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -1891,7 +2028,7 @@ def add_exercise_to_class(
         INSERT OR REPLACE INTO class_exercises (
             class_id, exercise_id, module_name, order_idx, prerequisite_id, min_stars_required, skill_tag, weight_point
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (class_id, exercise_id, module_name, order_idx, prerequisite_id, min_stars_required, skill_tag, weight_point))
+    """, (class_id, exercise_id, module_name, order_idx, prerequisite_id, 0, skill_tag, weight_point))
     conn.commit()
     conn.close()
     return {
@@ -1900,7 +2037,7 @@ def add_exercise_to_class(
         "module_name": module_name,
         "order_idx": order_idx,
         "prerequisite_id": prerequisite_id,
-        "min_stars_required": min_stars_required,
+        "min_stars_required": 0,
         "skill_tag": skill_tag,
         "weight_point": weight_point
     }
@@ -1912,11 +2049,10 @@ def update_class_exercise(
     module_name: Optional[str] = None,
     order_idx: Optional[int] = None,
     prerequisite_id: Optional[str] = None,
-    min_stars_required: Optional[int] = None,
     skill_tag: Optional[str] = None,
     weight_point: Optional[int] = None
 ) -> bool:
-    """Giảng viên cập nhật cấu hình Cây kỹ năng / Lộ trình học phần của một bài tập trong lớp."""
+    """Giảng viên cập nhật thông tin bài tập trong lớp học phần."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -1931,9 +2067,6 @@ def update_class_exercise(
     if prerequisite_id is not None:
         updates.append("prerequisite_id = ?")
         params.append(prerequisite_id if prerequisite_id != "" else None)
-    if min_stars_required is not None:
-        updates.append("min_stars_required = ?")
-        params.append(min_stars_required)
     if skill_tag is not None:
         updates.append("skill_tag = ?")
         params.append(skill_tag)

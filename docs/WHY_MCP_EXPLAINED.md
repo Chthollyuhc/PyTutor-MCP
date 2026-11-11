@@ -1,10 +1,10 @@
 # 📘 TÀI LIỆU THUYẾT MINH CHUYÊN SÂU: TẠI SAO CHỌN MODEL CONTEXT PROTOCOL (MCP)?
-## ĐỒ ÁN TỐT NGHIỆP: HỆ THỐNG GIA SƯ THÔNG MINH HỖ TRỢ HỌC LẬP TRÌNH PYTHON (PyTutor-MCP)
+## VAI TRÒ CỦA MCP TRONG HỆ THỐNG HỖ TRỢ HỌC PYTHON PYTUTOR-MCP
 **Tác giả:** SV. Trần Khánh | **Phiên bản:** v3.6 Pro (Academic Classroom & Exam Edition) | **Ngày cập nhật:** 20/10/2026
 
 ---
 
-> *"Tài liệu này được biên soạn nhằm phục vụ công tác giải trình, thuyết minh kỹ thuật và bảo vệ đồ án trước Giảng viên Hướng dẫn và Hội đồng Chấm điểm tốt nghiệp."*
+> *"Tài liệu này giải thích lựa chọn kiến trúc tích hợp công cụ của dự án. MCP là thành phần kỹ thuật; không phải phương pháp dạy học và không mặc định làm hệ thống hiệu quả hơn."*
 
 ---
 

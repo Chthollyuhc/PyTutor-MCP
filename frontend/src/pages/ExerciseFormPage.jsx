@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, Code2, BookOpen, CheckCircle } from 'lucide-react';
 import Header from '../components/Header';
+import { Input } from '../components/ui';
 import { checkHealth, fetchExerciseDetail, createInstructorExercise, updateInstructorExercise } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,9 +13,9 @@ export default function ExerciseFormPage() {
   const { isInstructor, user } = useAuth();
 
   const [health, setHealth] = useState(null);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Form States
   const [exerciseId, setExerciseId] = useState('');
@@ -90,9 +91,14 @@ export default function ExerciseFormPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!exerciseId.trim() || !title.trim() || !description.trim()) {
-      setError('Vui lòng điền đầy đủ Mã bài tập, Tiêu đề và Mô tả đề bài.');
+    const nextFieldErrors = {
+      ...(!exerciseId.trim() && { exerciseId: 'Vui lòng nhập mã bài tập.' }),
+      ...(!title.trim() && { title: 'Vui lòng nhập tiêu đề bài tập.' }),
+      ...(!description.trim() && { description: 'Vui lòng nhập mô tả đề bài.' }),
+    };
+    setFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setError('Hãy kiểm tra các trường được đánh dấu trước khi lưu.');
       return;
     }
 
@@ -135,8 +141,6 @@ export default function ExerciseFormPage() {
     <div className="h-screen w-screen flex flex-col bg-slate-950 font-sans text-slate-100 overflow-hidden">
       <Header
         health={health}
-        isDarkTheme={isDarkTheme}
-        setIsDarkTheme={setIsDarkTheme}
       />
 
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 max-w-5xl w-full mx-auto space-y-6">
@@ -156,7 +160,7 @@ export default function ExerciseFormPage() {
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+          <div role="alert" className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-400/30 text-rose-200 text-sm">
             {error}
           </div>
         )}
@@ -170,34 +174,27 @@ export default function ExerciseFormPage() {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Mã bài tập (Unique ID) *
-                </label>
-                <input
-                  type="text"
-                  value={exerciseId}
-                  onChange={(e) => setExerciseId(e.target.value)}
-                  disabled={isEditMode}
-                  placeholder="ví dụ: ex_06_fibonacci"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono disabled:opacity-50"
-                  required
-                />
-              </div>
+              <Input
+                label="Mã bài tập (Unique ID) *"
+                type="text"
+                value={exerciseId}
+                onChange={(e) => { setExerciseId(e.target.value); setError(''); setFieldErrors(prev => ({ ...prev, exerciseId: undefined })); }}
+                disabled={isEditMode}
+                placeholder="ví dụ: ex_06_fibonacci"
+                error={fieldErrors.exerciseId}
+                aria-required="true"
+                className="font-mono"
+              />
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Tiêu đề bài tập *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="ví dụ: Bài 06: Dãy số Fibonacci"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                  required
-                />
-              </div>
+              <Input
+                label="Tiêu đề bài tập *"
+                type="text"
+                value={title}
+                onChange={(e) => { setTitle(e.target.value); setError(''); setFieldErrors(prev => ({ ...prev, title: undefined })); }}
+                placeholder="ví dụ: Bài 06: Dãy số Fibonacci"
+                error={fieldErrors.title}
+                aria-required="true"
+              />
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -206,7 +203,7 @@ export default function ExerciseFormPage() {
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full min-h-11 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25"
                 >
                   <option value="Dễ">Dễ</option>
                   <option value="Trung bình">Trung bình</option>
@@ -214,32 +211,31 @@ export default function ExerciseFormPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Chủ đề thuật toán (Category)
-                </label>
-                <input
-                  type="text"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="ví dụ: Vòng lặp & Đệ quy"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-              </div>
+              <Input
+                label="Chủ đề thuật toán (Category)"
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="ví dụ: Vòng lặp & Đệ quy"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-200 mb-2" htmlFor="exercise-description">
                 Mô tả đề bài & Ví dụ (Hỗ trợ Markdown) *
               </label>
               <textarea
+                id="exercise-description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => { setDescription(e.target.value); setError(''); setFieldErrors(prev => ({ ...prev, description: undefined })); }}
                 rows={6}
                 placeholder="### Mô tả bài toán&#10;Viết chương trình...&#10;&#10;### Đầu vào (Input):&#10;Một số nguyên n...&#10;&#10;### Đầu ra (Output):&#10;Kết quả..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 font-mono leading-relaxed"
-                required
+                aria-invalid={fieldErrors.description ? 'true' : undefined}
+                aria-describedby={fieldErrors.description ? 'exercise-description-error' : undefined}
+                aria-required="true"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100 placeholder:text-slate-400 outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25 font-mono leading-relaxed"
               />
+              {fieldErrors.description && <p id="exercise-description-error" role="alert" className="mt-2 text-sm text-rose-200">{fieldErrors.description}</p>}
             </div>
           </div>
 
@@ -254,7 +250,7 @@ export default function ExerciseFormPage() {
               value={starterCode}
               onChange={(e) => setStarterCode(e.target.value)}
               rows={4}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-emerald-400 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-emerald-200 font-mono leading-relaxed outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25"
             />
           </div>
 
@@ -268,7 +264,7 @@ export default function ExerciseFormPage() {
               <button
                 type="button"
                 onClick={handleAddTestCase}
-                className="flex items-center space-x-1 py-1 px-2.5 rounded bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 border border-slate-700 transition-colors cursor-pointer"
+                className="flex items-center space-x-1 py-1 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-emerald-200 border border-slate-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Thêm Test Case</span>
@@ -283,8 +279,9 @@ export default function ExerciseFormPage() {
                     <button
                       type="button"
                       onClick={() => handleRemoveTestCase(idx)}
-                      className="text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
+                      className="text-slate-300 hover:text-rose-300 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 rounded"
                       title="Xóa test case này"
+                      aria-label={`Xóa test case ${idx + 1}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -292,35 +289,35 @@ export default function ExerciseFormPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 text-xs">
                     <div className="sm:col-span-5">
-                      <label className="block text-[10.5px] text-slate-400 mb-0.5">Dữ liệu vào (Input - stdin):</label>
-                      <input
+                      <Input
+                        label="Dữ liệu vào (Input - stdin)"
                         type="text"
                         value={tc.input.replace(/\n$/, '')}
                         onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)}
                         placeholder="ví dụ: 5"
-                        className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-emerald-400 font-mono"
                         required
+                        className="font-mono text-xs text-emerald-200 placeholder:text-slate-400"
                       />
                     </div>
                     <div className="sm:col-span-4">
-                      <label className="block text-[10.5px] text-slate-400 mb-0.5">Kết quả kỳ vọng (Expected Output):</label>
-                      <input
+                      <Input
+                        label="Kết quả kỳ vọng (Expected Output)"
                         type="text"
                         value={tc.expected_output}
                         onChange={(e) => handleTestCaseChange(idx, 'expected_output', e.target.value)}
                         placeholder="ví dụ: 15"
-                        className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-cyan-400 font-mono"
                         required
+                        className="font-mono text-xs text-cyan-200 placeholder:text-slate-400"
                       />
                     </div>
                     <div className="sm:col-span-3">
-                      <label className="block text-[10.5px] text-slate-400 mb-0.5">Mục đích kiểm thử:</label>
-                      <input
+                      <Input
+                        label="Mục đích kiểm thử"
                         type="text"
                         value={tc.description}
                         onChange={(e) => handleTestCaseChange(idx, 'description', e.target.value)}
                         placeholder="ví dụ: n = 5 thông thường"
-                        className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-slate-300"
+                        className="text-xs placeholder:text-slate-400"
                       />
                     </div>
                   </div>
@@ -338,14 +335,14 @@ export default function ExerciseFormPage() {
             <div className="flex items-center space-x-3">
               <Link
                 to="/instructor"
-                className="py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+                className="py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 Hủy bỏ
               </Link>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex items-center space-x-2 py-2.5 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center space-x-2 py-2.5 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
                 <Save className="w-4 h-4" />
                 <span>{isLoading ? 'Đang lưu...' : 'Lưu bài tập vào hệ thống'}</span>

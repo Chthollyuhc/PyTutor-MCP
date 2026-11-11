@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, HelpCircle, Compass, Code, ChevronRight, ChevronDown, ChevronUp, Send, MessageSquare, ShieldAlert, Lock } from 'lucide-react';
-import { sendTutorChatMessage } from '../services/api';
+import { sendTutorChatMessage, submitTutorFeedback } from '../services/api';
 
 export default function TutorPanel({
   hintLevel,
   setHintLevel,
   astAnalysis,
   tutorHint,
+  adaptiveStrategy,
   llmSource,
   isAskingAI = false,
   isSubmitting,
@@ -25,6 +26,7 @@ export default function TutorPanel({
   const [chatMessages, setChatMessages] = useState([]);
   const [userQuestion, setUserQuestion] = useState('');
   const [isSendingChat, setIsSendingChat] = useState(false);
+  const [feedbackById, setFeedbackById] = useState({});
 
   // Khi học viên đổi bài tập, đặt lại lịch sử chat làm rõ
   useEffect(() => {
@@ -35,33 +37,30 @@ export default function TutorPanel({
   const levels = [
     {
       level: 1,
-      title: '💡 Mức 1: Gợi Mở Tư Duy',
-      desc: 'Câu hỏi Socratic kích thích tư duy & nhắc lại khái niệm cốt lõi (Bảo toàn 3 ⭐)',
-      badge: 'Mức 1 (3⭐)',
+      title: 'Mức 1 · Gợi mở tư duy',
+      desc: 'Câu hỏi gợi mở giúp bạn tự nhớ lại khái niệm cốt lõi.',
       color: 'hover:border-emerald-500/60'
     },
     {
       level: 2,
-      title: '🔍 Mức 2: Chẩn Đoán Dòng Lỗi',
-      desc: 'Khoanh vùng chính xác dòng code bị sai và giải thích Test Case bị FAIL (Bảo toàn 2 ⭐)',
-      badge: 'Mức 2 (2⭐)',
+      title: 'Mức 2 · Chẩn đoán lỗi',
+      desc: 'Khoanh vùng dòng code có vấn đề và giải thích kiểm thử chưa đạt.',
       color: 'hover:border-amber-500/60'
     },
     {
       level: 3,
-      title: '📘 Mức 3: Dàn Ý & Khung Code',
-      desc: 'Dàn ý 4 bước chi tiết + Khung code mẫu có chỗ trống điền khuyết (Bảo toàn 1 ⭐)',
-      badge: 'Mức 3 (1⭐)',
+      title: 'Mức 3 · Dàn ý và khung code',
+      desc: 'Các bước giải chi tiết cùng khung code có chỗ trống để hoàn thiện.',
       color: 'hover:border-cyan-500/60'
     }
   ];
 
   const getLlmBadgeLabel = (source) => {
-    if (!source) return '✨ Gia sư AI';
+    if (!source) return 'Gia sư AI';
     const s = source.toLowerCase();
-    if (s.includes('gemini')) return '✨ Gia sư AI Gemini';
-    if (s.includes('qwen')) return '✨ Gia sư AI Qwen';
-    return '💡 Gợi ý tự động';
+    if (s.includes('gemini')) return 'Gia sư AI · Gemini';
+    if (s.includes('qwen')) return 'Gia sư AI · Qwen';
+    return 'Gợi ý tự động';
   };
 
   // Gửi câu hỏi làm rõ tới Gia sư AI (Phase 8: Multi-turn Follow-up Chat)
@@ -83,10 +82,11 @@ export default function TutorPanel({
         user_message: currentMsg,
         history: chatMessages,
         exam_session_id: currentSession?.id || null,
+        class_id: currentSession?.class_id || null,
       });
 
       if (res && res.reply) {
-        setChatMessages(prev => [...prev, { role: 'assistant', content: res.reply }]);
+        setChatMessages(prev => [...prev, { role: 'assistant', content: res.reply, interactionId: res.interaction_id }]);
       }
     } catch (err) {
       console.error('Lỗi khi gửi câu hỏi tới Gia sư AI:', err);
@@ -94,11 +94,21 @@ export default function TutorPanel({
         ...prev,
         {
           role: 'assistant',
-          content: '⚠️ Có lỗi kết nối khi trao đổi với Gia sư AI. Bạn vui lòng thử lại sau ít giây nhé!'
+          content: 'Có lỗi kết nối khi trao đổi với Gia sư AI. Bạn vui lòng thử lại sau ít giây nhé.'
         }
       ]);
     } finally {
       setIsSendingChat(false);
+    }
+  };
+
+  const handleFeedback = async (message, rating) => {
+    if (!message.interactionId || feedbackById[message.interactionId]) return;
+    try {
+      await submitTutorFeedback({ interaction_id: message.interactionId, rating });
+      setFeedbackById(prev => ({ ...prev, [message.interactionId]: rating }));
+    } catch (err) {
+      console.error('Không thể lưu đánh giá phản hồi AI:', err);
     }
   };
 
@@ -108,7 +118,7 @@ export default function TutorPanel({
       <div className="h-11 bg-slate-900 border-b border-slate-800 px-3.5 flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300">
           <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span>🤖 Trợ lý Học tập PyTutor</span>
+          <span>Trợ lý học tập PyTutor</span>
         </div>
         <span className="text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium">
           {getLlmBadgeLabel(llmSource)}
@@ -124,7 +134,7 @@ export default function TutorPanel({
               <span>CHẾ ĐỘ KỲ THI / KIỂM TRA NGHIÊM NGẶT</span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-300">
-              🔒 Đang trong chế độ Kiểm tra / Thi: Trợ lý AI tạm khóa để đảm bảo đánh giá công bằng. Bạn hãy sử dụng nút <strong>"Chạy thử code"</strong> và <strong>"Nộp bài chấm điểm"</strong> ở cột giữa.
+              Đang trong chế độ kiểm tra / thi: Trợ lý AI tạm khóa để đảm bảo đánh giá công bằng. Bạn hãy sử dụng nút <strong>"Chạy thử code"</strong> và <strong>"Nộp bài chấm điểm"</strong> ở cột giữa.
             </p>
             <div className="pt-2 border-t border-amber-500/30 flex items-center justify-between text-[10.5px] text-amber-300/80">
               <span>MCP Sandbox & AST vẫn chấm điểm 100%</span>
@@ -156,13 +166,6 @@ export default function TutorPanel({
                       <span className={`font-semibold text-xs ${active ? 'text-emerald-400' : 'text-slate-300'}`}>
                         {item.title}
                       </span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
-                          active ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'bg-slate-800 text-slate-400'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
                     </div>
                     <p className="text-[10.5px] leading-snug opacity-80">{item.desc}</p>
                   </button>
@@ -185,7 +188,7 @@ export default function TutorPanel({
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>🤖 Nhận gợi ý Mức {hintLevel} từ Gia sư AI</span>
+                  <span>Nhận gợi ý Mức {hintLevel} từ Gia sư AI</span>
                 </>
               )}
             </button>
@@ -202,7 +205,7 @@ export default function TutorPanel({
             >
               <span className="flex items-center space-x-1.5">
                 <Code className="w-3.5 h-3.5 text-cyan-400" />
-                <span>📋 Nhận diện nhanh code của bạn</span>
+                <span>Nhận diện nhanh code của bạn</span>
               </span>
               <div className="flex items-center space-x-2">
                 <span
@@ -241,7 +244,7 @@ export default function TutorPanel({
 
                 {astAnalysis.structural_summary && (
                   <p className="text-[10.5px] text-slate-400 italic bg-slate-900/40 p-1.5 rounded border border-slate-800/40">
-                    💡 {astAnalysis.structural_summary}
+                    {astAnalysis.structural_summary}
                   </p>
                 )}
               </div>
@@ -254,10 +257,9 @@ export default function TutorPanel({
           <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-amber-950/30 border border-emerald-500/40 space-y-2.5 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span className="text-xl">🎉</span>
                 <div>
                   <h4 className="text-xs font-bold text-emerald-300">Đã vượt qua 100% Test Cases!</h4>
-                  <p className="text-[10.5px] text-slate-400">Đánh giá tự lực: {starsEarned || 3} Sao</p>
+                  <p className="text-[10.5px] text-slate-300">Sao tự lực: {starsEarned || 3}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-0.5 text-base text-amber-400">
@@ -276,7 +278,7 @@ export default function TutorPanel({
                 className="w-full py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-lg shadow-md shadow-emerald-950/40 transition-all cursor-pointer group"
               >
                 <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform text-amber-300" />
-                <span>🚀 Thử thách Tối ưu Code Chuẩn Pythonic</span>
+                <span>Thử thách tối ưu code Pythonic</span>
               </button>
             )}
           </div>
@@ -308,6 +310,11 @@ export default function TutorPanel({
               <div className="prose prose-invert prose-xs max-w-none space-y-2">
                 {formatHintText(tutorHint)}
               </div>
+              {adaptiveStrategy && !testResults?.all_passed && (
+                <p className="border-t border-slate-700 pt-2 text-[11px] text-slate-400">
+                  Vì sao nhận gợi ý này: {adaptiveStrategy.reason_code === 'recurring_difficulty' ? 'lịch sử cho thấy bạn đã thử bài này nhiều lần' : adaptiveStrategy.reason_code === 'failed_case_diagnosis' ? 'có kiểm thử chưa đạt để làm căn cứ phân tích' : 'chưa có đủ dữ liệu lịch sử nên bắt đầu bằng gợi mở an toàn'}.
+                </p>
+              )}
 
               {/* Nút leo thang gợi ý thân thiện */}
               {tutorHint && !testResults?.all_passed && hintLevel < 3 && (
@@ -359,11 +366,12 @@ export default function TutorPanel({
             </div>
 
             {/* Chat History Bubbles */}
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1 text-xs">
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1.5 text-[13px] leading-relaxed" aria-live="polite" aria-relevant="additions text">
               {chatMessages.length === 0 ? (
-                <p className="text-[11px] text-slate-500 italic p-2.5 bg-slate-950/40 rounded-lg border border-slate-800/60 leading-normal">
-                  💬 Có điều gì chưa rõ trong bài làm hay gợi ý trên? Bạn hãy gõ câu hỏi phía dưới để Gia sư giải thích chi tiết hơn nhé.
-                </p>
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-slate-300">
+                  <MessageSquare className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed">Có điều gì chưa rõ trong bài làm hay gợi ý trên? Hãy hỏi phía dưới để Gia sư giải thích thêm.</p>
+                </div>
               ) : (
                 chatMessages.map((msg, idx) => (
                   <div
@@ -372,48 +380,61 @@ export default function TutorPanel({
                       msg.role === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    <span className="text-[9.5px] text-slate-500 px-1 mb-0.5">
-                      {msg.role === 'user' ? 'Bạn' : '🤖 Gia sư PyTutor'}
+                    <span className={`text-[11px] font-medium px-1 mb-1 ${msg.role === 'user' ? 'text-cyan-200/90' : 'text-emerald-200/90'}`}>
+                      {msg.role === 'user' ? 'Bạn' : 'Gia sư PyTutor'}
                     </span>
                     <div
                       className={`p-2.5 rounded-xl max-w-[92%] leading-relaxed ${
                         msg.role === 'user'
-                          ? 'bg-slate-800 text-cyan-200 border border-slate-700/80 rounded-br-sm'
-                          : 'bg-slate-950 text-slate-200 border border-emerald-500/30 rounded-bl-sm'
-                      }`}
+                          ? 'bg-slate-800 text-cyan-50 border border-slate-700 rounded-br-sm'
+                          : 'bg-slate-950/80 text-slate-100 border border-emerald-500/25 rounded-bl-sm'
+                      } whitespace-pre-wrap break-words`}
                     >
                       {renderBold(msg.content)}
                     </div>
+                    {msg.role === 'assistant' && msg.interactionId && (
+                      <div className="flex items-center gap-1 mt-1 px-1" role="group" aria-label="Đánh giá phản hồi gia sư">
+                        {[{ value: 1, icon: '👍', label: 'Hữu ích' }, { value: -1, icon: '👎', label: 'Chưa hiểu' }].map(item => (
+                          <button key={item.value} type="button" title={item.label} aria-label={item.label}
+                            onClick={() => handleFeedback(msg, item.value)}
+                            disabled={Boolean(feedbackById[msg.interactionId])}
+                            className={`px-2 py-1 rounded-md text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${feedbackById[msg.interactionId] === item.value ? 'bg-emerald-900 text-emerald-100' : 'text-slate-300 hover:bg-slate-800 hover:text-white'} disabled:cursor-default`}>
+                            {item.icon}
+                          </button>
+                        ))}
+                        {feedbackById[msg.interactionId] && <span className="text-[9px] text-slate-500">Đã ghi nhận</span>}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
 
               {isSendingChat && (
-                <div className="flex items-center space-x-1.5 text-slate-400 text-[11px] p-2 bg-slate-950/60 rounded-lg animate-pulse">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" />
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce delay-100" />
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce delay-200" />
-                  <span className="ml-1 text-emerald-400 font-medium">Gia sư đang soạn câu trả lời...</span>
+                <div className="flex items-center gap-2 text-slate-200 text-xs p-2.5 bg-slate-950/60 rounded-lg" role="status">
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-emerald-300/30 border-t-emerald-300 animate-spin" aria-hidden="true" />
+                  <span className="text-emerald-100 font-medium">Gia sư đang soạn câu trả lời...</span>
                 </div>
               )}
             </div>
 
             {/* Chat Input Form */}
-            <form onSubmit={handleSendChat} className="flex items-center space-x-1.5 mt-1">
+            <form onSubmit={handleSendChat} className="flex items-center gap-2 mt-1">
               <input
                 type="text"
+                aria-label="Câu hỏi gửi Gia sư PyTutor"
                 value={userQuestion}
                 onChange={(e) => setUserQuestion(e.target.value)}
-                placeholder={isExamMode ? "🔒 Gia sư AI bị khóa trong Chế độ Kỳ thi..." : "Hỏi Gia sư về bài làm (ví dụ: giải thích vòng lặp)..."}
+                placeholder={isExamMode ? "Gia sư AI bị khóa trong chế độ kỳ thi..." : "Hỏi gia sư về bài làm (ví dụ: giải thích vòng lặp)..."}
                 disabled={isSendingChat || isExamMode}
-                className={`flex-1 bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/40 ${
+                className={`flex-1 min-w-0 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
                   isExamMode ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
               <button
                 type="submit"
                 disabled={isSendingChat || !userQuestion.trim() || isExamMode}
-                className="p-1.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded-lg transition-colors cursor-pointer shadow-sm shadow-cyan-900/30"
+                aria-label={isSendingChat ? 'Đang gửi câu hỏi' : 'Gửi câu hỏi tới Gia sư AI'}
+                className="p-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors cursor-pointer shadow-sm shadow-cyan-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 title={isExamMode ? "Gia sư AI bị khóa trong Chế độ Kỳ thi" : "Gửi câu hỏi tới Gia sư AI"}
               >
                 <Send className="w-3.5 h-3.5" />

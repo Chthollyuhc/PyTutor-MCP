@@ -45,7 +45,7 @@ export default function LeaderboardModal({
   const top3 = leaderboard[2] || null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md select-text animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
       <div className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
@@ -106,11 +106,6 @@ export default function LeaderboardModal({
                     <span className="text-[11px] text-slate-400 mt-0.5">
                       {top2.completed_exercises} bài giải đúng
                     </span>
-                    <div className="flex items-center space-x-1 mt-2 text-xs">
-                      {top2.badges?.map((b, idx) => (
-                        <span key={idx} title={b.title} className="text-sm">{b.icon}</span>
-                      ))}
-                    </div>
                   </div>
                 ) : (
                   <div className="order-2 sm:order-1 p-3.5 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
@@ -135,11 +130,6 @@ export default function LeaderboardModal({
                     <span className="text-xs text-slate-300 mt-1">
                       {top1.completed_exercises} bài • Clean Max: {top1.highest_clean_score}
                     </span>
-                    <div className="flex items-center space-x-1.5 mt-2.5 text-sm">
-                      {top1.badges?.map((b, idx) => (
-                        <span key={idx} title={b.title} className="text-base hover:scale-125 transition-transform">{b.icon}</span>
-                      ))}
-                    </div>
                   </div>
                 ) : (
                   <div className="order-1 sm:order-2 p-4 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
@@ -164,11 +154,6 @@ export default function LeaderboardModal({
                     <span className="text-[11px] text-slate-400 mt-0.5">
                       {top3.completed_exercises} bài giải đúng
                     </span>
-                    <div className="flex items-center space-x-1 mt-2 text-xs">
-                      {top3.badges?.map((b, idx) => (
-                        <span key={idx} title={b.title} className="text-sm">{b.icon}</span>
-                      ))}
-                    </div>
                   </div>
                 ) : (
                   <div className="order-3 p-3.5 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
@@ -193,7 +178,6 @@ export default function LeaderboardModal({
                         <th className="py-2.5 text-center">Tổng Sao (⭐)</th>
                         <th className="py-2.5 text-center">Bài đã giải</th>
                         <th className="py-2.5 text-center">Điểm Clean Max</th>
-                        <th className="py-2.5 pr-4 text-right">Huy hiệu đạt được</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 font-sans">
@@ -219,19 +203,6 @@ export default function LeaderboardModal({
                               {item.highest_clean_score || 0}
                             </span>
                           </td>
-                          <td className="py-2.5 pr-4 text-right">
-                            {item.badges && item.badges.length > 0 ? (
-                              <div className="flex items-center justify-end space-x-1">
-                                {item.badges.map((b, idx) => (
-                                  <span key={idx} title={b.title} className="text-sm cursor-help">
-                                    {b.icon}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-slate-600 text-[11px] italic">Chưa có</span>
-                            )}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -239,53 +210,6 @@ export default function LeaderboardModal({
                 </div>
               </div>
 
-              {/* Badges Legend / Showcase */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-                <span className="font-bold text-slate-200 block mb-2">
-                  🎖️ BỘ SƯU TẬP 5 HUY HIỆU DANH GIÁ
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-[11.5px] text-slate-400">
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center space-x-2">
-                    <span className="text-lg">🌟</span>
-                    <div>
-                      <div className="font-semibold text-slate-200">Bước Chân Đầu Tiên</div>
-                      <div className="text-[10px] text-slate-500">Hoàn thành bài tập đầu tiên</div>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center space-x-2">
-                    <span className="text-lg">🏆</span>
-                    <div>
-                      <div className="font-semibold text-slate-200">Bậc Thầy Tự Lực</div>
-                      <div className="text-[10px] text-slate-500">Đạt 3 Sao ở 3 bài khác nhau</div>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center space-x-2">
-                    <span className="text-lg">⚡</span>
-                    <div>
-                      <div className="font-semibold text-slate-200">Thợ Săn Lỗi Tự Thân</div>
-                      <div className="text-[10px] text-slate-500">Sửa thành công sau khi từng fail</div>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center space-x-2">
-                    <span className="text-lg">🐍</span>
-                    <div>
-                      <div className="font-semibold text-slate-200">Nhà Khai Phá Pythonic</div>
-                      <div className="text-[10px] text-slate-500">Clean Code &gt;= 90 điểm</div>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center space-x-2">
-                    <span className="text-lg">🧗</span>
-                    <div>
-                      <div className="font-semibold text-slate-200">Kiên Trì Bền Bỉ</div>
-                      <div className="text-[10px] text-slate-500">Hoàn thành bài sau &gt; 5 lần thử</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </>
           )}
         </div>

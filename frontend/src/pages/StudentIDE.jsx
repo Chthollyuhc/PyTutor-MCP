@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { Sparkles, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Header from '../components/Header';
 import ProblemPanel from '../components/ProblemPanel';
 import EditorPanel from '../components/EditorPanel';
@@ -39,13 +40,14 @@ export default function StudentIDE() {
   const [testResults, setTestResults] = useState(null);
   const [astAnalysis, setAstAnalysis] = useState(null);
   const [tutorHint, setTutorHint] = useState('');
+  const [adaptiveStrategy, setAdaptiveStrategy] = useState(null);
   const [llmSource, setLlmSource] = useState('');
   const [mcpTrace, setMcpTrace] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [isLoadingExercise, setIsLoadingExercise] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const { theme } = useTheme();
 
   // Phase 12, 13 & 14: NEU Credit Classes & Exam/Practice Sessions State
   const [creditClasses, setCreditClasses] = useState([]);
@@ -198,6 +200,7 @@ export default function StudentIDE() {
         setTestResults(null);
         setAstAnalysis(null);
         setTutorHint('');
+        setAdaptiveStrategy(null);
         setLlmSource('');
       } catch (err) {
         console.error('Lỗi tải chi tiết bài tập:', err);
@@ -278,6 +281,7 @@ export default function StudentIDE() {
       setTestResults(res.test_results);
       setAstAnalysis(res.ast_analysis);
       setTutorHint(res.tutor_hint);
+      setAdaptiveStrategy(res.adaptive_strategy || null);
       setLlmSource(res.llm_source);
       if (res.mcp_trace) {
         setMcpTrace(res.mcp_trace);
@@ -308,6 +312,7 @@ export default function StudentIDE() {
       setTestResults(res.test_results);
       setAstAnalysis(res.ast_analysis);
       setTutorHint(res.tutor_hint);
+      setAdaptiveStrategy(res.adaptive_strategy || null);
       setLlmSource(res.llm_source);
       if (res.mcp_trace) {
         setMcpTrace(res.mcp_trace);
@@ -342,12 +347,10 @@ export default function StudentIDE() {
   };
 
   return (
-    <div className={`h-screen w-screen flex flex-col bg-slate-950 font-sans ${isDarkTheme ? 'dark' : ''}`}>
+    <div className="h-screen w-screen flex flex-col bg-slate-950 font-sans">
       {/* Header */}
       <Header
         health={health}
-        isDarkTheme={isDarkTheme}
-        setIsDarkTheme={setIsDarkTheme}
         onOpenInspector={() => setIsInspectorOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
         mcpTraceCount={mcpTrace.length}
@@ -381,9 +384,9 @@ export default function StudentIDE() {
       )}
 
       {/* Main 3-Column IDE Layout */}
-      <main className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
+      <main className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 overflow-y-auto xl:overflow-hidden">
         {/* Column 1: Problem Panel (~28%) */}
-        <section className="md:col-span-3 h-full overflow-hidden">
+        <section className="min-w-0 min-h-[60vh] xl:col-span-3 xl:h-full overflow-hidden">
           <ProblemPanel
             exercises={displayedExercises}
             selectedExerciseId={selectedExerciseId}
@@ -399,7 +402,7 @@ export default function StudentIDE() {
         </section>
 
         {/* Column 2: Editor & Test Results (~46%) */}
-        <section className="md:col-span-6 h-full overflow-hidden">
+        <section className="min-w-0 min-h-[75vh] xl:col-span-6 xl:h-full overflow-hidden">
           <EditorPanel
             code={code}
             setCode={handleCodeChange}
@@ -412,19 +415,20 @@ export default function StudentIDE() {
             onSubmit={() => handleSubmit()}
             isSubmitting={isSubmitting}
             testResults={testResults}
-            isDarkTheme={isDarkTheme}
+            isDarkTheme={theme === 'dark'}
             onOpenVisualizer={() => setIsVisualizerOpen(true)}
             isExamMode={isExamMode}
           />
         </section>
 
         {/* Column 3: AI Tutor Panel (~26%) */}
-        <section className="md:col-span-3 h-full overflow-hidden">
+        <section className="min-w-0 min-h-[60vh] xl:col-span-3 xl:h-full overflow-hidden">
           <TutorPanel
             hintLevel={hintLevel}
             setHintLevel={setHintLevel}
             astAnalysis={astAnalysis}
             tutorHint={tutorHint}
+            adaptiveStrategy={adaptiveStrategy}
             llmSource={llmSource}
             isAskingAI={isAskingAI}
             isSubmitting={isSubmitting}

@@ -98,7 +98,8 @@ def save_learning_event(
     total_tests: int,
     all_passed: bool,
     llm_source: str,
-    tutor_hint: str
+    tutor_hint: str,
+    action_type: str = "submit"
 ) -> dict:
     """
     [MCP Tool] Lưu sự kiện học tập và kết quả nộp bài vào cơ sở dữ liệu SQLite.
@@ -113,7 +114,8 @@ def save_learning_event(
             total_tests=total_tests,
             all_passed=all_passed,
             llm_source=llm_source,
-            tutor_hint=tutor_hint
+            tutor_hint=tutor_hint,
+            action_type=action_type
         )
         return {"status": "saved", "submission_id": submission_id}
     except Exception as e:

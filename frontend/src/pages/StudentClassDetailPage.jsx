@@ -7,12 +7,12 @@ import {
   ShieldAlert, Layers, CheckSquare, Target, Search
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { 
   fetchClasses, 
   fetchMyClasses, 
   fetchClassCurriculum, 
   fetchExamSessions, 
-  fetchSkillRoadmap, 
   fetchStudentProfile, 
   fetchLeaderboard 
 } from '../services/api';
@@ -30,7 +30,6 @@ export default function StudentClassDetailPage() {
   const [currentClass, setCurrentClass] = useState(null);
   const [curriculum, setCurriculum] = useState([]);
   const [examSessions, setExamSessions] = useState([]);
-  const [skillRoadmap, setSkillRoadmap] = useState(null);
   const [classProfile, setClassProfile] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +37,7 @@ export default function StudentClassDetailPage() {
   // Search bài tập trong lớp
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
 
-  // Active Tab: 'curriculum' | 'sessions' | 'roadmap' | 'analytics'
+  // Active Tab: 'curriculum' | 'sessions' | 'analytics'
   const [activeTab, setActiveTab] = useState('curriculum');
 
   // Modals
@@ -50,12 +49,11 @@ export default function StudentClassDetailPage() {
   const loadClassData = async () => {
     setIsLoading(true);
     try {
-      const [allCls, myCls, curr, sessList, roadmap, prof, lb] = await Promise.all([
+      const [allCls, myCls, curr, sessList, prof, lb] = await Promise.all([
         fetchClasses().catch(() => []),
         fetchMyClasses().catch(() => []),
         fetchClassCurriculum(classId, sessionId).catch(() => []),
         fetchExamSessions().catch(() => []),
-        fetchSkillRoadmap(sessionId, classId).catch(() => null),
         fetchStudentProfile(sessionId, '', classId).catch(() => null),
         fetchLeaderboard().catch(() => [])
       ]);
@@ -66,7 +64,6 @@ export default function StudentClassDetailPage() {
       // Lọc kỳ thi của lớp này
       const classSessions = (sessList || []).filter(s => !s.class_id || s.class_id === classId);
       setExamSessions(classSessions);
-      setSkillRoadmap(roadmap);
       setClassProfile(prof);
       // Đảm bảo an toàn: lb có thể là mảng hoặc object { leaderboard: [...] }
       const safeLeaderboard = Array.isArray(lb) ? lb : (lb?.leaderboard || []);
@@ -110,10 +107,10 @@ export default function StudentClassDetailPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans select-none flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans select-text flex flex-col">
       {/* 1. TOP NAVBAR & BREADCRUMB */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <header className="sticky top-0 z-30 bg-slate-900 border-b border-slate-800 px-4 py-3 sm:px-6 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             onClick={() => navigate('/student')}
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all flex items-center space-x-1 text-xs cursor-pointer"
@@ -125,40 +122,45 @@ export default function StudentClassDetailPage() {
           <div className="h-5 w-px bg-slate-800" />
 
           {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-xs">
+          <div className="min-w-0 flex items-center space-x-2 text-xs">
             <span className="text-slate-400 hover:text-slate-300 cursor-pointer" onClick={() => navigate('/student')}>
               Cổng Sinh viên
             </span>
             <span className="text-slate-600">/</span>
-            <span className="font-semibold text-emerald-400 flex items-center space-x-1.5">
+            <span className="min-w-0 font-semibold text-emerald-400 flex items-center space-x-1.5">
               <School className="w-3.5 h-3.5" />
-              <span>{currentClass ? `${currentClass.class_code} - ${currentClass.class_name}` : 'Không gian Lớp học phần'}</span>
+              <span className="max-w-28 truncate sm:max-w-none">{currentClass ? `${currentClass.class_code} - ${currentClass.class_name}` : 'Không gian Lớp học phần'}</span>
             </span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <ThemeToggle className="size-9 sm:size-10" />
           <button
             onClick={() => setIsProfileOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-amber-400 transition-all flex items-center space-x-1.5 cursor-pointer"
+            aria-label="Mở Năng lực 4D"
+            title="Mở Năng lực 4D"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-amber-400 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Award className="w-3.5 h-3.5" />
-            <span>Năng lực 4D</span>
+            <span className="hidden lg:inline">Năng lực 4D</span>
           </button>
 
           <button
             onClick={() => setIsInspectorOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono text-emerald-400 transition-all flex items-center space-x-1.5 cursor-pointer"
+            aria-label="Mở công cụ MCP"
+            title="Mở công cụ MCP"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Terminal className="w-3.5 h-3.5" />
-            <span>MCP (8)</span>
+            <span className="hidden sm:inline">MCP (8)</span>
           </button>
         </div>
       </header>
 
       {/* 2. CLASS HERO BANNER */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/60 border-b border-slate-800 px-6 py-6 sm:px-12">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 py-5 sm:px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-2">
             <div className="flex items-center space-x-2 text-xs">
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-semibold">
@@ -173,9 +175,9 @@ export default function StudentClassDetailPage() {
               {currentClass?.class_name || 'Lớp Học Phần Lập Trình Python'}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 flex items-center space-x-4">
-              <span>👨‍🏫 Giảng viên: <strong>{currentClass?.instructor_name || 'Nguyễn Văn A'}</strong></span>
-              <span>• Mã tham gia: <strong className="text-emerald-400 font-mono">{currentClass?.enrollment_code}</strong></span>
+            <p className="text-xs sm:text-sm text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span>Giảng viên: <strong>{currentClass?.instructor_name || 'Nguyễn Văn A'}</strong></span>
+              <span>Mã tham gia: <strong className="text-emerald-400 font-mono">{currentClass?.enrollment_code}</strong></span>
             </p>
           </div>
 
@@ -203,7 +205,7 @@ export default function StudentClassDetailPage() {
       </div>
 
       {/* 3. TABS NAVIGATION */}
-      <div className="bg-slate-900 border-b border-slate-800 px-6">
+      <div className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2">
           <button
             onClick={() => setActiveTab('curriculum')}
@@ -214,7 +216,7 @@ export default function StudentClassDetailPage() {
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>1. Chương Trình & Bài Tập ({curriculum.length})</span>
+            <span>Chương trình & bài tập ({curriculum.length})</span>
           </button>
 
           {SHOW_EXAM_SESSIONS && (
@@ -232,18 +234,6 @@ export default function StudentClassDetailPage() {
           )}
 
           <button
-            onClick={() => setActiveTab('roadmap')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center space-x-2 cursor-pointer shrink-0 ${
-              activeTab === 'roadmap'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>{SHOW_EXAM_SESSIONS ? '3. Cây Kỹ Năng & Chuẩn Sao' : '2. Cây Kỹ Năng & Chuẩn Sao'}</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('analytics')}
             className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center space-x-2 cursor-pointer shrink-0 ${
               activeTab === 'analytics'
@@ -252,13 +242,13 @@ export default function StudentClassDetailPage() {
             }`}
           >
             <Trophy className="w-3.5 h-3.5" />
-            <span>{SHOW_EXAM_SESSIONS ? '4. Bảng Vàng & Đánh Giá Năng Lực' : '3. Bảng Vàng & Đánh Giá Năng Lực'}</span>
+            <span>Bảng xếp hạng & năng lực</span>
           </button>
         </div>
       </div>
 
       {/* 4. MAIN TAB CONTENT */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-5 sm:px-6 sm:py-6">
         {isLoading ? (
           <div className="p-16 text-center text-slate-500 text-sm">Đang tải học liệu lớp học phần...</div>
         ) : (
@@ -270,7 +260,7 @@ export default function StudentClassDetailPage() {
                   <div className="flex items-center space-x-2">
                     <Info className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>
-                      Lộ trình bài tập được thiết kế tuần tự. Mỗi bài tập yêu cầu đạt chuẩn số Sao Tự Lực (Mastery Rubric) tối thiểu để mở khóa bài tiếp theo.
+                      Hoàn thành bài tiên quyết để mở khóa bài tiếp theo. Sao tự lực ghi nhận mức độ độc lập khi giải bài, không ảnh hưởng đến quyền truy cập.
                     </span>
                   </div>
                   <div className="text-slate-400 hidden sm:block">
@@ -287,7 +277,7 @@ export default function StudentClassDetailPage() {
                       value={exerciseSearchQuery}
                       onChange={(e) => setExerciseSearchQuery(e.target.value)}
                       placeholder="Tìm kiếm bài tập theo tên bài, kỹ năng (skill tag), độ khó, mã bài..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-9 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-sans"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-sans"
                     />
                     {exerciseSearchQuery && (
                       <button
@@ -335,10 +325,8 @@ export default function StudentClassDetailPage() {
 
                       <div className="space-y-2.5">
                         {modulesMap[moduleName].map((item) => {
-                          const minStars = item.min_stars_required || 1;
                           const earnedStars = item.stars_earned || 0;
                           const isMastered = item.status === 'MASTERED';
-                          const isNeedsMoreStars = item.status === 'NEEDS_MORE_STARS';
                           const isLocked = item.status === 'LOCKED';
                           const isAvailable = item.status === 'AVAILABLE' || item.status === 'IN_PROGRESS';
 
@@ -352,14 +340,7 @@ export default function StudentClassDetailPage() {
                             statusBadge = (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1">
                                 <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                                <span>Đã đạt chuẩn ({earnedStars} ⭐)</span>
-                              </span>
-                            );
-                          } else if (isNeedsMoreStars) {
-                            statusBadge = (
-                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center space-x-1">
-                                <AlertTriangle className="w-3 h-3 text-amber-400" />
-                                <span>Cần nâng sao ({earnedStars}/{minStars} ⭐)</span>
+                                <span>Đã hoàn thành ({earnedStars} ⭐ tự lực)</span>
                               </span>
                             );
                           } else if (isLocked) {
@@ -405,7 +386,7 @@ export default function StudentClassDetailPage() {
 
                                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
                                     <span>Độ khó: <strong className="text-slate-300">{item.difficulty}</strong></span>
-                                    <span>• Chuẩn đầu ra: <strong className="text-amber-400">Tối thiểu {minStars} ⭐</strong></span>
+                                    <span>• Sao tự lực: <strong className="text-amber-400">{earnedStars} ⭐</strong></span>
                                     {item.prerequisite_id && (
                                       <span className="text-slate-500 font-mono">• Tiên quyết: {item.prerequisite_id}</span>
                                     )}
@@ -429,7 +410,7 @@ export default function StudentClassDetailPage() {
                                       : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950'
                                   }`}
                                 >
-                                  <span>💻 Làm bài trên IDE</span>
+                                  <span>Làm bài trên IDE</span>
                                   <Play className="w-3 h-3 fill-current" />
                                 </button>
                               </div>
@@ -479,7 +460,7 @@ export default function StudentClassDetailPage() {
                                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' 
                                   : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                               }`}>
-                                {isExam ? '🔒 KỲ THI / KIỂM TRA TÍN CHỈ' : '🎯 ĐỢT THỰC HÀNH TỰ DO'}
+                                {isExam ? 'KỲ THI / KIỂM TRA TÍN CHỈ' : 'ĐỢT THỰC HÀNH TỰ DO'}
                               </span>
 
                               <span className="text-xs text-slate-400 flex items-center space-x-1">
@@ -511,7 +492,7 @@ export default function StudentClassDetailPage() {
                                   : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950'
                               }`}
                             >
-                              <span>{isExam ? '🚀 Vào Phòng Thi Tín Chỉ' : '💻 Bắt Đầu Thực Hành'}</span>
+                              <span>{isExam ? 'Vào phòng thi tín chỉ' : 'Bắt đầu thực hành'}</span>
                               <ArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -523,111 +504,14 @@ export default function StudentClassDetailPage() {
               </div>
             )}
 
-            {/* TAB 3: CÂY KỸ NĂNG HỌC PHẦN */}
-            {activeTab === 'roadmap' && (
-              <div className="space-y-6">
-                {/* Giải thích Thang đo định lượng (Mastery Rubric) */}
-                <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                  <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-                    <Target className="w-4 h-4 text-emerald-400" />
-                    <span>Quy Chuẩn Thang Đo Năng Lực (Mastery Rubric NEU)</span>
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/20 space-y-1">
-                      <div className="font-semibold text-emerald-400 flex items-center space-x-1">
-                        <span>⭐⭐⭐ 3 Sao (Tự lực hoàn toàn)</span>
-                      </div>
-                      <p className="text-slate-400 text-[11px]">Pass 100% test cases mà không dùng gợi ý tầng 2-3 và không tra cứu code giải.</p>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-950 border border-blue-500/20 space-y-1">
-                      <div className="font-semibold text-blue-400 flex items-center space-x-1">
-                        <span>⭐⭐ 2 Sao (Gợi mở sư phạm)</span>
-                      </div>
-                      <p className="text-slate-400 text-[11px]">Pass test cases sau khi nhận gợi ý định hướng thuật toán tầng 1-2 từ Gia sư AI.</p>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-950 border border-amber-500/20 space-y-1">
-                      <div className="font-semibold text-amber-400 flex items-center space-x-1">
-                        <span>⭐ 1 Sao (Cần hướng dẫn chi tiết)</span>
-                      </div>
-                      <p className="text-slate-400 text-[11px]">Cần mở gợi ý tầng 3 hoặc hỏi đáp nhiều lượt mới hoàn thành bài tập.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sơ đồ cây kỹ năng DAG */}
-                <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Bản Đồ Kỹ Năng Đồ Thị Định Hướng (DAG Matrix)</h4>
-                      <p className="text-xs text-slate-400">Bấm vào bất kỳ node nào đã mở khóa để vào thẳng IDE làm bài</p>
-                    </div>
-                    <span className="text-xs text-emerald-400 font-mono font-semibold">
-                      {skillRoadmap?.total_mastered ?? skillRoadmap?.mastered_count ?? 0}/{skillRoadmap?.total_exercises ?? skillRoadmap?.total_nodes ?? 0} Đã Làm Chủ
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                    {skillRoadmap?.nodes?.map((node) => {
-                      const isMastered = node.status === 'MASTERED';
-                      const isNeedsMoreStars = node.status === 'NEEDS_MORE_STARS';
-                      const isLocked = node.status === 'LOCKED';
-                      const isAvailable = node.status === 'AVAILABLE' || node.status === 'IN_PROGRESS';
-
-                      return (
-                        <div
-                          key={node.id}
-                          onClick={() => {
-                            if (!isLocked) {
-                              navigate(`/student/ide/${node.id}?classId=${classId}`);
-                            }
-                          }}
-                          className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2.5 ${
-                            isMastered
-                              ? 'bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-400'
-                              : isNeedsMoreStars
-                              ? 'bg-amber-950/20 border-amber-500/40 hover:border-amber-400'
-                              : isLocked
-                              ? 'bg-slate-950/40 border-slate-800/80 opacity-50 cursor-not-allowed'
-                              : 'bg-slate-950/80 border-blue-500/30 hover:border-blue-400 shadow-md'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 font-mono text-slate-300">
-                              {node.skill_tag}
-                            </span>
-                            {isMastered && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-                            {isNeedsMoreStars && <AlertTriangle className="w-4 h-4 text-amber-400" />}
-                            {isLocked && <Lock className="w-4 h-4 text-slate-500" />}
-                            {isAvailable && <Play className="w-3.5 h-3.5 text-blue-400 fill-blue-400" />}
-                          </div>
-
-                          <h5 className="font-bold text-sm text-white line-clamp-1">{node.title}</h5>
-
-                          <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
-                            <span className="text-slate-400">Chuẩn: <strong>{node.min_stars_required || 1} ⭐</strong></span>
-                            <span className="text-amber-400 font-semibold">Đạt: {node.stars_earned || 0} ⭐</span>
-                          </div>
-
-                          <div className="text-[11px] text-slate-400 font-medium">
-                            {node.status_description || node.unlock_message}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* TAB 4: BẢNG VÀNG & ĐÁNH GIÁ NĂNG LỰC */}
             {activeTab === 'analytics' && (() => {
               const am = classProfile?.analytics_metrics || {};
               const diag = classProfile?.diagnostic_evaluation || {};
-              const autonomyScore = am.autonomy_score !== undefined ? am.autonomy_score : (classProfile?.autonomy_score ?? 70);
-              const firstTryPassRate = am.first_try_pass_rate !== undefined ? am.first_try_pass_rate : (classProfile?.first_try_pass_rate ?? 0);
-              const avgAttempts = am.avg_attempts_to_solve !== undefined ? am.avg_attempts_to_solve : (classProfile?.avg_attempts_to_solve ?? 0);
+              const dataStatus = classProfile?.data_status || am.data_status || (classProfile?.total_submissions ? 'limited' : 'no_data');
+              const autonomyScore = dataStatus === 'no_data' ? null : (am.autonomy_score ?? classProfile?.autonomy_score ?? null);
+              const firstTryPassRate = dataStatus === 'no_data' ? null : (am.first_try_pass_rate ?? classProfile?.first_try_pass_rate ?? null);
+              const avgAttempts = dataStatus === 'no_data' ? null : (am.avg_attempts_to_solve ?? classProfile?.avg_attempts_to_solve ?? null);
               const strengths = diag.strengths_analysis || classProfile?.strengths_analysis || 'Chưa đủ dữ liệu nộp bài để phân tích điểm mạnh.';
               const weaknesses = diag.weaknesses_and_bottlenecks || classProfile?.weaknesses_and_bottlenecks || 'Chưa ghi nhận điểm nghẽn nghiêm trọng.';
               const recommendations = diag.recommended_next_action || classProfile?.recommended_next_action || 'Tiếp tục hoàn thành các bài tập trong lộ trình học phần.';
@@ -635,23 +519,26 @@ export default function StudentClassDetailPage() {
 
               return (
                 <div className="space-y-6">
+                  {dataStatus !== 'sufficient' && <div role="status" className="rounded-lg border border-amber-700/60 bg-amber-950/30 p-3 text-sm text-amber-100">
+                    {dataStatus === 'no_data' ? 'Chưa có bài nộp để tính chỉ số tiến độ.' : `Mẫu còn hạn chế: ${am.sample_size ?? classProfile?.total_exercises_attempted ?? 0} bài đã thử; chưa đủ cơ sở kết luận năng lực.`}
+                  </div>}
                   {/* 4 Thẻ KPI của riêng lớp này */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-xs text-slate-400 mb-1">Chỉ số Tự lực (Autonomy)</div>
-                      <div className="text-2xl font-bold text-purple-400">{autonomyScore}<span className="text-sm font-normal text-slate-400">/100</span></div>
+                      <div className="text-2xl font-bold text-emerald-400">{autonomyScore ?? '—'}<span className="text-sm font-normal text-slate-400">{autonomyScore == null ? '' : '/100'}</span></div>
                       <div className="text-[11px] text-slate-500 mt-1">Đo lường tính độc lập</div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-xs text-slate-400 mb-1">Vượt qua lần đầu</div>
-                      <div className="text-2xl font-bold text-emerald-400">{firstTryPassRate}%</div>
+                      <div className="text-2xl font-bold text-emerald-400">{firstTryPassRate == null ? '—' : `${firstTryPassRate}%`}</div>
                       <div className="text-[11px] text-slate-500 mt-1">First-try pass rate</div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-xs text-slate-400 mb-1">Số lần thử trung bình</div>
-                      <div className="text-2xl font-bold text-blue-400">{avgAttempts}</div>
+                      <div className="text-2xl font-bold text-blue-400">{avgAttempts ?? '—'}</div>
                       <div className="text-[11px] text-slate-500 mt-1">Số lần nộp/bài đã giải</div>
                     </div>
 

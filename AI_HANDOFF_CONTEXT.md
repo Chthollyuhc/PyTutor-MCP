@@ -22,6 +22,8 @@
 13. [Mô Hình Triển Khai Học Viện: Lớp Tín Chỉ & Chế Độ Thi vs Thực Hành](#13-mô-hình-triển-khai-học-viện-lớp-tín-chỉ--chế-độ-thi-vs-thực-hành)
 14. [Chuẩn Hóa Học Phần NEU, Quản Lý Đa Lớp Học Phần & Động Cơ Phân Tích Năng Lực 4 Chiều (Phase 13 & 14)](#14-chuẩn-hóa-học-phần-neu-quản-lý-đa-lớp-học-phần--động-cơ-phân-tích-năng-lực-4-chiều-phase-13--14)
 15. [Kiến Trúc Điều Hướng Đa Tầng, Không Gian Lớp Học Phần Tách Biệt & Đại Tu 24 Môn NEU LMS (Phase 15 & 15.1)](#15-kiến-trúc-điều-hướng-đa-tầng--không-gian-lớp-học-phần-tách-biệt-phase-15)
+16. [Phase 16 — AI Tutor Upgrade](#160-phase-16--ai-tutor-upgrade-mvp-02112026)
+17. [Phase 17 — Adaptive Feedback & Learning Analytics](#170-phase-17--phản-hồi-thích-ứng-và-phân-tích-tiến-độ)
 
 ---
 
@@ -48,7 +50,8 @@ Khi bạn (AI Agent mới) tiếp quản dự án này, bạn **BẮT BUỘC TU�
 ## 2. BẢN CHẤT LÝ THUYẾT & TRIẾT LÝ THIẾT KẾ HỆ THỐNG
 
 ### 2.1. Đề tài & Tác giả
-* **Tên đề tài:** Hệ thống Gia sư Thông minh Hỗ trợ Học Lập trình Python Dựa trên Model Context Protocol (MCP) (Đồ án Tốt nghiệp Đại học).
+* **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập (Đồ án Tốt nghiệp Đại học).
+* **Vai trò MCP:** giao thức tích hợp các công cụ thực thi, phân tích mã và dữ liệu học tập; đây là thành phần kiến trúc, không phải mục tiêu sư phạm hay tuyên bố hệ thống hiệu quả hơn.
 * **Sinh viên thực hiện:** Trần Minh Khánh (Sinh viên Khóa K65 CNTT — MSV: `11236131`).
 * **Đơn vị đào tạo:** Khoa Công nghệ thông tin — Trường Đại học Kinh tế Quốc dân (NEU).
 * **Giảng viên hướng dẫn:** Nguyễn Văn A & Trần Văn B.
@@ -62,7 +65,7 @@ Trước khi có MCP, các ứng dụng AI dạy lập trình (như ChatGPT, Cop
 4. **Phân Mảnh & Khó Mở Rộng (Hardcoded Integration):** Muốn thêm một chức năng phân tích cú pháp mới, lập trình viên phải sửa lại code Backend, sửa Router, sửa DTO và hardcode vào prompt.
 5. **Bị Khóa Chặt Vào Nhà Cung Cấp (Vendor Lock-in):** Dùng Function Calling độc quyền của OpenAI thì không chạy được với Gemini hoặc các mô hình mã nguồn mở cục bộ như Qwen/Ollama.
 
-### 2.3. Giải pháp Đột Phá: Model Context Protocol (MCP)
+### 2.3. Lớp tích hợp công cụ: Model Context Protocol (MCP)
 **Model Context Protocol (MCP)** là một chuẩn giao thức mở do **Anthropic** công bố vào cuối năm 2024, được coi là **"Cổng USB-C của thời đại Trí tuệ Nhân tạo"**.
 * **Ẩn dụ chuẩn mực:** LLM là "bộ não thiên tài trong phòng kính". MCP là sợi cáp kết nối mang lại cho bộ não đó:
   * **Tay chân:** Tự bấm máy chạy code thật trong hộp cát cô lập (`run_test_cases`, `trace_code_execution`).
@@ -1211,5 +1214,79 @@ Trước khi người dùng hoàn tất nghiệm thu và chuyển giao đồ án
 ## 🎯 KẾT LUẬN & LỜI DẶN DÒ DÀNH CHO AGENT TIẾP QUẢN
 Hệ thống **PyTutor-MCP** là một công trình đồ án tốt nghiệp được thiết kế với chất lượng mã nguồn cao cấp (Production-grade), tuân thủ nghiêm ngặt các nguyên tắc kiến trúc phần mềm, bảo mật cô lập tiến trình và phương pháp sư phạm hiện đại.  
 Khi tiếp quản dự án từ phiên bản **v5.0 Pro (NEU Multi-Stage LMS & IDE Architecture - Final Turnkey Release)**, bạn hãy tự tin phát triển tiếp các tính năng mới theo yêu cầu của người dùng, luôn giữ vững tính ổn định, quy tắc zero-question và sự chuẩn mực của giao thức Model Context Protocol!
+
+#### 16.0. Phase 16 — AI Tutor Upgrade MVP (02/11/2026)
+- Prompt dùng Jinja2 với persona Socratic, Senior Pythonic Reviewer và Instructor Analytics; số liệu Student Model được truyền vào prompt theo quyền hạn.
+- RAG cục bộ được lập chỉ mục tự động khi backend khởi động: SQLite + TF-IDF vector thưa/cosine, nguồn hiện có là `docs/knowledge_base/python_fundamentals.md` do dự án biên soạn. **Chưa có giáo trình NEU được cấp quyền**, không được tuyên bố KB hiện dùng nội dung giáo trình NEU.
+- Student chat yêu cầu JWT, chỉ nhận role student; EXAM Guard đứng trước input guard/model. Instructor class-chat yêu cầu instructor, kiểm tra quyền lớp và chỉ gửi thống kê tổng hợp backend cho LLM.
+- Có input/output guard, chống prompt injection cơ bản và Anti-Spoil corpus; LLM interaction telemetry ghi model, latency, token counts khi SDK trả metadata, guard/status; chat phản hồi có interaction ID và feedback chủ sở hữu.
+- Hints thích ứng và Pythonic Review cũng lưu telemetry. Feedback UI hiện gắn với các bong bóng chat đa lượt; chưa có feedback cho kết quả hint/pythonic-review.
+- Tệp triển khai/kiểm thử chính: `backend/guardrails.py`, `backend/prompt_templates.py`, `backend/rag/retriever.py`, `test_phase16_ai_upgrade.py`, `plans/PLAN_16_AI_UPGRADE.md`.
+- Kiểm tra xác nhận gần nhất: Phase 16 unittest 6/6 PASS; Phase 8, 9, 10, 12, 13–14, 15.3–15.4 và MCP Server regression PASS; `py -m compileall -q backend` PASS; trong thư mục `frontend`, `npm.cmd run build` PASS (có cảnh báo bundle size >500 kB).
+- Trạng thái: MVP đã triển khai; nghiệm thu tổng thể còn cần chạy lại suite đầy đủ, rà coverage endpoint instructor/feedback/EXAM no-model, đo false-positive/latency và xác nhận nguồn RAG được quyền dùng. Nạp giáo trình NEU chỉ thực hiện khi người dùng cung cấp/cấp quyền; hiện không được tuyên bố kho tri thức đã dùng giáo trình chính thức NEU.
+
+#### 17.0. Phase 17 — Phản hồi Thích ứng & Phân tích Tiến độ (Technical MVP; User Pilot Pending)
+
+**Mục tiêu sản phẩm:** nhấn mạnh hai năng lực cốt lõi của đồ án: (1) Gia sư lựa chọn loại phản hồi dựa trên bằng chứng phiên làm bài và lịch sử, (2) Student Model/Instructor Analytics trình bày tiến độ với định nghĩa, mẫu dữ liệu và giới hạn diễn giải minh bạch.
+
+##### 17.1. Luồng và chính sách thích ứng
+
+```text
+Sinh viên yêu cầu gợi ý / nộp bài
+  → MCP pipeline chạy test + trả failed-test evidence
+  → attempt history + analytics Student Model
+  → backend/adaptive_policy.select_hint_strategy(...)
+  → prompt nêu strategy, evidence, data_status và hint level được yêu cầu
+  → tutor response → telemetry / feedback
+```
+
+- `conceptual_start`: khởi đầu bằng gợi mở khái niệm khi chưa có lịch sử hữu ích.
+- `failed_case_diagnosis`: dùng kết quả test lỗi để tập trung vào biểu hiện cụ thể.
+- `recurring_difficulty`: khi có nhiều lần thử, dùng gợi ý tiếp nối cụ thể hơn, tránh lặp hướng dẫn cũ.
+- `solution_review`: sau khi pass, phản hồi củng cố/nhận xét và gợi ý hướng tự kiểm tra/extension thay vì tiếp tục scaffolding sửa lỗi.
+- Quy tắc sản phẩm: tăng độ cụ thể theo bằng chứng lỗi lặp lại, nhưng `hint_level` do người học chọn vẫn chi phối giới hạn tiết lộ; policy không tự tăng level hoặc trả lời hoàn chỉnh. Thành công chuyển sang review/fade scaffolding.
+- Strategy selector là heuristic deterministic, chưa phải Knowledge Tracing/IRT và chưa được hiệu chuẩn bằng dữ liệu người học. Không gọi các strategy hoặc score này là mô hình đã chứng minh năng lực.
+
+##### 17.2. Hợp đồng metric và xử lý dữ liệu thưa
+
+- Official outcomes chỉ dùng các event `action_type='submit'`. `ask_ai` được lưu trong lịch sử để tutor tránh lặp gợi ý, nhưng loại khỏi official submission count, pass rate, autonomy và class aggregates.
+- Các trường chính: tổng lượt nộp; số bài khác nhau; first-try pass rate theo bài (lần nộp chính thức đầu tiên); số lần nộp trung bình/bài; mức hint cao nhất trung bình theo từng bài; autonomy score theo công thức hiện hữu; nhóm lỗi pass/logic/zero-pass; topic mastery.
+- `data_status`: `no_data` với 0 bài; `limited` dưới 3 bài khác nhau; `sufficient` từ 3 bài. Ngưỡng 3 là quy ước hiển thị bảo thủ, không phải cut-score nghiên cứu.
+- Hint use là process evidence, không tự nó đồng nghĩa với năng lực thấp; cần phân biệt kết quả đúng/sai với cách người học yêu cầu trợ giúp. Autonomy score hiện tại là chỉ số sản phẩm kế thừa, không phải thang đo tâm trắc đã thẩm định.
+- Instructor class chat cần giới hạn lớp do giảng viên quản lý và chỉ nhận thống kê tổng hợp; tránh đưa code hoặc định danh cá nhân vào prompt thống kê. Trường hợp không có dữ liệu phải nói no-data, không suy diễn lỗi phổ biến.
+
+##### 17.3. Cơ sở sư phạm và cách áp dụng
+
+- Hattie & Timperley: feedback hữu ích làm rõ mục tiêu, bằng chứng tiến độ hiện tại và bước kế tiếp; tập trung vào task/process/self-regulation hơn praise chung chung. DOI: `10.3102/003465430298487`.
+- Nicol & Macfarlane-Dick: formative assessment nên hỗ trợ người học chủ động tự đánh giá, tự điều chỉnh và sử dụng feedback. DOI: `10.1080/03075070600572090`.
+- Bolsinova et al.: accuracy và on-demand hint use có thể đóng góp thông tin khác nhau; tồn tại khác biệt cá nhân trong thói quen dùng hint. Nghiên cứu dùng dữ liệu học ngôn ngữ, không bê mô hình đo lường nguyên trạng vào PyTutor. DOI: `10.1177/01466216221084208`.
+- Nghiên cứu immediate feedback ở toán trung học và personalized feedback trong ITS môn machine learning chỉ là tham khảo thiết kế; chúng không chứng minh hiệu quả của PyTutor với sinh viên Python.
+- Diễn giải và nguồn liên kết đầy đủ được ghi tại `docs/PHASE_17_METRICS_AND_BENCHMARK.md`.
+
+##### 17.4. Kiểm thử kỹ thuật hiện hữu
+
+- `backend/adaptive_policy.py`: pure function nhận hint level, test results, attempt history, student model; trả strategy, reason code, evidence, previous levels, data status và requested level.
+- `backend/database.py`: lọc `action_type=submit` cho official analytics, tính các chỉ số và status mẫu.
+- `backend/main.py` + `backend/llm_service.py`: đưa chiến lược/bằng chứng vào prompt và giữ nguyên requested hint level; analytics theo lớp qua Instructor AI endpoint.
+- `test_phase17_adaptive_analytics.py`: 5 test gồm policy evidence, repeated attempts không tự leo disclosure, pass review, prompt reason/hint-level, no-data/limited analytics.
+- `evaluate_phase17_adaptive.py`: sáu hồ sơ tổng hợp (empty, syntax, logic, repeated, recovery, passed), so với static conceptual baseline. Lần chạy ghi nhận 6/6 policy expectations, requested hint level giữ 6/6, evidence consistency 6/6; baseline khớp 2/6 theo rubric test. **Đây là test policy trên fixture do dự án đặt, không phải benchmark chất lượng giáo dục hoặc user outcome.**
+- Gần nhất: `py -m unittest test_phase17_adaptive_analytics -v` PASS 5/5; `py evaluate_phase17_adaptive.py` PASS theo số liệu trên. Chạy lại trước mỗi release.
+
+##### 17.5. Pilot người dùng đã thống nhất, còn phải thực hiện
+
+Người dùng chọn: 2–3 người có cả vai trò sinh viên và giảng viên; dùng cùng kịch bản so sánh trước–sau và hồ sơ/lỗi lập trình dựng sẵn.
+
+1. So sánh baseline fixed conceptual Level 1 với adaptive policy.
+2. Dùng ca mới/no-history, lặp lỗi logic, syntax/runtime fail, pass lần đầu, pass sau hỗ trợ, profile dưới 3 bài.
+3. Reset code/history giữa điều kiện; luân phiên thứ tự baseline/adaptive giữa người thử để giảm hiệu ứng thứ tự; cùng hướng dẫn facilitator.
+4. Student rubric 0–2: grounded in evidence, specificity, actionable next step, learner agency, anti-spoil, clarity. Student ratings 1–5: hiểu bước tới, phù hợp lỗi, lộ quá nhiều, còn tự giải được.
+5. Instructor đọc cùng snapshot lớp ở hai điều kiện, xác định khó khăn, sample size, hành động sư phạm, và kết luận không thể đưa ra; chấm với answer key và ghi nhận overclaim/confusion.
+6. Báo cáo paired observations, rating, thời gian và ví dụ; nêu rõ cỡ mẫu nhỏ, practice/order effect, không kiểm định significance, không claim causal learning gain.
+
+**Privacy:** ưu tiên tài khoản và hồ sơ giả lập. Nếu dùng tài khoản người tham gia, giải thích loại log và xin đồng ý trước; chỉ ghi role, scenario/condition, completion, rating và ghi chú đã ẩn danh. Không lấy mật khẩu hoặc dữ liệu ngoài mục đích; mặc định mock tutor, không gửi code cá nhân đến provider.
+
+**Definition of done:** technical MVP được xác nhận qua test/replay/build; pilot chỉ được ghi “hoàn tất” sau khi các buổi 2–3 người được chạy, kết quả được ghi và lỗi answer leakage/unsupported claims/data-status confusion đã xử lý rồi chạy lại. Không tuyên bố tác động tăng điểm hay cải thiện learning gain với pilot nhỏ.
+
+**Tài liệu điều phối:** `PLAN.md` là dashboard và status; `docs/PHASE_17_METRICS_AND_BENCHMARK.md` là metric contract, nguyên tắc nghiên cứu, pilot protocol, rubric và nguồn; `plans/PLAN_16_AI_UPGRADE.md` là chi tiết thiết kế Phase 16.
 
 
