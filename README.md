@@ -257,11 +257,15 @@ Hệ thống sẽ khởi chạy tại các địa chỉ:
 ```text
 PyTutor-MCP/
 ├── backend/                        # Máy chủ Backend FastAPI (MCP Host & Orchestrator)
+│   ├── adaptive_policy.py          # Chính sách chọn chiến lược phản hồi thích ứng
 │   ├── auth.py                     # Quản lý xác thực JWT & Phân quyền RBAC
-│   ├── database.py                 # SQLite engine (WAL mode), Schemas 9 bảng & Seeding dữ liệu NEU
+│   ├── database.py                 # SQLite engine (WAL mode), Schemas & Seeding dữ liệu NEU
+│   ├── guardrails.py               # Bộ kiểm tra an toàn đầu vào/đầu ra & Anti-Spoil
 │   ├── llm_service.py              # Đóng gói Context Bundle, Sư phạm Giàn giáo 3 cấp & Anti-Spoil
 │   ├── main.py                     # 30+ REST API Routes & Lifespan handler
 │   ├── mcp_client.py               # Kết nối JSON-RPC 2.0 Client qua stdio pipe tới MCP Server
+│   ├── prompt_templates.py         # Template Jinja2 theo persona sư phạm
+│   ├── rag/                        # Truy xuất tri thức cục bộ TF-IDF / SQLite FTS5
 │   └── schemas.py                  # Pydantic DTO models kiểm định dữ liệu
 │
 ├── frontend/                       # Giao diện người dùng Web (React 18 + Vite + TailwindCSS)
@@ -274,11 +278,14 @@ PyTutor-MCP/
 │   │   │   ├── MCPInspectorModal.jsx # Trực quan hóa 8 MCP Tools & Nhật ký JSON-RPC Trace
 │   │   │   ├── ProblemPanel.jsx    # Đề bài Markdown, Metadata & Ngữ cảnh Lớp học phần
 │   │   │   ├── PythonicReviewModal.jsx # Đánh giá Clean Code PEP 8 từ Tech Lead
-│   │   │   ├── SkillRoadmapModal.jsx   # Đồ thị DAG kỹ năng học phần
 │   │   │   ├── StudentProfileModal.jsx # Hồ sơ năng lực 4 chiều & Lịch sử nạp lại code
-│   │   │   └── TutorPanel.jsx      # Phản hồi Sư phạm 3 cấp độ, AST & Multi-turn Chat
+│   │   │   ├── TableControls.jsx   # Điều khiển bảng & phân trang
+│   │   │   ├── ThemeToggle.jsx     # Chuyển đổi giao diện Sáng / Tối
+│   │   │   ├── TutorPanel.jsx      # Phản hồi Sư phạm 3 cấp độ, AST & Multi-turn Chat
+│   │   │   └── ui/                 # Bộ UI components chuẩn hóa (Badge, Button, Card, Input)
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx     # Quản lý phiên đăng nhập JWT & Tự động gia hạn
+│   │   │   ├── AuthContext.jsx     # Quản lý phiên đăng nhập JWT & Tự động gia hạn
+│   │   │   └── ThemeContext.jsx    # Quản lý Light/Dark theme theo hệ thống
 │   │   ├── pages/                  # Các trang màn hình điều hướng đa tầng
 │   │   │   ├── ExerciseFormPage.jsx    # Form thêm/sửa bài tập cho Giảng viên
 │   │   │   ├── InstructorDashboard.jsx # Bảng điều khiển Quản trị Giảng viên
@@ -300,20 +307,23 @@ PyTutor-MCP/
 │   ├── storage.py                  # Tầng truy xuất dữ liệu độc lập cho MCP Server
 │   └── tracer.py                   # Tracing từng bước thực thi biến số qua sys.settrace
 │
-├── docs/                           # Tài liệu khoa học & Báo cáo đồ án
+├── docs/                           # Tài liệu khoa học, KB & Báo cáo đồ án
 │   ├── EVALUATION_REPORT.md        # Báo cáo thực nghiệm khoa học độc lập tự động xuất
 │   ├── MCP_QUICK_SUMMARY_MOBILE.md # Tóm tắt nhanh kiến trúc MCP đọc trên điện thoại
-│   └── WHY_MCP_EXPLAINED.md        # Luận cứ khoa học: Vì sao đồ án cần sử dụng MCP
+│   ├── PHASE_17_METRICS_AND_BENCHMARK.md # Hợp đồng chỉ số & pilot protocol Phase 17
+│   ├── WHY_MCP_EXPLAINED.md        # Luận cứ khoa học: Vì sao đồ án cần sử dụng MCP
+│   └── knowledge_base/             # Tài liệu tri thức Python cho RAG cục bộ
 │
-├── plans/                          # Kế hoạch & Kiến trúc chi tiết qua 15 Phases
-├── scripts/                        # Các scripts hỗ trợ di trú và đồng bộ dữ liệu
+├── plans/                          # Kế hoạch triển khai đang mở (PLAN_16_AI_UPGRADE.md)
 ├── test_phase*.py                  # Hệ thống kiểm thử tự động toàn diện qua từng Phase
-├── evaluate_its_benchmark.py       # Script đo đạc thực nghiệm khoa học 4 Benchmarks
+├── evaluate_*.py                   # Script đo đạc thực nghiệm & replay thích ứng
 ├── requirements.txt                # Thư viện Python phụ thuộc
 ├── start_dev.bat                   # Script khởi chạy 1-Click tự động cho Windows
 ├── start_dev.sh                    # Script khởi chạy tự động cho Linux/macOS
 ├── AI_HANDOFF_CONTEXT.md           # Single Source of Truth phục vụ bàn giao & tiếp quản
-├── PLAN.md                         # Bảng theo dõi tiến độ tổng thể 15 Phases
+├── DESIGN.md                       # Design tokens & hệ thống giao diện
+├── PRODUCT.md                      # Đặc tả sản phẩm & phạm vi nghiệp vụ
+├── PLAN.md                         # Bảng theo dõi tiến độ tổng thể (Phase 1 -> 17)
 └── README.md                       # Tài liệu giới thiệu chính thức của dự án
 ```
 
