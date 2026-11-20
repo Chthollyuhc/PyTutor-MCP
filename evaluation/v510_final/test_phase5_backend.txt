@@ -1,23 +1,23 @@
-﻿py : 2026-11-21 05:44:04,451 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:56:10,926 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
 + ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
 +                                                        ~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:44:05,296 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:44:06,571 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
-2026-11-21 05:44:06,624 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
-2026-11-21 05:44:06,679 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
-2026-11-21 05:44:06,685 [INFO] httpx: HTTP Request: GET http://test/api/auth/me "HTTP/1.1 200 OK"
-2026-11-21 05:44:08,194 [INFO] httpx: HTTP Request: POST http://test/api/run-test "HTTP/1.1 200 OK"
-2026-11-21 05:44:11,120 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:44:11,128 [INFO] httpx: HTTP Request: GET http://test/api/student-model/student "HTTP/1.1 200 OK"
-2026-11-21 05:44:11,131 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 403 Forbidden"
-2026-11-21 05:44:11,144 [INFO] httpx: HTTP Request: POST http://test/api/instructor/exercises "HTTP/1.1 200 OK"
-2026-11-21 05:44:11,148 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 200 OK"
-2026-11-21 05:44:11,158 [INFO] httpx: HTTP Request: DELETE http://test/api/instructor/exercises/ex_test_fibonacci 
+2026-11-21 05:56:11,593 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:56:12,488 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
+2026-11-21 05:56:12,533 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 05:56:12,580 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 05:56:12,585 [INFO] httpx: HTTP Request: GET http://test/api/auth/me "HTTP/1.1 200 OK"
+2026-11-21 05:56:13,587 [INFO] httpx: HTTP Request: POST http://test/api/run-test "HTTP/1.1 200 OK"
+2026-11-21 05:56:15,429 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:56:15,433 [INFO] httpx: HTTP Request: GET http://test/api/student-model/student "HTTP/1.1 200 OK"
+2026-11-21 05:56:15,434 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 403 Forbidden"
+2026-11-21 05:56:15,439 [INFO] httpx: HTTP Request: POST http://test/api/instructor/exercises "HTTP/1.1 200 OK"
+2026-11-21 05:56:15,442 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 200 OK"
+2026-11-21 05:56:15,447 [INFO] httpx: HTTP Request: DELETE http://test/api/instructor/exercises/ex_test_fibonacci 
 "HTTP/1.1 200 OK"
 ======================================================================
 🚀 BẮT ĐẦU KIỂM THỬ BACKEND PHASE 5 (AUTH, INSTRUCTOR CRUD, ADAPTIVE MCP)

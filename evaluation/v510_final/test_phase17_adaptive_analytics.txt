@@ -16,6 +16,6 @@ test_strategy_uses_repeated_attempts_without_escalating_level
 (test_phase17_adaptive_analytics.Phase17Tests.test_strategy_uses_repeated_attempts_without_escalating_level) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.191s
+Ran 5 tests in 0.211s
 
 OK

@@ -26,4 +26,4 @@ Câu hỏi ngoài KB (14): trả 'không có nguồn' đúng 13/14 = 92.86%
   python_not_covered   7/8
   Gắn nguồn không phù hợp: O02→Hàm và giá trị trả về (0.2335)
 
-Độ trễ truy xuất (ms): median 1.9176 | p95 2.7725 | max 5.7817 (n=1092)
+Độ trễ truy xuất (ms): median 1.3893 | p95 1.7555 | max 18.8532 (n=1092)

@@ -31,6 +31,6 @@ test_strip_comment_keeps_hash_in_string
 (test_hint_quality_v510.CheckFunctionTests.test_strip_comment_keeps_hash_in_string) ... ok
 
 ----------------------------------------------------------------------
-Ran 17 tests in 0.604s
+Ran 17 tests in 0.463s
 
 OK

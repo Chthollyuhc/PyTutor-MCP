@@ -18,65 +18,65 @@ test_action_cards_in_insights_and_stuck_card
 C:\Users\Admin\AppData\Local\Programs\Python\Python314\Lib\site-packages\starlette\testclient.py:53: 
 DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
   _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
-2026-11-21 05:43:54,318 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã nguồn. 
+2026-11-21 05:56:04,117 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã nguồn. 
 Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 C:\Users\Admin\Downloads\PyTutor-Thesis\backend\schemas.py:563: PydanticDeprecatedSince20: `min_items` is deprecated 
 and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
 Migration Guide at https://errors.pydantic.dev/2.13/migration/
   keywords: list[str] = Field(..., min_items=1, description="Danh sách các từ khóa nhận diện")
-2026-11-21 05:43:55,063 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:55,076 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:55,113 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,677 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:56:04,686 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:56:04,709 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/insights?days=30 "HTTP/1.1 200 OK"
 ok
 test_cell_group_equals_journey_equals_process_by_exercise 
 (test_visual_views_v58.JourneyIntegrationTests.test_cell_group_equals_journey_equals_process_by_exercise) ... ok
 test_classes_attention_rbac_and_sorting 
-(test_visual_views_v58.JourneyIntegrationTests.test_classes_attention_rbac_and_sorting) ... 2026-11-21 05:43:55,215 
+(test_visual_views_v58.JourneyIntegrationTests.test_classes_attention_rbac_and_sorting) ... 2026-11-21 05:56:04,789 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:55,226 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:55,297 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
+2026-11-21 05:56:04,796 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:56:04,846 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
 200 OK"
-2026-11-21 05:43:55,301 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
+2026-11-21 05:56:04,849 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
 200 OK"
-2026-11-21 05:43:55,302 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
+2026-11-21 05:56:04,850 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
 403 Forbidden"
 ok
 test_instructor_journey_rbac_and_privacy 
-(test_visual_views_v58.JourneyIntegrationTests.test_instructor_journey_rbac_and_privacy) ... 2026-11-21 05:43:55,313 
+(test_visual_views_v58.JourneyIntegrationTests.test_instructor_journey_rbac_and_privacy) ... 2026-11-21 05:56:04,859 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:55,322 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:55,334 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,865 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:56:04,874 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/students/v58_dung/exercises/ex_03_factorial/journey?days=30 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:55,340 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,877 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/students/v58_dung/exercises/ex_03_factorial/journey?days=30 
 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:55,342 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,878 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/students/v58_dung/exercises/ex_03_factorial/journey?days=30 
 "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:55,349 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,884 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/students/nobody_here/exercises/ex_03_factorial/journey?days=30 
 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:55,358 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,889 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/v58_demo/students/v58_dung/exercises/no_such_exercise/journey?days=30 
 "HTTP/1.1 404 Not Found"
 ok
 test_matrix_complete_sorted_and_ordered 
 (test_visual_views_v58.JourneyIntegrationTests.test_matrix_complete_sorted_and_ordered) ... ok
 test_student_journey_scope_and_code 
-(test_visual_views_v58.JourneyIntegrationTests.test_student_journey_scope_and_code) ... 2026-11-21 05:43:55,391 [INFO] 
+(test_visual_views_v58.JourneyIntegrationTests.test_student_journey_scope_and_code) ... 2026-11-21 05:56:04,913 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:55,402 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:56,716 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:04,921 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:56:05,837 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/journey?class_id=v58_demo&exercise_id=ex_01_sum_1_to_n "HTTP/1.1 200 OK"
-2026-11-21 05:43:58,033 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:06,696 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/journey?class_id=v58_demo&exercise_id=ex_01_sum_1_to_n "HTTP/1.1 200 OK"
-2026-11-21 05:43:58,038 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:06,700 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/journey?class_id=v58_demo&exercise_id=ex_01_sum_1_to_n "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:58,040 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:06,701 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/journey?class_id=v58_demo&exercise_id=ex_01_sum_1_to_n "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:58,047 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:06,704 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/journey?class_id=v58_demo&exercise_id=nope "HTTP/1.1 404 Not Found"
 ok
 test_week_counts (test_visual_views_v58.JourneyIntegrationTests.test_week_counts) ... ok
@@ -87,6 +87,6 @@ test_order_key_matches_insights_rule (test_visual_views_v58.JourneyPointsTests.t
 ... ok
 
 ----------------------------------------------------------------------
-Ran 19 tests in 4.816s
+Ran 19 tests in 3.401s
 
 OK

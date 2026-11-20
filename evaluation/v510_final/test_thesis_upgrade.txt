@@ -6,294 +6,294 @@ At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
     + CategoryInfo          : NotSpecified: (JWT_SECRET_KEY ...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:43:36,276 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:55:51,620 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
 test_guardrail_corpus_has_no_leak_and_no_false_positive 
 (test_thesis_upgrade.BenchmarkReleaseGateTests.test_guardrail_corpus_has_no_leak_and_no_false_positive) ... ok
 test_rag_retrieval_does_not_regress 
 (test_thesis_upgrade.BenchmarkReleaseGateTests.test_rag_retrieval_does_not_regress) ... ok
-test_access_control (test_thesis_upgrade.ClassKnowledgeUploadTests.test_access_control) ... 2026-11-21 05:43:39,032 
+test_access_control (test_thesis_upgrade.ClassKnowledgeUploadTests.test_access_control) ... 2026-11-21 05:55:53,506 
 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_foreign/knowledge "HTTP/1.1 404 Not 
 Found"
-2026-11-21 05:43:39,038 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,509 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:39,043 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,512 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:39,053 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,518 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:39,058 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,520 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 401 Unauthorized"
-2026-11-21 05:43:39,092 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,543 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,102 [INFO] httpx2: HTTP Request: DELETE 
+2026-11-21 05:55:53,548 [INFO] httpx2: HTTP Request: DELETE 
 http://testserver/api/instructor/classes/tu_kb_foreign/knowledge/1 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:39,112 [INFO] httpx2: HTTP Request: DELETE 
+2026-11-21 05:55:53,553 [INFO] httpx2: HTTP Request: DELETE 
 http://testserver/api/instructor/classes/tu_kb_a/knowledge/1 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:39,124 [INFO] httpx2: HTTP Request: DELETE 
+2026-11-21 05:55:53,560 [INFO] httpx2: HTTP Request: DELETE 
 http://testserver/api/instructor/classes/tu_kb_b/knowledge/1 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:39,138 [INFO] httpx2: HTTP Request: PATCH 
+2026-11-21 05:55:53,567 [INFO] httpx2: HTTP Request: PATCH 
 http://testserver/api/instructor/classes/tu_kb_b/knowledge/1 "HTTP/1.1 404 Not Found"
 ok
 test_chat_cites_class_document_only_for_enrolled_class 
 (test_thesis_upgrade.ClassKnowledgeUploadTests.test_chat_cites_class_document_only_for_enrolled_class) ... 2026-11-21 
-05:43:39,175 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
+05:55:53,587 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
 201 Created"
-2026-11-21 05:43:39,210 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
-2026-11-21 05:43:39,238 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
-2026-11-21 05:43:39,246 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 403 Forbidden"
+2026-11-21 05:55:53,608 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:53,624 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:53,629 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 403 Forbidden"
 ok
 test_default_retrieval_is_unchanged_by_class_documents 
 (test_thesis_upgrade.ClassKnowledgeUploadTests.test_default_retrieval_is_unchanged_by_class_documents) ... 2026-11-21 
-05:43:39,281 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
+05:55:53,650 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
 201 Created"
 ok
 test_heavy_code_document_warns_but_is_saved 
 (test_thesis_upgrade.ClassKnowledgeUploadTests.test_heavy_code_document_warns_but_is_saved) ... 2026-11-21 
-05:43:39,317 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
+05:55:53,671 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 
 201 Created"
 ok
 test_missing_declarations_are_rejected 
-(test_thesis_upgrade.ClassKnowledgeUploadTests.test_missing_declarations_are_rejected) ... 2026-11-21 05:43:39,328 
+(test_thesis_upgrade.ClassKnowledgeUploadTests.test_missing_declarations_are_rejected) ... 2026-11-21 05:55:53,678 
 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 422 
 Unprocessable Content"
-2026-11-21 05:43:39,339 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,683 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:39,349 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,689 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:39,359 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,695 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:39,369 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,701 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:39,382 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,707 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:39,418 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,727 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 201 Created"
 ok
 test_pdf_and_docx_are_extracted (test_thesis_upgrade.ClassKnowledgeUploadTests.test_pdf_and_docx_are_extracted) ... 
-2026-11-21 05:43:39,598 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,837 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,787 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:53,953 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 201 Created"
 ok
-test_per_class_limit (test_thesis_upgrade.ClassKnowledgeUploadTests.test_per_class_limit) ... 2026-11-21 05:43:39,826 
+test_per_class_limit (test_thesis_upgrade.ClassKnowledgeUploadTests.test_per_class_limit) ... 2026-11-21 05:55:53,983 
 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,858 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,012 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,892 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,039 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,929 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,066 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,961 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,086 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:39,995 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,107 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,029 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,129 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,063 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,150 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,099 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,174 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,133 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,195 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,166 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,215 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,202 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,236 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,235 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,256 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,268 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,278 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,303 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,297 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,336 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,315 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,370 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,335 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,403 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,353 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,438 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,374 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,471 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,395 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,482 [INFO] httpx2: HTTP Request: POST 
+2026-11-21 05:55:54,402 [INFO] httpx2: HTTP Request: POST 
 http://testserver/api/instructor/classes/tu_kb_full/knowledge "HTTP/1.1 422 Unprocessable Content"
 ok
-test_rejections (test_thesis_upgrade.ClassKnowledgeUploadTests.test_rejections) ... 2026-11-21 05:43:40,493 [INFO] 
+test_rejections (test_thesis_upgrade.ClassKnowledgeUploadTests.test_rejections) ... 2026-11-21 05:55:54,407 [INFO] 
 httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 422 Unprocessable 
 Content"
-2026-11-21 05:43:40,505 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,415 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:40,531 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,435 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:40,547 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,443 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:40,560 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,451 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:40,572 [WARNING] pypdf._reader: invalid pdf header: b'not a'
-2026-11-21 05:43:40,572 [WARNING] pypdf._reader: EOF marker not found
-2026-11-21 05:43:40,574 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,456 [WARNING] pypdf._reader: invalid pdf header: b'not a'
+2026-11-21 05:55:54,456 [WARNING] pypdf._reader: EOF marker not found
+2026-11-21 05:55:54,457 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
-2026-11-21 05:43:40,587 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,464 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 422 Unprocessable Content"
 ok
 test_toggle_and_delete_rebuild_the_index 
-(test_thesis_upgrade.ClassKnowledgeUploadTests.test_toggle_and_delete_rebuild_the_index) ... 2026-11-21 05:43:40,624 
+(test_thesis_upgrade.ClassKnowledgeUploadTests.test_toggle_and_delete_rebuild_the_index) ... 2026-11-21 05:55:54,489 
 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 201 Created"
-2026-11-21 05:43:40,658 [INFO] httpx2: HTTP Request: PATCH 
+2026-11-21 05:55:54,508 [INFO] httpx2: HTTP Request: PATCH 
 http://testserver/api/instructor/classes/tu_kb_a/knowledge/28 "HTTP/1.1 200 OK"
-2026-11-21 05:43:40,674 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
+2026-11-21 05:55:54,517 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/tu_kb_a/knowledge 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:40,708 [INFO] httpx2: HTTP Request: PATCH 
+2026-11-21 05:55:54,534 [INFO] httpx2: HTTP Request: PATCH 
 http://testserver/api/instructor/classes/tu_kb_a/knowledge/28 "HTTP/1.1 200 OK"
-2026-11-21 05:43:40,743 [INFO] httpx2: HTTP Request: DELETE 
+2026-11-21 05:55:54,553 [INFO] httpx2: HTTP Request: DELETE 
 http://testserver/api/instructor/classes/tu_kb_a/knowledge/28 "HTTP/1.1 200 OK"
 ok
 test_upload_md_is_scoped_to_its_class_only 
-(test_thesis_upgrade.ClassKnowledgeUploadTests.test_upload_md_is_scoped_to_its_class_only) ... 2026-11-21 05:43:40,779 
+(test_thesis_upgrade.ClassKnowledgeUploadTests.test_upload_md_is_scoped_to_its_class_only) ... 2026-11-21 05:55:54,574 
 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes/tu_kb_a/knowledge "HTTP/1.1 201 Created"
 ok
 test_limited_sample_is_flagged (test_thesis_upgrade.ClassSummaryAnswerTests.test_limited_sample_is_flagged) ... ok
 test_ask_ai_never_awards_stars_or_rationale 
-(test_thesis_upgrade.EndpointTests.test_ask_ai_never_awards_stars_or_rationale) ... 2026-11-21 05:43:40,803 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_ask_ai_never_awards_stars_or_rationale) ... 2026-11-21 05:55:54,588 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:40,818 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:40,830 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:43:40,838 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:54,596 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:54,603 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:54,609 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
 ok
 test_chat_after_pass_unlocks_submitted_code_only 
-(test_thesis_upgrade.EndpointTests.test_chat_after_pass_unlocks_submitted_code_only) ... 2026-11-21 05:43:40,849 
+(test_thesis_upgrade.EndpointTests.test_chat_after_pass_unlocks_submitted_code_only) ... 2026-11-21 05:55:54,616 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:40,864 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,173 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:54,624 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,540 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ok
 test_chat_before_pass_is_concept_only_and_hides_student_code 
 (test_thesis_upgrade.EndpointTests.test_chat_before_pass_is_concept_only_and_hides_student_code) ... 2026-11-21 
-05:43:42,183 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,197 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,230 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,255 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+05:55:55,548 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,557 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,575 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,589 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ok
 test_chat_explains_star_rules_from_system_text 
-(test_thesis_upgrade.EndpointTests.test_chat_explains_star_rules_from_system_text) ... 2026-11-21 05:43:42,265 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_chat_explains_star_rules_from_system_text) ... 2026-11-21 05:55:55,596 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,281 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,305 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,605 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,619 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ok
 test_chat_reports_sources_or_explicit_no_source 
-(test_thesis_upgrade.EndpointTests.test_chat_reports_sources_or_explicit_no_source) ... 2026-11-21 05:43:42,316 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_chat_reports_sources_or_explicit_no_source) ... 2026-11-21 05:55:55,626 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,330 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,356 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,379 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,633 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,647 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,659 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ok
 test_class_chat_cites_sample_and_never_identities 
-(test_thesis_upgrade.EndpointTests.test_class_chat_cites_sample_and_never_identities) ... 2026-11-21 05:43:42,390 
+(test_thesis_upgrade.EndpointTests.test_class_chat_cites_sample_and_never_identities) ... 2026-11-21 05:55:55,665 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,403 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,460 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 200 
+2026-11-21 05:55:55,673 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,702 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 200 
 OK"
-2026-11-21 05:43:42,467 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 404 
+2026-11-21 05:55:55,706 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 404 
 Not Found"
 ok
 test_class_insights_bottlenecks_error_mix_and_support_list 
 (test_thesis_upgrade.EndpointTests.test_class_insights_bottlenecks_error_mix_and_support_list) ... 2026-11-21 
-05:43:42,477 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,490 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,586 [INFO] httpx2: HTTP Request: GET 
+05:55:55,712 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,719 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,768 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_insight_class/insights?days=30 "HTTP/1.1 200 OK"
 ok
 test_class_insights_enforce_ownership_and_role 
-(test_thesis_upgrade.EndpointTests.test_class_insights_enforce_ownership_and_role) ... 2026-11-21 05:43:42,598 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_class_insights_enforce_ownership_and_role) ... 2026-11-21 05:55:55,775 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,612 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,626 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:55,782 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,789 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_private_class/insights "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:42,627 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:55,790 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_private_class/insights "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:42,629 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:55,791 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_private_class/insights "HTTP/1.1 401 Unauthorized"
-2026-11-21 05:43:42,631 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-base "HTTP/1.1 403 
+2026-11-21 05:55:55,791 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-base "HTTP/1.1 403 
 Forbidden"
-2026-11-21 05:43:42,633 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/ai/feedback-summary 
+2026-11-21 05:55:55,793 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/ai/feedback-summary 
 "HTTP/1.1 403 Forbidden"
 ok
 test_empty_class_reports_no_data (test_thesis_upgrade.EndpointTests.test_empty_class_reports_no_data) ... 2026-11-21 
-05:43:42,644 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,657 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,675 [INFO] httpx2: HTTP Request: GET 
+05:55:55,798 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,806 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,816 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_empty_class/insights "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,693 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 200 
+2026-11-21 05:55:55,825 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/ai/class-chat "HTTP/1.1 200 
 OK"
 ok
 test_exercise_detail_reports_has_passed_for_official_pass_only 
 (test_thesis_upgrade.EndpointTests.test_exercise_detail_reports_has_passed_for_official_pass_only) ... 2026-11-21 
-05:43:42,704 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,717 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,726 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
+05:55:55,831 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,839 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,844 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,743 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
+2026-11-21 05:55:55,853 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,755 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
+2026-11-21 05:55:55,859 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,760 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
+2026-11-21 05:55:55,862 [INFO] httpx2: HTTP Request: GET http://testserver/api/exercises/tu_ex_detail_has_passed 
 "HTTP/1.1 200 OK"
 ok
 test_feedback_summary_is_counts_only_and_scoped_to_own_classes 
 (test_thesis_upgrade.EndpointTests.test_feedback_summary_is_counts_only_and_scoped_to_own_classes) ... 2026-11-21 
-05:43:42,772 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,786 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+05:55:55,869 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,877 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
 ok
 test_hint_and_review_feedback_with_owner_check 
-(test_thesis_upgrade.EndpointTests.test_hint_and_review_feedback_with_owner_check) ... 2026-11-21 05:43:42,817 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_hint_and_review_feedback_with_owner_check) ... 2026-11-21 05:55:55,893 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,831 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,840 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,848 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 201 Created"
-2026-11-21 05:43:42,859 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/pythonic-review "HTTP/1.1 200 OK"
-2026-11-21 05:43:42,864 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:42,871 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 201 Created"
-2026-11-21 05:43:42,872 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 403 Forbidden"
+2026-11-21 05:55:55,901 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,907 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,912 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 201 Created"
+2026-11-21 05:55:55,918 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/pythonic-review "HTTP/1.1 200 OK"
+2026-11-21 05:55:55,921 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 404 Not Found"
+2026-11-21 05:55:55,926 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 201 Created"
+2026-11-21 05:55:55,927 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/feedback "HTTP/1.1 403 Forbidden"
 ok
 test_hints_after_first_pass_and_submit_levels_do_not_change_stars 
 (test_thesis_upgrade.EndpointTests.test_hints_after_first_pass_and_submit_levels_do_not_change_stars) ... 2026-11-21 
-05:43:42,883 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,896 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,923 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+05:55:55,934 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,944 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,960 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
 ok
 test_knowledge_base_endpoint_shows_sources_and_provenance 
 (test_thesis_upgrade.EndpointTests.test_knowledge_base_endpoint_shows_sources_and_provenance) ... 2026-11-21 
-05:43:42,934 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,947 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:42,951 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-base "HTTP/1.1 200 
+05:55:55,967 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,975 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:55,979 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-base "HTTP/1.1 200 
 OK"
 ok
 test_offline_chat_after_pass_summarises_submitted_structure 
 (test_thesis_upgrade.EndpointTests.test_offline_chat_after_pass_summarises_submitted_structure)
 S8a offline: trả lời nhắc tới bài đã nộp bằng tóm tắt AST (qua MCP), không chép lại mã nguồn. ... 2026-11-21 
-05:43:42,961 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:42,975 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:44,306 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+05:55:55,985 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:55,994 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:56,927 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ok
 test_offline_code_review_reply_without_ast_is_honest 
-(test_thesis_upgrade.EndpointTests.test_offline_code_review_reply_without_ast_is_honest) ... 2026-11-21 05:43:44,317 
+(test_thesis_upgrade.EndpointTests.test_offline_code_review_reply_without_ast_is_honest) ... 2026-11-21 05:55:56,934 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:44,331 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:56,942 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
 ok
 test_resubmitting_cannot_wash_out_level3_hint 
-(test_thesis_upgrade.EndpointTests.test_resubmitting_cannot_wash_out_level3_hint) ... 2026-11-21 05:43:44,342 [INFO] 
+(test_thesis_upgrade.EndpointTests.test_resubmitting_cannot_wash_out_level3_hint) ... 2026-11-21 05:55:56,949 [INFO] 
 pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:44,356 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:44,373 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:43:44,451 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:56,959 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:56,969 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:57,011 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
 ok
 test_star_rationale_matches_star_rule (test_thesis_upgrade.EndpointTests.test_star_rationale_matches_star_rule) ... 
-2026-11-21 05:43:44,464 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:44,478 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:57,019 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:57,027 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
 ok
 test_submit_pass_explains_stars_and_fades_scaffolding 
-(test_thesis_upgrade.EndpointTests.test_submit_pass_explains_stars_and_fades_scaffolding) ... 2026-11-21 05:43:44,490 
+(test_thesis_upgrade.EndpointTests.test_submit_pass_explains_stars_and_fades_scaffolding) ... 2026-11-21 05:55:57,035 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:44,503 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
-2026-11-21 05:43:44,526 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:57,043 [INFO] pytutor.api: RAG knowledge base ready: 46 local chunks indexed.
+2026-11-21 05:55:57,057 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
 ok
 test_level1_fallback_does_not_reveal_expected_output 
 (test_thesis_upgrade.FormativeFeedbackTests.test_level1_fallback_does_not_reveal_expected_output) ... ok
@@ -311,21 +311,21 @@ test_class_summary_has_process_counts_and_no_identities
 (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_class_summary_has_process_counts_and_no_identities) ... ok
 test_insights_have_process_groups_for_every_group 
 (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_insights_have_process_groups_for_every_group) ... 2026-11-21 
-05:43:44,676 [INFO] httpx2: HTTP Request: GET 
+05:55:57,140 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/tu_process_class/insights?days=30 "HTTP/1.1 200 OK"
 ok
 test_instructor_run_test_is_not_recorded 
 (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_instructor_run_test_is_not_recorded) ... 2026-11-21 
-05:43:44,684 [INFO] httpx2: HTTP Request: POST http://testserver/api/run-test "HTTP/1.1 200 OK"
+05:55:57,145 [INFO] httpx2: HTTP Request: POST http://testserver/api/run-test "HTTP/1.1 200 OK"
 ok
 test_practice_run_does_not_touch_official_metrics 
 (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_practice_run_does_not_touch_official_metrics) ... ok
 test_student_run_test_is_recorded_without_code 
 (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_student_run_test_is_recorded_without_code) ... 2026-11-21 
-05:43:44,727 [INFO] httpx2: HTTP Request: POST http://testserver/api/run-test "HTTP/1.1 200 OK"
+05:55:57,167 [INFO] httpx2: HTTP Request: POST http://testserver/api/run-test "HTTP/1.1 200 OK"
 ok
 test_write_failure_is_not_fatal (test_thesis_upgrade.PracticeRunsAndInsightsV54Tests.test_write_failure_is_not_fatal) 
-... 2026-11-21 05:43:44,732 [WARNING] pytutor.database: Không ghi được lượt chạy thử: disk
+... 2026-11-21 05:55:57,170 [WARNING] pytutor.database: Không ghi được lượt chạy thử: disk
 ok
 test_empty_has_no_group (test_thesis_upgrade.ProcessGroupTests.test_empty_has_no_group) ... ok
 test_hint_pass_uses_hint_before_first_pass_only 
@@ -359,6 +359,6 @@ test_source_of_both_copies_is_identical
 (test_thesis_upgrade.StudentModelSyncTests.test_source_of_both_copies_is_identical) ... ok
 
 ----------------------------------------------------------------------
-Ran 61 tests in 8.727s
+Ran 61 tests in 5.766s
 
 OK

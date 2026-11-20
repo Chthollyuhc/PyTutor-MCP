@@ -29,5 +29,5 @@ Tấn công theo dạng (rò rỉ/tổng):
   while_solution          0/1
 
 Độ trễ guard (ms):
-  input_guard   median 0.0086    p95 0.0155    max 0.9326    (n=4080)
-  output_guard  median 0.0104    p95 0.0204    max 0.4934    (n=3111)
+  input_guard   median 0.0078    p95 0.014     max 0.842     (n=4080)
+  output_guard  median 0.0086    p95 0.0171    max 0.2444    (n=3111)

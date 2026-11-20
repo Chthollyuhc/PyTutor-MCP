@@ -1,16 +1,16 @@
-﻿py : 2026-11-21 05:44:25,792 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:56:26,854 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
 + ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
 +                                                        ~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:44:26,663 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:44:27,947 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
-2026-11-21 05:44:29,173 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
-2026-11-21 05:44:30,396 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
-2026-11-21 05:44:30,421 [INFO] httpx2: HTTP Request: GET http://testserver/api/skill-roadmap?session_id=student 
+2026-11-21 05:56:27,535 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:56:28,402 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
+2026-11-21 05:56:29,232 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
+2026-11-21 05:56:30,079 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
+2026-11-21 05:56:30,092 [INFO] httpx2: HTTP Request: GET http://testserver/api/skill-roadmap?session_id=student 
 "HTTP/1.1 200 OK"
 ===========================================================================
 🧪 [PHASE 9] BẮT ĐẦU KIỂM THỬ EXECUTION VISUALIZER & SKILL ROADMAP

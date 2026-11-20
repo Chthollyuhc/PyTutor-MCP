@@ -17,6 +17,6 @@ test_passed_has_no_failures (test_data_capture_v57.PureFeatureTests.test_passed_
 test_skipped_not_counted_as_failed (test_data_capture_v57.PureFeatureTests.test_skipped_not_counted_as_failed) ... ok
 
 ----------------------------------------------------------------------
-Ran 8 tests in 0.220s
+Ran 8 tests in 0.188s
 
 OK

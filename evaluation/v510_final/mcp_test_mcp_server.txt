@@ -54,7 +54,7 @@
 [8] Kiểm tra Tool: run_test_cases (Kịch bản: Vòng lặp vô hạn while True - Chờ timeout 5s)...
     Trạng thái: TIMEOUT
     Thông báo: Time Limit Exceeded (>5.0s)
-    Thời gian chạy: 5018.46 ms
+    Thời gian chạy: 5017.64 ms
     ✅ Sandbox cô lập bắt chặn thành công vòng lặp vô hạn sau 5 giây mà không làm crash Server!
 
 ======================================================================

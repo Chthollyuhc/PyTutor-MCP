@@ -1,19 +1,19 @@
-﻿py : 2026-11-21 05:44:12,251 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:56:16,072 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
 + ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
 +                                                        ~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:44:13,193 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:44:14,479 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
-2026-11-21 05:44:15,762 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
-2026-11-21 05:44:17,057 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
-2026-11-21 05:44:18,403 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
-2026-11-21 05:44:24,726 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
-2026-11-21 05:44:24,757 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
-2026-11-21 05:44:24,780 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:56:16,744 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:56:17,614 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
+2026-11-21 05:56:18,494 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 05:56:19,410 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 05:56:20,336 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 05:56:26,221 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 05:56:26,239 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 05:56:26,251 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
 ======================================================================
 🧪 [PHASE 8] BẮT ĐẦU KIỂM THỬ MULTI-TURN CHAT & CUSTOM INPUT RUN
 ======================================================================
@@ -22,7 +22,7 @@ At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
     ✅ Health: OK | MCP Tools: 8 tools
 
 [2] Kiểm tra POST /api/custom-run (Code chuẩn: tính nhân đôi n)...
-    ✅ Output thực tế: '16' | Thời gian: 45.9 ms
+    ✅ Output thực tế: '16' | Thời gian: 29.86 ms
 
 [3] Kiểm tra POST /api/custom-run (Lỗi cú pháp: thiếu dấu ngoặc)...
     ✅ Đã bắt đúng lỗi cú pháp: SyntaxError: '(' was never closed
@@ -31,7 +31,7 @@ At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
     ✅ Đã bắt đúng lỗi Runtime: ZeroDivisionError: division by zero
 
 [5] Kiểm tra POST /api/custom-run (Vòng lặp vô hạn: while True)...
-    ✅ Đã ngắt cưỡng chế sau 6.32s | Status: TIMEOUT
+    ✅ Đã ngắt cưỡng chế sau 5.88s | Status: TIMEOUT
 
 [6] Kiểm tra POST /api/tutor/chat (Hỏi làm rõ: 'Tại sao range(1, n) thiếu 1 đơn vị?')...
     ✅ Nguồn AI: Rule-Based Assistant

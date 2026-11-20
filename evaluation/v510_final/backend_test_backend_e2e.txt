@@ -1,20 +1,20 @@
-﻿py : 2026-11-21 05:45:11,299 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:56:59,607 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:38 char:46
 + ... solated "backend_test_backend_e2e" { py -m backend.test_backend_e2e }
 +                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:45:12,162 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:45:13,441 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
-2026-11-21 05:45:14,705 [INFO] httpx: HTTP Request: GET http://test/api/exercises "HTTP/1.1 200 OK"
-2026-11-21 05:45:16,047 [INFO] httpx: HTTP Request: GET http://test/api/exercises/ex_01_sum_1_to_n "HTTP/1.1 200 OK"
-2026-11-21 05:45:18,932 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:45:21,668 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:45:24,385 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:45:27,392 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:45:29,976 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:57:00,229 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:57:01,084 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
+2026-11-21 05:57:01,921 [INFO] httpx: HTTP Request: GET http://test/api/exercises "HTTP/1.1 200 OK"
+2026-11-21 05:57:02,738 [INFO] httpx: HTTP Request: GET http://test/api/exercises/ex_01_sum_1_to_n "HTTP/1.1 200 OK"
+2026-11-21 05:57:04,578 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:57:06,414 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:57:08,234 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:57:10,095 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:57:11,965 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
 ======================================================================
 🧪 [PHASE 2] BẮT ĐẦU KIỂM THỬ TÍCH HỢP TOÀN DIỆN BACKEND E2E
 ======================================================================

@@ -1,30 +1,30 @@
-﻿py : 2026-11-21 05:44:48,339 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:56:42,154 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
 + ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
 +                                                        ~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:44:49,248 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:44:49,276 [INFO] httpx2: HTTP Request: GET http://testserver/api/auth/me "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,288 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
+2026-11-21 05:56:42,832 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:56:42,853 [INFO] httpx2: HTTP Request: GET http://testserver/api/auth/me "HTTP/1.1 200 OK"
+2026-11-21 05:56:42,862 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
 OK"
-2026-11-21 05:44:49,298 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/classes/cls_neu_cntt1117_02/leave 
+2026-11-21 05:56:42,869 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/classes/cls_neu_cntt1117_02/leave 
 "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,308 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
+2026-11-21 05:56:42,875 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
 OK"
-2026-11-21 05:44:49,316 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1117_02/leave 
+2026-11-21 05:56:42,881 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1117_02/leave 
 "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,328 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
+2026-11-21 05:56:42,890 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
 "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,343 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:56:42,900 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/skill-roadmap?class_id=cls_neu_cntt1128_02 "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,355 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1128_02/enroll 
+2026-11-21 05:56:42,910 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1128_02/enroll 
 "HTTP/1.1 200 OK"
-2026-11-21 05:44:49,363 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
+2026-11-21 05:56:42,915 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
 "HTTP/1.1 200 OK"
-2026-11-21 05:44:50,639 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/profile?session_id=student 
+2026-11-21 05:56:43,781 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/profile?session_id=student 
 "HTTP/1.1 200 OK"
 ================================================================================
 🧪 [PHASE 15.3] BẮT ĐẦU KIỂM THỬ QA AUDIT HOTFIX & DATA INTEGRITY

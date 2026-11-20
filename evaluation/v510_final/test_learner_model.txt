@@ -6,35 +6,35 @@ At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
     + CategoryInfo          : NotSpecified: (JWT_SECRET_KEY ...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-2026-11-21 05:43:47,737 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:55:59,299 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
 test_instructor_learner_model_endpoint_access_control 
-(test_learner_model.ApiTests.test_instructor_learner_model_endpoint_access_control) ... 2026-11-21 05:43:47,793 [INFO] 
+(test_learner_model.ApiTests.test_instructor_learner_model_endpoint_access_control) ... 2026-11-21 05:55:59,341 [INFO] 
 httpx2: HTTP Request: GET http://testserver/api/instructor/classes/lm_api_class/students/lm_api_student/learner-model 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:47,801 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,348 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/lm_api_class/students/lm_api_student/learner-model "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:47,805 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,350 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/lm_api_class/students/lm_api_student/learner-model "HTTP/1.1 403 Forbidden"
-2026-11-21 05:43:47,808 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,353 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/lm_api_class/students/lm_api_student/learner-model "HTTP/1.1 401 Unauthorized"
-2026-11-21 05:43:47,818 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,360 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/lm_api_class/students/lm_api_other_student/learner-model "HTTP/1.1 404 Not 
 Found"
-2026-11-21 05:43:47,824 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,364 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/instructor/classes/khong_ton_tai/students/lm_api_student/learner-model "HTTP/1.1 404 Not Found"
 ok
 test_profile_includes_learner_model_in_both_branches 
-(test_learner_model.ApiTests.test_profile_includes_learner_model_in_both_branches) ... 2026-11-21 05:43:47,832 [INFO] 
+(test_learner_model.ApiTests.test_profile_includes_learner_model_in_both_branches) ... 2026-11-21 05:55:59,370 [INFO] 
 httpx2: HTTP Request: GET http://testserver/api/student/profile?session_id=lm_api_student "HTTP/1.1 200 OK"
-2026-11-21 05:43:47,836 [WARNING] pytutor.api: Lỗi truy xuất student profile qua MCP, dùng fallback: mcp down
-2026-11-21 05:43:47,840 [INFO] httpx2: HTTP Request: GET 
+2026-11-21 05:55:59,372 [WARNING] pytutor.api: Lỗi truy xuất student profile qua MCP, dùng fallback: mcp down
+2026-11-21 05:55:59,375 [INFO] httpx2: HTTP Request: GET 
 http://testserver/api/student/profile?session_id=lm_api_student "HTTP/1.1 200 OK"
 ok
 test_submit_passes_only_enrolled_class_and_never_403s 
-(test_learner_model.ApiTests.test_submit_passes_only_enrolled_class_and_never_403s) ... 2026-11-21 05:43:47,852 [INFO] 
+(test_learner_model.ApiTests.test_submit_passes_only_enrolled_class_and_never_403s) ... 2026-11-21 05:55:59,388 [INFO] 
 httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:43:47,864 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
-2026-11-21 05:43:47,874 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:59,397 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:55:59,404 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
 ok
 test_get_attempts_reports_action_type (test_learner_model.AttemptFeatureTests.test_get_attempts_reports_action_type) 
 ... ok
@@ -91,15 +91,15 @@ test_one_failing_exercise_is_not_enough_to_be_struggling
 test_secure_needs_two_passed_exercises (test_learner_model.StateRuleTests.test_secure_needs_two_passed_exercises) ... 
 ok
 test_api_knowledge_components_crud 
-(test_learner_model.TestDynamicKnowledgeComponents.test_api_knowledge_components_crud) ... 2026-11-21 05:43:48,361 
+(test_learner_model.TestDynamicKnowledgeComponents.test_api_knowledge_components_crud) ... 2026-11-21 05:55:59,738 
 [INFO] httpx2: HTTP Request: GET http://testserver/api/knowledge-components "HTTP/1.1 200 OK"
-2026-11-21 05:43:48,371 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/knowledge-components 
+2026-11-21 05:55:59,743 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/knowledge-components 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:48,378 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-components 
+2026-11-21 05:55:59,748 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/knowledge-components 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:48,383 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/instructor/knowledge-components/loop 
+2026-11-21 05:55:59,750 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/instructor/knowledge-components/loop 
 "HTTP/1.1 400 Bad Request"
-2026-11-21 05:43:48,390 [INFO] httpx2: HTTP Request: DELETE 
+2026-11-21 05:55:59,756 [INFO] httpx2: HTTP Request: DELETE 
 http://testserver/api/instructor/knowledge-components/file_io_test "HTTP/1.1 200 OK"
 ok
 test_assign_kcs_with_custom_definitions 
@@ -108,6 +108,6 @@ test_derive_learner_model_with_custom_kc
 (test_learner_model.TestDynamicKnowledgeComponents.test_derive_learner_model_with_custom_kc) ... ok
 
 ----------------------------------------------------------------------
-Ran 34 tests in 0.827s
+Ran 34 tests in 0.611s
 
 OK

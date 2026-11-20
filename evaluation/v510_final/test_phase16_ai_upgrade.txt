@@ -1,18 +1,18 @@
-﻿py : 2026-11-21 05:43:27,592 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+﻿py : 2026-11-21 05:55:45,151 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
 nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
 At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
 +   else { Invoke-Isolated $m { py -m unittest $m -v } }
 +                               ~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:5...khi triển khai.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
 test_chat_requires_auth_and_instructor_role 
-(test_phase16_ai_upgrade.Phase16Tests.test_chat_requires_auth_and_instructor_role) ... 2026-11-21 05:43:28,510 [INFO] 
+(test_phase16_ai_upgrade.Phase16Tests.test_chat_requires_auth_and_instructor_role) ... 2026-11-21 05:55:45,862 [INFO] 
 pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
-2026-11-21 05:43:28,516 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:28,528 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:28,532 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 401 Unauthorized"
-2026-11-21 05:43:28,535 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 403 Forbidden"
+2026-11-21 05:55:45,866 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:55:45,876 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:55:45,880 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 401 Unauthorized"
+2026-11-21 05:55:45,881 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 403 Forbidden"
 ok
 test_database_migration_and_feedback_owner 
 (test_phase16_ai_upgrade.Phase16Tests.test_database_migration_and_feedback_owner) ... ok
@@ -21,13 +21,13 @@ test_prompt_persona_uses_metrics_and_untrusted_context
 (test_phase16_ai_upgrade.Phase16Tests.test_prompt_persona_uses_metrics_and_untrusted_context) ... ok
 test_rag_ingest_and_retrieve (test_phase16_ai_upgrade.Phase16Tests.test_rag_ingest_and_retrieve) ... ok
 test_student_prompt_injection_blocked_before_model 
-(test_phase16_ai_upgrade.Phase16Tests.test_student_prompt_injection_blocked_before_model) ... 2026-11-21 05:43:28,583 
+(test_phase16_ai_upgrade.Phase16Tests.test_student_prompt_injection_blocked_before_model) ... 2026-11-21 05:55:45,918 
 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:28,592 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:28,596 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 400 Bad Request"
+2026-11-21 05:55:45,927 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:55:45,930 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 400 Bad Request"
 ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 0.280s
+Ran 6 tests in 0.243s
 
 OK

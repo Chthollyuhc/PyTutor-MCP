@@ -25,5 +25,5 @@ Tấn công theo dạng (rò rỉ/tổng):
   Câu hỏi hợp lệ bị chặn: HB09
 
 Độ trễ guard (ms):
-  input_guard   median 0.0122    p95 0.0187    max 0.9206    (n=1836)
-  output_guard  median 0.0116    p95 0.0235    max 0.1408    (n=1326)
+  input_guard   median 0.011     p95 0.0168    max 0.785     (n=1836)
+  output_guard  median 0.0099    p95 0.0194    max 0.2219    (n=1326)

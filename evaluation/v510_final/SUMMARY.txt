@@ -1,38 +1,39 @@
 ﻿compileall exit=0
-test_phase16_ai_upgrade (2s): ---------------------------------------------------------------------- | Ran 6 tests in 0.280s |  | OK
-test_phase17_adaptive_analytics (1s): ---------------------------------------------------------------------- | Ran 5 tests in 0.191s |  | OK
-test_qa_authorization (5s): ---------------------------------------------------------------------- | Ran 9 tests in 3.224s |  | OK
-test_thesis_upgrade (11s): ---------------------------------------------------------------------- | Ran 61 tests in 8.727s |  | OK
-test_level3_scaffold (0s): ---------------------------------------------------------------------- | Ran 15 tests in 0.004s |  | OK
+test_phase16_ai_upgrade (2s): ---------------------------------------------------------------------- | Ran 6 tests in 0.243s |  | OK
+test_phase17_adaptive_analytics (1s): ---------------------------------------------------------------------- | Ran 5 tests in 0.211s |  | OK
+test_qa_authorization (4s): ---------------------------------------------------------------------- | Ran 9 tests in 2.346s |  | OK
+test_thesis_upgrade (7s): ---------------------------------------------------------------------- | Ran 61 tests in 5.766s |  | OK
+test_level3_scaffold (0s): ---------------------------------------------------------------------- | Ran 15 tests in 0.003s |  | OK
 test_pedagogy_v55 (0s): ---------------------------------------------------------------------- | Ran 19 tests in 0.018s |  | OK
-test_learner_model (3s): ---------------------------------------------------------------------- | Ran 34 tests in 0.827s |  | OK
-test_passwords (1s): ---------------------------------------------------------------------- | Ran 7 tests in 0.823s |  | OK
+test_learner_model (2s): ---------------------------------------------------------------------- | Ran 34 tests in 0.611s |  | OK
+test_passwords (1s): ---------------------------------------------------------------------- | Ran 7 tests in 0.687s |  | OK
 test_no_code_hint (0s): ---------------------------------------------------------------------- | Ran 5 tests in 0.001s |  | OK
 test_user_uploaded_kb (0s):  | ====================================================================== | KẾT LUẬN: TÀI LIỆU ĐÃ ĐƯỢC NẠP, PHÂN ĐOẠN VÀ HOẠT ĐỘNG HOÀN TOÀN CHUẨN XÁC! | ======================================================================
-test_data_capture_v57 (0s): ---------------------------------------------------------------------- | Ran 8 tests in 0.220s |  | OK
-test_class_overview_v57 (2s): ---------------------------------------------------------------------- | Ran 9 tests in 1.563s |  | OK
-test_visual_views_v58 (5s): ---------------------------------------------------------------------- | Ran 19 tests in 4.816s |  | OK
-test_plain_language_v59 (5s): ---------------------------------------------------------------------- | Ran 23 tests in 4.722s |  | OK
-test_phase5_backend (8s):  | ====================================================================== | 🎉 TẤT CẢ TEST CASES BACKEND PHASE 5 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
-test_phase8_chat (14s):  | ====================================================================== | 🎉 TẤT CẢ 7 BÀI KIỂM THỬ CỦA PHASE 8 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
-test_phase9_visualizer (6s):  | =========================================================================== | 🎉 TẤT CẢ 7 BÀI TEST TỰ ĐỘNG CỦA PHASE 9 ĐỀU ĐẠT 100% (ALL PASSED)! | ===========================================================================
-test_phase10_gamification (7s):  | =========================================================================== | 🎉 TẤT CẢ 6 BÀI KIỂM THỬ TỰ ĐỘNG CỦA PHASE 10 ĐỀU ĐẠT 100% (ALL PASSED)! | ===========================================================================
-test_phase12_classroom_exam (6s):  | ================================================================================ | 🎉 TẤT CẢ 7 HẠNG MỤC KIỂM THỬ CỦA PHASE 12 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
-test_phase13_14_neu_lms (3s):  | ================================================================================ | 🎉 TẤT CẢ 8 HẠNG MỤC KIỂM THỬ CỦA PHASE 13 & 14 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
-test_phase15_3_qa_audit (3s):  | ================================================================================ | 🎉 TẤT CẢ 6 HẠNG MỤC KIỂM THỬ QA AUDIT HOTFIX ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
-test_phase15_4_action_buttons (9s):  | ================================================================================ | 🎉 TẤT CẢ CÁC HẠNG MỤC KIỂM THỬ PHASE 15.4 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
-test_hint_quality_v510 (1s): ---------------------------------------------------------------------- | Ran 17 tests in 0.604s |  | OK
-test_prompt_golden_v510 (0s): ---------------------------------------------------------------------- | Ran 2 tests in 0.012s |  | OK
-test_hint_resilience_v510 (1s): ---------------------------------------------------------------------- | Ran 14 tests in 0.100s |  | OK
-mcp_test_mcp_server (8s):  | ====================================================================== | 🎉 TẤT CẢ 8 BƯỚC KIỂM THỬ CỦA PHASE 1 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
-backend_test_backend_e2e (20s):  | ====================================================================== | 🎉 TẤT CẢ 6 BÀI KIỂM THỬ BACKEND E2E ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
+test_data_capture_v57 (0s): ---------------------------------------------------------------------- | Ran 8 tests in 0.188s |  | OK
+test_class_overview_v57 (1s): ---------------------------------------------------------------------- | Ran 9 tests in 1.201s |  | OK
+test_visual_views_v58 (4s): ---------------------------------------------------------------------- | Ran 19 tests in 3.401s |  | OK
+test_plain_language_v59 (4s): ---------------------------------------------------------------------- | Ran 23 tests in 3.235s |  | OK
+test_phase5_backend (5s):  | ====================================================================== | 🎉 TẤT CẢ TEST CASES BACKEND PHASE 5 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
+test_phase8_chat (11s):  | ====================================================================== | 🎉 TẤT CẢ 7 BÀI KIỂM THỬ CỦA PHASE 8 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
+test_phase9_visualizer (4s):  | =========================================================================== | 🎉 TẤT CẢ 7 BÀI TEST TỰ ĐỘNG CỦA PHASE 9 ĐỀU ĐẠT 100% (ALL PASSED)! | ===========================================================================
+test_phase10_gamification (5s):  | =========================================================================== | 🎉 TẤT CẢ 6 BÀI KIỂM THỬ TỰ ĐỘNG CỦA PHASE 10 ĐỀU ĐẠT 100% (ALL PASSED)! | ===========================================================================
+test_phase12_classroom_exam (4s):  | ================================================================================ | 🎉 TẤT CẢ 7 HẠNG MỤC KIỂM THỬ CỦA PHASE 12 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
+test_phase13_14_neu_lms (2s):  | ================================================================================ | 🎉 TẤT CẢ 8 HẠNG MỤC KIỂM THỬ CỦA PHASE 13 & 14 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
+test_phase15_3_qa_audit (2s):  | ================================================================================ | 🎉 TẤT CẢ 6 HẠNG MỤC KIỂM THỬ QA AUDIT HOTFIX ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
+test_phase15_4_action_buttons (6s):  | ================================================================================ | 🎉 TẤT CẢ CÁC HẠNG MỤC KIỂM THỬ PHASE 15.4 ĐỀU ĐẠT CHUẨN 100%! | ================================================================================
+test_hint_quality_v510 (1s): ---------------------------------------------------------------------- | Ran 17 tests in 0.463s |  | OK
+test_hint_evidence_v510 (1s): ---------------------------------------------------------------------- | Ran 14 tests in 0.382s |  | OK
+test_prompt_golden_v510 (0s): ---------------------------------------------------------------------- | Ran 2 tests in 0.009s |  | OK
+test_hint_resilience_v510 (1s): ---------------------------------------------------------------------- | Ran 20 tests in 0.120s |  | OK
+mcp_test_mcp_server (7s):  | ====================================================================== | 🎉 TẤT CẢ 8 BƯỚC KIỂM THỬ CỦA PHASE 1 ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
+backend_test_backend_e2e (13s):  | ====================================================================== | 🎉 TẤT CẢ 6 BÀI KIỂM THỬ BACKEND E2E ĐỀU ĐẠT CHUẨN 100%! | ======================================================================
 eval_phase17_adaptive (0s):       "requested_level_preserved": true |     } |   ] | }
-eval_learner_model_policy (1s):   - hint_reliant: data_status=sufficient, hint_reliance=high, khác baseline 15/15 ô |   - repeated_logic_error: data_status=limited, hint_reliance=low, khác baseline 3/15 ô |   - syntax_struggler: data_status=sufficient, hint_reliance=low, khác baseline 12/15 ô | KẾT QUẢ: ĐẠT
-eval_guardrails_dev (0s):  | Độ trễ guard (ms): |   input_guard   median 0.0086    p95 0.0155    max 0.9326    (n=4080) |   output_guard  median 0.0104    p95 0.0204    max 0.4934    (n=3111)
-eval_guardrails_holdout (1s):  | Độ trễ guard (ms): |   input_guard   median 0.0122    p95 0.0187    max 0.9206    (n=1836) |   output_guard  median 0.0116    p95 0.0235    max 0.1408    (n=1326)
-eval_rag (2s):   python_not_covered   7/8 |   Gắn nguồn không phù hợp: O02→Hàm và giá trị trả về (0.2335) |  | Độ trễ truy xuất (ms): median 1.9176 | p95 2.7725 | max 5.7817 (n=1092)
-eval_level3_dev (13s): Lời giải lọt nguyên vẹn sau khi che: 0/24 [] | Khung còn là Python hợp lệ: 24/24 | Kiểm thử còn đạt sau khi che: 9/125 | Dòng lệnh bị che: 63/129
-eval_level3_holdout (9s): Lời giải lọt nguyên vẹn sau khi che: 0/16 [] | Khung còn là Python hợp lệ: 16/16 | Kiểm thử còn đạt sau khi che: 0/83 | Dòng lệnh bị che: 40/73
-frontend test:theme (1 s): ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 75.0983
-frontend test:ui-utils (1 s): ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 115.6266
-frontend build (4 s): https://rollupjs.org/configuration-options/#output-manualchunks | - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit. | ✓ built in 3.02s
+eval_learner_model_policy (0s):   - hint_reliant: data_status=sufficient, hint_reliance=high, khác baseline 15/15 ô |   - repeated_logic_error: data_status=limited, hint_reliance=low, khác baseline 3/15 ô |   - syntax_struggler: data_status=sufficient, hint_reliance=low, khác baseline 12/15 ô | KẾT QUẢ: ĐẠT
+eval_guardrails_dev (0s):  | Độ trễ guard (ms): |   input_guard   median 0.0078    p95 0.014     max 0.842     (n=4080) |   output_guard  median 0.0086    p95 0.0171    max 0.2444    (n=3111)
+eval_guardrails_holdout (0s):  | Độ trễ guard (ms): |   input_guard   median 0.011     p95 0.0168    max 0.785     (n=1836) |   output_guard  median 0.0099    p95 0.0194    max 0.2219    (n=1326)
+eval_rag (2s):   python_not_covered   7/8 |   Gắn nguồn không phù hợp: O02→Hàm và giá trị trả về (0.2335) |  | Độ trễ truy xuất (ms): median 1.3893 | p95 1.7555 | max 18.8532 (n=1092)
+eval_level3_dev (9s): Lời giải lọt nguyên vẹn sau khi che: 0/24 [] | Khung còn là Python hợp lệ: 24/24 | Kiểm thử còn đạt sau khi che: 9/125 | Dòng lệnh bị che: 63/129
+eval_level3_holdout (6s): Lời giải lọt nguyên vẹn sau khi che: 0/16 [] | Khung còn là Python hợp lệ: 16/16 | Kiểm thử còn đạt sau khi che: 0/83 | Dòng lệnh bị che: 40/73
+frontend test:theme (0 s): ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 65.5894
+frontend test:ui-utils (0 s): ℹ skipped 0 | ℹ todo 0 | ℹ duration_ms 87.5538
+frontend build (3 s): https://rollupjs.org/configuration-options/#output-manualchunks | - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit. | ✓ built in 1.98s

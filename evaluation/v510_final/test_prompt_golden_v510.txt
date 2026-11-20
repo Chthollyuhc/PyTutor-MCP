@@ -10,6 +10,6 @@ test_prompts_rebuild_character_for_character
 (test_prompt_golden_v510.PromptGoldenTests.test_prompts_rebuild_character_for_character) ... ok
 
 ----------------------------------------------------------------------
-Ran 2 tests in 0.012s
+Ran 2 tests in 0.009s
 
 OK

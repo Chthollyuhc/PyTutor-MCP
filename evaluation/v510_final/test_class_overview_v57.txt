@@ -14,13 +14,13 @@ C:\Users\Admin\Downloads\PyTutor-Thesis\backend\schemas.py:563: PydanticDeprecat
 and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
 Migration Guide at https://errors.pydantic.dev/2.13/migration/
   keywords: list[str] = Field(..., min_items=1, description="Danh sách các từ khóa nhận diện")
-2026-11-21 05:43:52,700 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
-2026-11-21 05:43:52,713 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
-2026-11-21 05:43:52,736 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+2026-11-21 05:56:02,979 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 05:56:02,988 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 05:56:03,006 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
 "HTTP/1.1 200 OK"
-2026-11-21 05:43:52,742 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+2026-11-21 05:56:03,011 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
 "HTTP/1.1 404 Not Found"
-2026-11-21 05:43:52,744 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+2026-11-21 05:56:03,012 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
 "HTTP/1.1 403 Forbidden"
 ok
 test_new_keys_and_overview (test_class_overview_v57.OverviewIntegrationTests.test_new_keys_and_overview) ... ok
@@ -34,6 +34,6 @@ test_limited_gives_no_class_conclusion
 test_no_data (test_class_overview_v57.OverviewPureTests.test_no_data) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 1.563s
+Ran 9 tests in 1.201s
 
 OK

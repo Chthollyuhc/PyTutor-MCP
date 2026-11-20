@@ -30,6 +30,18 @@ test_level3_reply_has_logic_masked (test_hint_resilience_v510.ProviderFailureTes
 test_no_provider_response_gives_deterministic_hint_for_every_level 
 (test_hint_resilience_v510.ProviderFailureTests.test_no_provider_response_gives_deterministic_hint_for_every_level) 
 ... ok
+test_blank_attempt_prompt_has_no_error_evidence 
+(test_hint_resilience_v510.ReviewFixTests.test_blank_attempt_prompt_has_no_error_evidence) ... ok
+test_docstring_used_as_a_value_is_not_treated_as_comment 
+(test_hint_resilience_v510.ReviewFixTests.test_docstring_used_as_a_value_is_not_treated_as_comment) ... ok
+test_short_benign_comment_overlap_does_not_replace_a_good_reply 
+(test_hint_resilience_v510.ReviewFixTests.test_short_benign_comment_overlap_does_not_replace_a_good_reply) ... ok
+test_timeout_picks_the_loop_that_never_updates_its_condition 
+(test_hint_resilience_v510.ReviewFixTests.test_timeout_picks_the_loop_that_never_updates_its_condition) ... ok
+test_trace_is_skipped_for_code_with_risky_imports_or_calls 
+(test_hint_resilience_v510.ReviewFixTests.test_trace_is_skipped_for_code_with_risky_imports_or_calls) ... ok
+test_trace_step_not_called_for_risky_code 
+(test_hint_resilience_v510.ReviewFixTests.test_trace_step_not_called_for_risky_code) ... ok
 test_errors_timeout_and_bad_json_return_none_with_skipped_step 
 (test_hint_resilience_v510.TraceStepFailureTests.test_errors_timeout_and_bad_json_return_none_with_skipped_step) ... 
 Không lấy được vết chạy: máy chủ MCP đóng kết nối
@@ -40,6 +52,6 @@ test_not_traced_for_syntax_error_timeout_or_pass
 (test_hint_resilience_v510.TraceStepFailureTests.test_not_traced_for_syntax_error_timeout_or_pass) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 0.100s
+Ran 20 tests in 0.120s
 
 OK

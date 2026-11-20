@@ -33,6 +33,6 @@ test_text_without_code_is_untouched (test_level3_scaffold.Level3SkeletonTests.te
 ok
 
 ----------------------------------------------------------------------
-Ran 15 tests in 0.004s
+Ran 15 tests in 0.003s
 
 OK
