@@ -49,102 +49,15 @@ QWEN_SECKEY = os.getenv("QWEN_SECKEY", "neutv")
 QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen2.5:14b-instruct-ctx16k")
 
 
-def build_scaffolding_prompt(
-    exercise: dict,
-    code: str,
-    test_results: dict,
-    ast_analysis: dict,
-    hint_level: int,
-    attempt_history: list[dict] = None,
-    student_model: dict = None,
-    adaptive_strategy: dict = None
-) -> str:
-    """
-    Đóng gói Context Bundle và thiết lập System Prompt sư phạm theo cấp độ và mô hình thích ứng.
-    """
-    title = exercise.get("title", "Bài tập lập trình Python")
-    desc = exercise.get("description", "")
-    all_passed = test_results.get("all_passed", False)
-    passed_count = test_results.get("passed_tests", 0)
-    total_count = test_results.get("total_tests", 0)
-    
-    # Trích xuất lỗi hoặc test cases thất bại
-    failed_details = []
-    for r in test_results.get("results", []):
-        if r.get("status") != "PASS":
-            status = r.get("status")
-            inp = r.get("input", "")
-            exp = r.get("expected_output", "")
-            act = r.get("actual_output", "")
-            err = r.get("error_message", "")
-            failed_details.append(
-                f"- Test #{r.get('test_idx')} ({status}): Input='{inp}' | Kỳ vọng='{exp}' | Nhận được='{act}' | Lỗi='{err}'"
-            )
-            if len(failed_details) >= 3:
-                break
-                
-    failed_text = "\n".join(failed_details) if failed_details else "(Không có test case nào bị lỗi)"
-    ast_summary = ast_analysis.get("structural_summary", "Không có thông tin AST")
+_STRATEGY_NAMES = {
+    "solution_review": "Sinh viên đã vượt qua bài; tập trung phản hồi và củng cố.",
+    "recurring_difficulty": "Có nhiều lần thử; tránh lặp nguyên văn gợi ý trước và chia nhỏ bước tiếp theo.",
+    "failed_case_diagnosis": "Có test thất bại; ưu tiên giải thích dựa trên bằng chứng test.",
+    "conceptual_start": "Chưa có đủ lịch sử; bắt đầu bằng gợi mở khái niệm an toàn.",
+}
 
-    # Ngữ cảnh lịch sử nộp bài (Attempt History)
-    history_section = ""
-    if attempt_history and len(attempt_history) > 0:
-        history_lines = []
-        for i, att in enumerate(attempt_history[:3]):
-            status_str = "PASS toàn bộ" if att.get("all_passed") else f"Đạt {att.get('passed')}/{att.get('total')} tests"
-            history_lines.append(f"  + Lần nộp trước #{i+1}: Mức gợi ý {att.get('hint_level', 1)} | Kết quả: {status_str} ({att.get('timestamp', '')})")
-        history_section = f"""
-[LỊCH SỬ NỘP BÀI TRƯỚC ĐÓ CỦA HỌC VIÊN TRONG PHIÊN NÀY]:
-{"\n".join(history_lines)}
-* Chỉ dẫn: Học viên đang thử nghiệm lại bài. Hãy xem xét tiến trình của họ để đưa ra gợi ý tiếp nối mang tính xây dựng, tránh lặp lại các câu hỏi mở mà họ đã xem!
-"""
-
-    # Ngữ cảnh mô hình học sinh (Student Model)
-    student_model_section = ""
-    if student_model and student_model.get("total_submissions", 0) > 0:
-        student_model_section = f"""
-[HỒ SƠ HỌC SINH THÍCH ỨNG (STUDENT MODEL)]:
-- Tóm tắt năng lực: {student_model.get('summary', '')}
-- Mức độ cần hỗ trợ trung bình: Level {student_model.get('average_hint_level', 1.0)}
-"""
-
-    strategy = adaptive_strategy or {}
-    strategy_names = {
-        "solution_review": "Sinh viên đã vượt qua bài; tập trung phản hồi và củng cố.",
-        "recurring_difficulty": "Có nhiều lần thử; tránh lặp nguyên văn gợi ý trước và chia nhỏ bước tiếp theo.",
-        "failed_case_diagnosis": "Có test thất bại; ưu tiên giải thích dựa trên bằng chứng test.",
-        "conceptual_start": "Chưa có đủ lịch sử; bắt đầu bằng gợi mở khái niệm an toàn.",
-    }
-    strategy_section = f"""
-[CHIẾN LƯỢC PHẢN HỒI]
-- Mã lý do: {strategy.get('reason_code', 'conceptual_start')}
-- Căn cứ: {', '.join(strategy.get('evidence', [])) or 'Chưa đủ dữ liệu lịch sử'}
-- Trạng thái dữ liệu: {strategy.get('data_status', 'insufficient')}
-- Hướng dẫn: {strategy_names.get(strategy.get('strategy'), strategy_names['conceptual_start'])}
-- Giữ nguyên cấp độ người học yêu cầu: Level {hint_level}; không tự tăng mức tiết lộ.
-"""
-    if any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])):
-        strategy_section += f"- LƯU Ý QUAN TRỌNG: {ADAPTATION_INSTRUCTIONS['no_code_yet']}\n"
-
-    # Mô hình người học v3: chỉ điều chỉnh cách diễn đạt/độ chia bước, không đổi mức tiết lộ.
-    learner_section = ""
-    signals = strategy.get("learner_signals") or {}
-    if signals:
-        kc_lines = [f"  + {v.get('label_vi')}: {STATE_LABELS.get(v.get('state'), v.get('state'))} "
-                    f"(dựa trên {v.get('others_attempted', 0)} bài khác đã nộp)" for v in signals.get("exercise_kcs", [])]
-        adapt_lines = [f"  + [{a.get('code')}] {ADAPTATION_INSTRUCTIONS.get(a.get('code'), '')}"
-                       for a in strategy.get("adaptations", []) if a.get("code") in ADAPTATION_INSTRUCTIONS]
-        learner_section = "\n[MÔ HÌNH NGƯỜI HỌC - heuristic chưa hiệu chuẩn, chỉ dùng để điều chỉnh cách diễn đạt]\n"
-        learner_section += "- Nhóm kiến thức liên quan tới bài này:\n" + ("\n".join(kc_lines) if kc_lines else "  + (chưa xác định)") + "\n"
-        if strategy.get("diagnosis_focus"):
-            learner_section += f"- Dạng lỗi quan sát ở lượt này: {strategy['diagnosis_focus']}\n"
-        if adapt_lines:
-            learner_section += "- Điều chỉnh cần áp dụng:\n" + "\n".join(adapt_lines) + "\n"
-        learner_section += ("- Không nhận xét năng lực của sinh viên, không nêu các nhãn trên cho sinh viên như một đánh giá; "
-                            f"giữ nguyên Level {hint_level}.\n")
-
-    # Khung phản hồi hình thành (formative feedback): mục tiêu → bằng chứng → bước kế tiếp.
-    formative_section = """
+# Khung phản hồi hình thành (formative feedback): mục tiêu → bằng chứng → bước kế tiếp.
+_FORMATIVE_SECTION = """
 [KHUNG PHẢN HỒI HÌNH THÀNH - ÁP DỤNG CHO MỌI CẤP ĐỘ]
 Mỗi phản hồi phải trả lời đủ ba ý, theo đúng thứ tự, trong giới hạn tiết lộ của cấp độ được yêu cầu:
 1. Mục tiêu / đang ở đâu: bài yêu cầu gì và bài làm hiện đạt đến đâu (dùng số kiểm thử đạt thực tế).
@@ -153,16 +66,14 @@ Mỗi phản hồi phải trả lời đủ ba ý, theo đúng thứ tự, trong
 Không lặp lại nguyên văn gợi ý của các lần trước. Không nhận xét về năng lực của sinh viên; chỉ nhận xét về bài làm.
 """
 
-    # Chỉ dẫn sư phạm theo Level
-    if all_passed:
-        level_instruction = """
+_LEVEL_PASSED = """
 [TÌNH HUỐNG: SINH VIÊN ĐÃ ĐẠT 100% TEST CASES - RÚT GIÀN GIÁO]
 - Ghi nhận ngắn gọn cách làm đã hiệu quả (nêu cụ thể dựa trên AST, không khen chung chung).
 - KHÔNG đưa thêm gợi ý sửa lỗi. Đặt đúng 1 câu hỏi tự kiểm để sinh viên tự giải thích vì sao lời giải đúng (ví dụ: trường hợp biên nào đã được xử lý và ở dòng nào).
 - Nêu 1 hướng mở rộng TÙY CHỌN (ví dụ: viết lại gọn hơn, thử đầu vào lớn hơn); nói rõ đây là tùy chọn.
 """
-    elif hint_level == 1:
-        level_instruction = """
+
+_LEVEL_1 = """
 [CẤP ĐỘ GỢI Ý 1: GỢI MỞ TƯ DUY & KHÁI NIỆM (SOCRATIC CONCEPTUAL HINT)]
 🎯 Mục tiêu: Giúp sinh viên tự định hình lại hướng tiếp cận thông qua câu hỏi gợi mở, TUYỆT ĐỐI KHÔNG can thiệp vào code hay chỉ dòng cụ thể.
 📋 Quy chuẩn cấu trúc phản hồi bắt buộc:
@@ -172,8 +83,8 @@ Không lặp lại nguyên văn gợi ý của các lần trước. Không nhậ
 🚫 Ràng buộc: KHÔNG trích dòng code lỗi cụ thể, KHÔNG đưa code sửa, KHÔNG tiết lộ thuật toán hoàn chỉnh.
 🚫 Ranh giới với Mức 2: KHÔNG nêu đầu vào, đầu ra thực tế hay đầu ra kỳ vọng cụ thể của kiểm thử nào (đó là bằng chứng của Mức 2); chỉ nói tổng quát bài đang đạt bao nhiêu kiểm thử. Câu hỏi gợi mở phải nói về KHÁI NIỆM chung, không chỉ ra tham số hay biểu thức nào trong bài làm là sai.
 """
-    elif hint_level == 2:
-        level_instruction = """
+
+_LEVEL_2 = """
 [CẤP ĐỘ GỢI Ý 2: CHẨN ĐOÁN TRỰC DIỆN & KHOANH VÙNG DÒNG LỖI (DIAGNOSTIC & LOCALIZATION HINT)]
 🎯 Mục tiêu: Chỉ rõ chính xác dòng code hoặc khối lệnh nào đang gây ra sai số và mổ xẻ nguyên nhân kỹ thuật vì sao kết quả thực tế bị lệch.
 📋 Quy chuẩn cấu trúc phản hồi bắt buộc:
@@ -185,8 +96,8 @@ Không lặp lại nguyên văn gợi ý của các lần trước. Không nhậ
 3. 🧭 **Hướng cần xem lại (KHÔNG nêu cách sửa):** Chỉ ra PHẦN nào của chương trình và KHÁI NIỆM nào cần nghĩ lại, rồi kết thúc bằng đúng MỘT câu hỏi để sinh viên tự đưa ra cách sửa (ví dụ: *"Với `Input = 3`, vòng lặp của bạn chạy qua những giá trị `i` nào, và có giá trị nào đề bài cần mà vòng lặp bỏ qua không?"*).
 🚫 Ràng buộc: Không đưa code giải hoàn chỉnh cả bài. Không viết ra điều kiện, biểu thức, giá trị cận hay thuật toán thay thế (đó là việc của Mức 3); không nói "bạn cần đổi X thành Y", "nên dùng điều kiện ...", "hãy in ... khi ...". Chỉ giải phẫu nguyên nhân và hướng suy nghĩ để sinh viên tự sửa.
 """
-    else:  # Level 3
-        level_instruction = """
+
+_LEVEL_3 = """
 [CẤP ĐỘ GỢI Ý 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU (STEP-BY-STEP & CODE SKELETON)]
 🎯 Mục tiêu: Hướng dẫn chi tiết từng bước thuật toán từ đầu đến cuối và cung cấp KHUNG CODE MẪU (Code Skeleton) có chỗ trống `...` hoặc `# TODO` để sinh viên điền vào.
 📋 Quy chuẩn cấu trúc phản hồi bắt buộc:
@@ -208,6 +119,121 @@ Không lặp lại nguyên văn gợi ý của các lần trước. Không nhậ
    print(ket_qua)
    ```
 """
+
+
+def _failed_tests_text(test_results: dict) -> str:
+    """Tối đa 3 test chưa đạt, mỗi test một dòng; rỗng thì trả câu 'không có test lỗi'."""
+    failed_details = []
+    for r in test_results.get("results", []):
+        if r.get("status") != "PASS":
+            status = r.get("status")
+            inp = r.get("input", "")
+            exp = r.get("expected_output", "")
+            act = r.get("actual_output", "")
+            err = r.get("error_message", "")
+            failed_details.append(
+                f"- Test #{r.get('test_idx')} ({status}): Input='{inp}' | Kỳ vọng='{exp}' | Nhận được='{act}' | Lỗi='{err}'"
+            )
+            if len(failed_details) >= 3:
+                break
+    return "\n".join(failed_details) if failed_details else "(Không có test case nào bị lỗi)"
+
+
+def _history_section(attempt_history: Optional[list]) -> str:
+    """Ngữ cảnh lịch sử nộp bài (Attempt History)."""
+    if not (attempt_history and len(attempt_history) > 0):
+        return ""
+    history_lines = []
+    for i, att in enumerate(attempt_history[:3]):
+        status_str = "PASS toàn bộ" if att.get("all_passed") else f"Đạt {att.get('passed')}/{att.get('total')} tests"
+        history_lines.append(f"  + Lần nộp trước #{i+1}: Mức gợi ý {att.get('hint_level', 1)} | Kết quả: {status_str} ({att.get('timestamp', '')})")
+    return f"""
+[LỊCH SỬ NỘP BÀI TRƯỚC ĐÓ CỦA HỌC VIÊN TRONG PHIÊN NÀY]:
+{"\n".join(history_lines)}
+* Chỉ dẫn: Học viên đang thử nghiệm lại bài. Hãy xem xét tiến trình của họ để đưa ra gợi ý tiếp nối mang tính xây dựng, tránh lặp lại các câu hỏi mở mà họ đã xem!
+"""
+
+
+def _student_model_section(student_model: Optional[dict]) -> str:
+    """Ngữ cảnh mô hình học sinh (Student Model)."""
+    if student_model and student_model.get("total_submissions", 0) > 0:
+        return f"""
+[HỒ SƠ HỌC SINH THÍCH ỨNG (STUDENT MODEL)]:
+- Tóm tắt năng lực: {student_model.get('summary', '')}
+- Mức độ cần hỗ trợ trung bình: Level {student_model.get('average_hint_level', 1.0)}
+"""
+    return ""
+
+
+def _strategy_section(strategy: dict, hint_level: int) -> str:
+    section = f"""
+[CHIẾN LƯỢC PHẢN HỒI]
+- Mã lý do: {strategy.get('reason_code', 'conceptual_start')}
+- Căn cứ: {', '.join(strategy.get('evidence', [])) or 'Chưa đủ dữ liệu lịch sử'}
+- Trạng thái dữ liệu: {strategy.get('data_status', 'insufficient')}
+- Hướng dẫn: {_STRATEGY_NAMES.get(strategy.get('strategy'), _STRATEGY_NAMES['conceptual_start'])}
+- Giữ nguyên cấp độ người học yêu cầu: Level {hint_level}; không tự tăng mức tiết lộ.
+"""
+    if any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])):
+        section += f"- LƯU Ý QUAN TRỌNG: {ADAPTATION_INSTRUCTIONS['no_code_yet']}\n"
+    return section
+
+
+def _learner_section(strategy: dict, hint_level: int) -> str:
+    """Mô hình người học v3: chỉ điều chỉnh cách diễn đạt/độ chia bước, không đổi mức tiết lộ."""
+    signals = strategy.get("learner_signals") or {}
+    if not signals:
+        return ""
+    kc_lines = [f"  + {v.get('label_vi')}: {STATE_LABELS.get(v.get('state'), v.get('state'))} "
+                f"(dựa trên {v.get('others_attempted', 0)} bài khác đã nộp)" for v in signals.get("exercise_kcs", [])]
+    adapt_lines = [f"  + [{a.get('code')}] {ADAPTATION_INSTRUCTIONS.get(a.get('code'), '')}"
+                   for a in strategy.get("adaptations", []) if a.get("code") in ADAPTATION_INSTRUCTIONS]
+    section = "\n[MÔ HÌNH NGƯỜI HỌC - heuristic chưa hiệu chuẩn, chỉ dùng để điều chỉnh cách diễn đạt]\n"
+    section += "- Nhóm kiến thức liên quan tới bài này:\n" + ("\n".join(kc_lines) if kc_lines else "  + (chưa xác định)") + "\n"
+    if strategy.get("diagnosis_focus"):
+        section += f"- Dạng lỗi quan sát ở lượt này: {strategy['diagnosis_focus']}\n"
+    if adapt_lines:
+        section += "- Điều chỉnh cần áp dụng:\n" + "\n".join(adapt_lines) + "\n"
+    section += ("- Không nhận xét năng lực của sinh viên, không nêu các nhãn trên cho sinh viên như một đánh giá; "
+                f"giữ nguyên Level {hint_level}.\n")
+    return section
+
+
+def _level_instruction(hint_level: int, all_passed: bool) -> str:
+    if all_passed:
+        return _LEVEL_PASSED
+    return {1: _LEVEL_1, 2: _LEVEL_2}.get(hint_level, _LEVEL_3)
+
+
+def build_scaffolding_prompt(
+    exercise: dict,
+    code: str,
+    test_results: dict,
+    ast_analysis: dict,
+    hint_level: int,
+    attempt_history: list[dict] = None,
+    student_model: dict = None,
+    adaptive_strategy: dict = None
+) -> str:
+    """
+    Đóng gói Context Bundle và thiết lập System Prompt sư phạm theo cấp độ và mô hình thích ứng.
+    Prompt được ghép từ các khối độc lập (đề bài, mã, kết quả chạy, AST, lịch sử, hồ sơ, chiến lược, mô hình người học,
+    khung phản hồi, chỉ dẫn theo mức, quy tắc) để từng khối có thể kiểm thử riêng.
+    """
+    title = exercise.get("title", "Bài tập lập trình Python")
+    desc = exercise.get("description", "")
+    all_passed = test_results.get("all_passed", False)
+    passed_count = test_results.get("passed_tests", 0)
+    total_count = test_results.get("total_tests", 0)
+    failed_text = _failed_tests_text(test_results)
+    ast_summary = ast_analysis.get("structural_summary", "Không có thông tin AST")
+    history_section = _history_section(attempt_history)
+    student_model_section = _student_model_section(student_model)
+    strategy = adaptive_strategy or {}
+    strategy_section = _strategy_section(strategy, hint_level)
+    learner_section = _learner_section(strategy, hint_level)
+    formative_section = _FORMATIVE_SECTION
+    level_instruction = _level_instruction(hint_level, all_passed)
 
     prompt = f"""Bạn là PyTutor - một Gia sư Trí tuệ Nhân tạo dạy lập trình Python thân thiện, thấu cảm và tuân thủ phương pháp sư phạm giàn giáo (Scaffolding Pedagogy).
 

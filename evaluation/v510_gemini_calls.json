@@ -1,0 +1,27 @@
+{
+  "limit": 300,
+  "total": 109,
+  "runs": [
+    {
+      "tag": "before_real_dev_1",
+      "calls": 44,
+      "finished": "2026-11-21T04:28:41",
+      "gemini_success_replies": 43,
+      "stopped": ""
+    },
+    {
+      "tag": "before_real_dev_2",
+      "calls": 44,
+      "finished": "2026-11-21T04:32:38",
+      "gemini_success_replies": 42,
+      "stopped": ""
+    },
+    {
+      "tag": "before_real_holdout",
+      "calls": 21,
+      "finished": "2026-11-21T04:34:26",
+      "gemini_success_replies": 20,
+      "stopped": ""
+    }
+  ]
+}
