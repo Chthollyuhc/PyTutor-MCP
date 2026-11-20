@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "test:theme": "node --test src/context/themePreference.test.js",
-    "test:ui-utils": "node --test src/utils/share.test.js src/utils/path.test.js src/utils/plainCopy.test.js src/utils/blankCode.test.js",
+    "test:ui-utils": "node --test src/utils/share.test.js src/utils/path.test.js src/utils/plainCopy.test.js src/utils/blankCode.test.js src/utils/hintMarkdown.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

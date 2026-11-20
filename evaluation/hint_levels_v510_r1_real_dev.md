@@ -29,7 +29,7 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 | m3_khung_khong_dat_het_test | — | — | 14/14 |
 | m3_khung_la_python_hop_le | — | — | 13/14 |
 | tang_tien_so_voi_luot_truoc | — | 12/12 | 14/14 |
-| ten_co_that | 13/15 | 14/14 | 14/15 |
+| ten_co_that | — | 14/14 | 14/15 |
 
 **Phản hồi đạt MỌI kiểm tra áp dụng:** Mức 1 1/15 · Mức 2 12/14 · Mức 3 12/15
 **Đạt mọi kiểm tra NỘI DUNG (bỏ kiểm tra định dạng nhãn `dung_mot_buoc_ke_tiep`):** Mức 1 2/15 · Mức 2 12/14 · Mức 3 13/15
@@ -53,9 +53,9 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 - D11 · Mức 1: do_dai, khong_cum_chi_cach_sua, m1_neu_khai_niem
 - D11 · Mức 3: ten_co_that
 - D12 · Mức 1: do_dai, khong_lo_bieu_thuc_loi_giai
-- D13 · Mức 1: do_dai, ten_co_that, m1_khong_bang_chung_test_cu_the
+- D13 · Mức 1: do_dai, m1_khong_bang_chung_test_cu_the
 - D14 · Mức 1: do_dai
-- D15 · Mức 1: do_dai, ten_co_that, khong_cum_chi_cach_sua
+- D15 · Mức 1: do_dai, khong_cum_chi_cach_sua
 - D15 · Mức 2: khong_cum_chi_cach_sua
 
 Ghi chú: Vòng 1: Gemini thật sau khi đổi prompt/bằng chứng/vết chạy

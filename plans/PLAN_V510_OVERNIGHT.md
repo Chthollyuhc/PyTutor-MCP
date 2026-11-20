@@ -3,11 +3,15 @@
 > Nhật ký tự tiếp quản. Đề bài gốc: `plans/OVERNIGHT_V510_PROMPT.md`. Nhánh: `feat/overnight-deep-upgrade`; tag mốc: `pre-overnight-v510`.
 > Lệnh chạy bộ hồi quy đầy đủ: `.\.claude\run_suite_v510.ps1 -OutDir <thư mục>` (mỗi module một DB tạm, LLM tắt).
 
-## Trạng thái nhanh (cập nhật khi xong từng đơn vị việc)
+## Trạng thái nhanh (cập nhật khi xong từng đơn vị việc; dùng để tự tiếp quản sau khi bị dừng)
 - [x] Pha 0: usage + Cron `9f9c787b`, nhánh + commit snapshot `a3328a3` + tag, mốc test `evaluation/v510_baseline/` (toàn xanh).
-- [ ] Pha 1: bộ đo (`evaluate_hint_levels.py`, `hint_quality_checks.py`, kịch bản dev 15 + giữ riêng 7) xong; mốc offline xong; mốc thật đang chạy; còn: phần Điểm yếu bên dưới (đã viết), commit.
-- [ ] Pha 2: golden prompt → tách khối → hint_evidence + offline 3 mức → prompt (lịch sử, bằng chứng, từng mức) → vết chạy → enforce_level3 quoted_context.
-- [ ] Pha 3 · [ ] Pha 4 · [ ] Pha 5 · [ ] Pha 6
+- [x] Pha 1: bộ đo (`evaluate_hint_levels.py`, `hint_quality_checks.py`, dev 15 + red-team 9 + giữ riêng 7), mốc TRƯỚC offline + thật (dev ×2, giữ riêng ×1).
+- [x] Pha 2: golden prompt → tách khối → `hint_evidence`/`hint_rules` (offline 3 mức) → prompt có bằng chứng theo mức/lịch sử/dữ liệu không tin cậy → vết chạy trong phiên MCP → test resilience.
+- [ ] Pha 3: Vòng 1 xong (offline + thật dev); Vòng 2 red-team (offline xong; thật đang chạy nền, tag `r2_real_redteam`); CÒN: Vòng 3 = chạy SAU (`--real` dev 1 lần, `--real --holdout` 1 lần, `--offline` dev + giữ riêng), rồi MỚI ĐỌC tập giữ riêng; viết `docs/HINT_LEVELS_BEFORE_AFTER_V510.md`; hồi quy `evaluate_real_llm.py` nếu còn lượt.
+- [~] Pha 4: test resilience xong; `TutorPanel.jsx` đã có bảng Markdown + chữ nghiêng (`utils/hintMarkdown.js` + test, build OK); CÒN: kiểm trình duyệt trên qa-backend :8001/qa-frontend :5174 (3 mức, sáng/tối, 375px), ảnh vào `docs/ui_audit/v510/`.
+- [ ] Pha 5 (PLAN.md v5.10, AI_HANDOFF_CONTEXT §22, CLAUDE.md §11, docs/REPORT_UPDATES_V510.md, nháp chương 3/4, THESIS_OUTLINE_AND_DEFENSE) · [ ] Pha 6 (code-review, hồi quy cuối, OVERNIGHT_REPORT.md, CronDelete)
+- Ngân sách Gemini (trần 300): đã dùng 168 trước vòng 1c; kế hoạch còn lại: L1 recheck 15 + red-team 27 + dev sau 44 + giữ riêng sau 21 = 107 → 275; hồi quy 22 → 297. KHÔNG chạy dev thật lần 2 sau (hết ngân sách), ghi trung thực vào báo cáo.
+- Tiêu chí đã đổi sau mốc (đều áp dụng cho cả trước lẫn sau bằng `--rescore`, lý do ở Nhật ký): xem dòng 04:40 và 05:05.
 
 ## Số lượt Gemini đã dùng: xem `evaluation/v510_gemini_calls.json` (trần 300; script `evaluate_hint_levels.py --real` tự cộng dồn và từ chối vượt trần)
 
@@ -71,3 +75,6 @@ Nguồn mã: `hint_quality_checks.py` (kiểm thử riêng: `test_hint_quality_v
 - 04:52 Pha 2 đã làm: (a) tách khối `build_scaffolding_prompt`, test vàng khớp từng ký tự TRƯỚC khi đổi nội dung (commit ff7a550); (b) `backend/hint_evidence.py` + `backend/hint_rules.py`: nhánh rule-based 3 mức theo bằng chứng (test thông tin nhất, dòng đáng xem từ cú pháp/traceback/vết chạy/AST, khái niệm + phép thử, dàn ý theo đề, khung mã bám mã người học đã che logic, bảng chạy tay, xoay vòng khi hỏi lại, chú thích người học KHÔNG bao giờ được chép lại); (c) `trace_code_execution` trong cùng phiên MCP (`execute_submission_pipeline(with_trace=True)` chỉ cho `ask_ai` và khi không bị khóa EXAM; timeout 6s; lỗi → SKIPPED trong `mcp_trace`, dùng bằng chứng tĩnh); (d) prompt: rào chắn thông tin Mức 1 (không đưa giá trị kiểm thử cho mô hình), bằng chứng ưu tiên theo mức, nội dung ≤ 3 gợi ý cũ, khối "dữ liệu không đáng tin", bố cục và độ dài theo mức; (e) test chuỗi prompt cũ đổi CÓ CHỦ ĐÍCH: `test_pedagogy_v55` (Ranh giới Mức 1/2, nhãn bằng chứng), `test_learner_model` (KHUNG MÃ), `test_thesis_upgrade` (Mức 1 không còn nêu mô tả test lỗi). Tệp vàng sinh lại.
 - 04:53 Offline dev SAU (`hint_levels_v510_r1d_offline_dev.json`): đạt mọi kiểm tra Mức 1 15/15, Mức 2 14/14, Mức 3 15/15 (trước: 8/15, 0/14, 0/15). LƯU Ý trung thực: nhánh offline được viết khi nhìn tập dev nên số trên tập dev là số ĐÃ TINH CHỈNH; tập giữ riêng mới là số đo khách quan (chưa chạy, chưa đọc).
 - 04:54 Chưa quyết: không chỉnh `enforce_level3_skeleton` theo `quoted_context` (xem "Cần người dùng quyết định").
+- 05:00 Vòng 1 thật (`hint_levels_v510_r1_real_dev.json`, 44 lượt): Mức 2 và 3 tăng rõ (đạt mọi kiểm tra nội dung: Mức 2 11/14→12/14 sau rescore, Mức 3 13/15; trước: ~8/14 và ~5/15); Mức 1 trượt chủ yếu `do_dai` (mô hình chào hỏi và dài ~214 âm tiết) và 1 số ca khái niệm quá sát bài (D03: câu hỏi "điểm kết thúc của range cần bao gồm n?" gần như chỉ cách sửa). Đã siết prompt Mức 1 (không chào hỏi, trần 90 từ, câu hỏi trên ví dụ KHÁC bài) và Mức 2 (một dòng trong TOÀN BỘ phản hồi, không mô tả hành động sửa kể cả dạng câu hỏi).
+- 05:05 Tinh chỉnh bộ đo thêm (cả trước lẫn sau, `--rescore`): bằng chứng test ở Mức 1 xét theo câu có từ chỉ kết quả/đầu vào (số trùng hợp trong ví dụ khái niệm không còn tính); tên trong `backtick` được phép là mảnh của dữ liệu test; `ten_co_that` chỉ áp dụng Mức 2–3 (Mức 1 dùng ví dụ dữ kiện khác); thêm `khong_chep_lai_chu_thich`. Lý do: các kiểm tra này gây dương tính giả, không phải để làm đẹp số sau.
+- 05:05 Hạn mức 5 giờ 98% (reset ~05:30). Mọi việc đã commit; tiếp quản theo mục "Trạng thái nhanh".

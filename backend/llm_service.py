@@ -81,7 +81,7 @@ _LEVEL_PASSED = """
 _LEVEL_1 = """
 [CẤP ĐỘ GỢI Ý 1: ĐỊNH HƯỚNG KHÁI NIỆM (SOCRATIC CONCEPTUAL HINT)]
 🎯 Mục tiêu: giúp sinh viên tự định hình lại hướng tiếp cận bằng KHÁI NIỆM, không chạm vào dòng code hay giá trị kiểm thử cụ thể.
-📋 Bố cục bắt buộc, theo đúng thứ tự (TỐI ĐA 130 từ). Vào thẳng mục 1, KHÔNG chào hỏi hay giới thiệu bản thân:
+📋 Bố cục bắt buộc, theo đúng thứ tự (TỐI ĐA 90 từ, mỗi mục một hai câu ngắn). Vào thẳng mục 1, KHÔNG chào hỏi hay giới thiệu bản thân:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử (dùng số thật ở trên).
 2. 📖 **Khái niệm cần xem lại - <tên nhóm khái niệm>:** gọi đúng tên nhóm khái niệm gắn với dạng vấn đề quan sát được (xem [BẰNG CHỨNG TỔNG QUÁT]) và giải thích ngắn 2-3 câu bằng lời của bạn. Có thể kèm TỐI ĐA MỘT ví dụ rất ngắn viết trong dòng chữ (đặt giữa dấu backtick, một biểu thức, dữ kiện KHÁC bài đang làm), không dùng khối code.
 3. ❓ **Câu hỏi để tự kiểm:** đúng MỘT câu hỏi về khái niệm vừa nêu, đặt trên một ví dụ KHÁC bài đang làm (dữ kiện khác) để sinh viên tự áp dụng vào bài của mình. Không hỏi thẳng về biến, tham số hay giá trị trong bài làm, và không nêu điều bài làm cần đạt (ví dụ "điểm kết thúc cần bao gồm n", "cần ép sang kiểu số nguyên").

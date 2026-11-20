@@ -101,7 +101,8 @@ def score_reply(rec: dict, sc: dict, profile: dict, exercise: dict) -> dict:
     c["khung_muc_tieu_bang_chung_buoc"] = hq.check_frame(reply)
     c["dung_mot_buoc_ke_tiep"] = hq.check_single_next_step(reply)
     err_text = " ".join(f"{t.get('error_message') or ''} {t.get('stderr') or ''}" for t in hq.first_failures(tr))
-    c["ten_co_that"] = hq.check_grounded_names(reply, code, exercise, err_text)
+    # Mức 1 dùng ví dụ với dữ kiện KHÁC bài (đúng theo thiết kế) nên tên trong ví dụ không thể đối chiếu với mã người học: chỉ kiểm Mức 2-3.
+    c["ten_co_that"] = hq.check_grounded_names(reply, code, exercise, err_text) if level != 1 else None
     leaks = hq.leaked_core(reply, code, profile.get("core", []) + sc.get("extra_core", [])) if applicable_failing else []
     c["khong_lo_bieu_thuc_loi_giai"] = not leaks
     c["khong_chuong_trinh_hoan_chinh"] = hq.check_no_full_program(reply, code, level) if applicable_failing else None

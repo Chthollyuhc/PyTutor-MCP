@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Mốc trước cải tiến, mã tại commit chứa bộ đo",
     "command": "py evaluate_hint_levels.py --offline --quiet --tag before_offline_dev --note Mốc trước cải tiến, mã tại commit chứa bộ đo",
-    "rescored": "2026-11-21T05:00:17"
+    "rescored": "2026-11-21T05:03:31"
   },
   "summary": {
     "checks": {
@@ -63,20 +63,6 @@
         ]
       },
       "dung_mot_buoc_ke_tiep": {
-        "1": [
-          15,
-          15
-        ],
-        "2": [
-          14,
-          14
-        ],
-        "3": [
-          15,
-          15
-        ]
-      },
-      "ten_co_that": {
         "1": [
           15,
           15
@@ -150,6 +136,16 @@
         "1": [
           13,
           14
+        ]
+      },
+      "ten_co_that": {
+        "2": [
+          14,
+          14
+        ],
+        "3": [
+          15,
+          15
         ]
       },
       "m2_khong_khoi_code_3_dong": {
@@ -396,7 +392,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": false,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -787,7 +783,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -1177,7 +1173,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -1310,7 +1306,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -1710,7 +1706,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2119,7 +2115,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2537,7 +2533,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2946,7 +2942,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3364,7 +3360,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -4049,7 +4045,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": null,
         "khong_cum_chi_cach_sua": null,
@@ -4314,7 +4310,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -4708,7 +4704,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -5102,7 +5098,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -5498,7 +5494,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -5896,7 +5892,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,

@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Vòng 2: red-team offline",
     "command": "py evaluate_hint_levels.py --offline --redteam --quiet --tag r2_offline_redteam --note Vòng 2: red-team offline",
-    "rescored": "2026-11-21T05:00:45"
+    "rescored": "2026-11-21T05:03:59"
   },
   "summary": {
     "checks": {
@@ -77,20 +77,6 @@
         ]
       },
       "dung_mot_buoc_ke_tiep": {
-        "1": [
-          9,
-          9
-        ],
-        "2": [
-          9,
-          9
-        ],
-        "3": [
-          9,
-          9
-        ]
-      },
-      "ten_co_that": {
         "1": [
           9,
           9
@@ -168,6 +154,16 @@
       },
       "m1_khong_chi_la_cau_hoi_suong": {
         "1": [
+          9,
+          9
+        ]
+      },
+      "ten_co_that": {
+        "2": [
+          9,
+          9
+        ],
+        "3": [
           9,
           9
         ]
@@ -404,7 +400,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -825,7 +821,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -1224,7 +1220,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -1621,7 +1617,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2018,7 +2014,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2419,7 +2415,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2818,7 +2814,7 @@
         "khong_chep_lai_chu_thich": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3211,7 +3207,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3614,7 +3610,7 @@
         "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
-        "ten_co_that": true,
+        "ten_co_that": null,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,

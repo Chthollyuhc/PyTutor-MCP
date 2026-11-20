@@ -29,7 +29,7 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 | m3_khung_khong_dat_het_test | — | — | 9/9 |
 | m3_khung_la_python_hop_le | — | — | 9/9 |
 | tang_tien_so_voi_luot_truoc | — | 6/8 | 9/9 |
-| ten_co_that | 9/9 | 9/9 | 9/9 |
+| ten_co_that | — | 9/9 | 9/9 |
 
 **Phản hồi đạt MỌI kiểm tra áp dụng:** Mức 1 9/9 · Mức 2 6/9 · Mức 3 8/9
 **Đạt mọi kiểm tra NỘI DUNG (bỏ kiểm tra định dạng nhãn `dung_mot_buoc_ke_tiep`):** Mức 1 9/9 · Mức 2 6/9 · Mức 3 8/9

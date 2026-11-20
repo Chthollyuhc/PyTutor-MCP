@@ -3,6 +3,7 @@ import { Sparkles, HelpCircle, Compass, Code, ChevronRight, ChevronDown, Chevron
 import { Badge } from './ui';
 import { sendTutorChatMessage } from '../services/api';
 import TutorFeedbackButtons from './TutorFeedbackButtons';
+import { groupTableLines, parseTable } from '../utils/hintMarkdown';
 
 export default function TutorPanel({
   hintLevel,
@@ -578,6 +579,36 @@ function HintCodeBlock({ codeBody, canInsert, onInsert }) {
   );
 }
 
+// Bảng Markdown trong gợi ý (Mức 3: "bảng chạy tay" để trống). Ô trống giữ chiều cao để người học nhìn thấy chỗ cần tự điền.
+function HintTable({ rows }) {
+  const { header, body } = parseTable(rows);
+  const cell = 'border border-border px-2 py-1 align-top';
+  return (
+    <div className="my-2 overflow-x-auto rounded-lg border border-border">
+      <table className="w-full min-w-max border-collapse text-left text-[0.8125rem]">
+        {header && (
+          <thead className="bg-surface-raised">
+            <tr>
+              {header.map((h, i) => (
+                <th key={i} scope="col" className={`${cell} font-semibold text-foreground`}>{renderBold(h)}</th>
+              ))}
+            </tr>
+          </thead>
+        )}
+        <tbody>
+          {body.map((r, ri) => (
+            <tr key={ri}>
+              {r.map((c, ci) => (
+                <td key={ci} className={`${cell} ${c ? 'text-foreground' : 'h-8 min-w-[3.5rem] bg-surface'}`}>{c ? renderBold(c) : null}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
   if (!text) return null;
 
@@ -597,8 +628,9 @@ function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
       const lines = para.split('\n');
       return (
         <div key={`${pIdx}-${paraIdx}`} className="space-y-1">
-          {lines.map((line, lIdx) => {
-            const content = line.trim();
+          {groupTableLines(lines).map((item, lIdx) => {
+            if (item.table) return <HintTable key={lIdx} rows={item.table} />;
+            const content = item.line.trim();
             if (!content) return null;
 
             if (content.startsWith('# ')) {
@@ -654,8 +686,11 @@ function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
 
 function renderBold(str) {
   if (!str) return null;
-  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`)/g);
+  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`|\*[^*\s][^*]*\*)/g);
   return parts.map((part, i) => {
+    if (part.length > 2 && part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
+      return <em key={i} className="italic text-muted">{part.slice(1, -1)}</em>;
+    }
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
         <strong key={i} className="font-bold text-foreground">
