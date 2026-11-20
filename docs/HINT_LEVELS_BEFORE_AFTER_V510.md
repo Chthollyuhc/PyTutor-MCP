@@ -154,7 +154,7 @@ Ghi chú: ở mốc trước, phản hồi Gemini thường KHÔNG có nhãn "B�
 - Trước: trung vị 1977 ms, trung bình 2330 ms (n=44)
 - Sau: trung vị 2768 ms, trung bình 3137 ms (n=44)
 
-Phép đo này gộp cả khởi động tiến trình MCP cho mỗi lượt; chênh lệch (khoảng +0,8 giây ở trung vị) là chi phí thêm của bước vết chạy trong cùng phiên. Một lượt gọi Gemini mất khoảng 4–5 giây theo nhật ký chạy, nên chi phí thêm đáng kể nhưng không lớn hơn thời gian chờ mô hình. Bước vết chạy có timeout 6 giây và chỉ chạy khi xin gợi ý (`ask_ai`) trên bài chưa đạt; chưa chạy `evaluate_load_benchmark.py` cho đường này (xem việc chưa làm).
+Phép đo này gộp cả khởi động tiến trình MCP cho mỗi lượt; chênh lệch (khoảng +0,8 giây ở trung vị) là chi phí thêm của bước vết chạy trong cùng phiên. Một lượt gọi Gemini mất khoảng 4–5 giây theo nhật ký chạy, nên chi phí thêm đáng kể nhưng không lớn hơn thời gian chờ mô hình. Bước vết chạy có timeout 6 giây và chỉ chạy khi xin gợi ý (`ask_ai`) trên bài chưa đạt; đo tải riêng (`evaluate_load_benchmark.py`, 1–20 luồng) cho thấy `ask_ai` có vết chạy gần như bằng `submit` không có vết chạy, nên chi phí thêm nhỏ và khó tách khỏi nhiễu; hai phép đo không khớp nhau (+0,8 s so với ≈0).
 
 ## 3. Nguyên văn trước/sau
 

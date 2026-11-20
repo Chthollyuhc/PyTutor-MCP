@@ -1,0 +1,207 @@
+{
+  "generated_at": "2026-11-21T06:03:36",
+  "mode": "offline (PYTUTOR_DISABLE_LLM=1), DB/KB tạm, client và server cùng máy",
+  "python": "3.14.0",
+  "cpu_count": 16,
+  "real_db_unchanged": true,
+  "levels": [
+    1,
+    5,
+    10,
+    20
+  ],
+  "rows": [
+    {
+      "scenario": "run-test",
+      "concurrency": 1,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 1120.9,
+      "p95_ms": 1177.9,
+      "max_ms": 1181.9,
+      "mean_ms": 1116.6,
+      "throughput_rps": 0.9,
+      "wall_s": 22.33
+    },
+    {
+      "scenario": "run-test",
+      "concurrency": 5,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 1355.6,
+      "p95_ms": 1381.6,
+      "max_ms": 1381.8,
+      "mean_ms": 1350.3,
+      "throughput_rps": 3.69,
+      "wall_s": 5.42
+    },
+    {
+      "scenario": "run-test",
+      "concurrency": 10,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 1944.6,
+      "p95_ms": 1995.9,
+      "max_ms": 1995.9,
+      "mean_ms": 1940.5,
+      "throughput_rps": 5.07,
+      "wall_s": 3.94
+    },
+    {
+      "scenario": "run-test",
+      "concurrency": 20,
+      "requests": 40,
+      "ok": 40,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 40
+      },
+      "p50_ms": 2831.7,
+      "p95_ms": 3935.2,
+      "max_ms": 3997.9,
+      "mean_ms": 3035.4,
+      "throughput_rps": 6.07,
+      "wall_s": 6.59
+    },
+    {
+      "scenario": "ask_ai",
+      "concurrency": 1,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 1832.7,
+      "p95_ms": 1890.3,
+      "max_ms": 1913.2,
+      "mean_ms": 1840.7,
+      "throughput_rps": 0.54,
+      "wall_s": 36.82
+    },
+    {
+      "scenario": "ask_ai",
+      "concurrency": 5,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 2408.1,
+      "p95_ms": 2478.2,
+      "max_ms": 2499.0,
+      "mean_ms": 2413.1,
+      "throughput_rps": 2.06,
+      "wall_s": 9.7
+    },
+    {
+      "scenario": "ask_ai",
+      "concurrency": 10,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 3524.8,
+      "p95_ms": 3651.2,
+      "max_ms": 3668.7,
+      "mean_ms": 3543.7,
+      "throughput_rps": 2.79,
+      "wall_s": 7.17
+    },
+    {
+      "scenario": "ask_ai",
+      "concurrency": 20,
+      "requests": 40,
+      "ok": 40,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 40
+      },
+      "p50_ms": 5877.2,
+      "p95_ms": 7006.0,
+      "max_ms": 7137.2,
+      "mean_ms": 5909.1,
+      "throughput_rps": 3.19,
+      "wall_s": 12.54
+    },
+    {
+      "scenario": "submit",
+      "concurrency": 1,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 1848.7,
+      "p95_ms": 1899.9,
+      "max_ms": 1911.4,
+      "mean_ms": 1848.8,
+      "throughput_rps": 0.54,
+      "wall_s": 36.98
+    },
+    {
+      "scenario": "submit",
+      "concurrency": 5,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 2393.3,
+      "p95_ms": 2436.9,
+      "max_ms": 2446.5,
+      "mean_ms": 2393.1,
+      "throughput_rps": 2.07,
+      "wall_s": 9.64
+    },
+    {
+      "scenario": "submit",
+      "concurrency": 10,
+      "requests": 20,
+      "ok": 20,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 20
+      },
+      "p50_ms": 3621.3,
+      "p95_ms": 3745.9,
+      "max_ms": 3748.3,
+      "mean_ms": 3630.9,
+      "throughput_rps": 2.74,
+      "wall_s": 7.31
+    },
+    {
+      "scenario": "submit",
+      "concurrency": 20,
+      "requests": 40,
+      "ok": 40,
+      "error_rate": 0.0,
+      "statuses": {
+        "200": 40
+      },
+      "p50_ms": 5941.3,
+      "p95_ms": 7002.3,
+      "max_ms": 7120.4,
+      "mean_ms": 5929.0,
+      "throughput_rps": 3.21,
+      "wall_s": 12.47
+    }
+  ]
+}

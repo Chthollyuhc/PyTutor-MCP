@@ -30,7 +30,7 @@ Không phản hồi red-team nào lộ biểu thức lời giải hay chương t
 - Kiểm tra từ khóa không bắt được câu hỏi/bước kế tiếp vẫn gợi cách sửa (D03 Mức 1, D12 Mức 2, D03 Mức 3): chỉ đọc tay mới thấy. Cần người chấm.
 - Chỉ **một** lần chạy dev thật "sau" (hết ngân sách), trong khi Gemini dao động giữa các lần (hai lần dev trước: Mức 1 9/15 và 8/15, Mức 2 8/14 và 9/14, Mức 3 5/15 và 7/15).
 - Bộ đo do chính trợ lý viết và đã tinh chỉnh trong đêm để bỏ dương tính giả (áp dụng đồng nhất cho trước và sau bằng `--rescore`, lý do ở nhật ký). Điểm 0–5 ở `docs/HINT_LEVELS_BEFORE_AFTER_V510.md` là **đề xuất của trợ lý** (cột "SV chốt" trống), không phải điểm của tác giả.
-- Chưa đo `evaluate_load_benchmark.py` cho đường có vết chạy; chưa có test tích hợp chạy MCP thật cho bước vết chạy; chưa pilot; không có bằng chứng về hiệu quả học tập.
+- Đo tải sau khi nối vết chạy (`evaluation/load_benchmark_results_v510.json`, 1/5/10/20 luồng, 20 yêu cầu mỗi mức, 0 lỗi, DB thật không đổi): `ask_ai` (có vết chạy) p50 1,83 s ở 1 luồng, 3,52 s ở 10, 5,88 s ở 20 (p95 7,0 s); `submit` (không vết chạy) cùng mức: 1,85 / 3,62 / 5,94 s. Tức chi phí vết chạy không phân biệt được với nhiễu đo; con số +0,8 s ở trên đến từ phép đo TestClient từng lượt, nên hai số không khớp nhau và nên coi chi phí là "nhỏ, chưa xác định chính xác". So với mốc 13/11 (`load_benchmark_results.json`) chênh trong khoảng ±10%, cả ở `run-test` không đổi gì, nên phần lớn là khác điều kiện máy. Đã có test tích hợp chạy MCP thật cho bước vết chạy (`test_trace_integration_v510`, 2/2). Chưa pilot; không có bằng chứng về hiệu quả học tập.
 - Tinh chỉnh sau review (bộ chặn chép chú thích hẹp hơn, bỏ bằng chứng lỗi khi chưa viết code, an toàn vết chạy) chưa được đo lại bằng Gemini thật (hết lượt); chỉ chạy lại offline và test.
 
 ## 2. Commit (`git log --oneline pre-overnight-v510..HEAD`)
@@ -75,7 +75,7 @@ Bộ đếm `evaluation/v510_gemini_calls.json`: 275 lượt do `evaluate_hint_l
 5. `LeaderboardModal` (mâu thuẫn nguyên tắc "so với chính mình"): vẫn là việc còn mở, chưa chạm.
 
 ## 7. Việc chưa làm
-Chạy lại Gemini thật cho bản sau review; đo `evaluate_load_benchmark.py`; test tích hợp bước vết chạy với MCP thật; sandbox riêng cho vết chạy (hiện dùng danh sách an toàn); bản `.docx` có tracked changes (tùy chọn, không làm); pilot người học.
+Chạy lại Gemini thật cho bản sau review; sandbox riêng cho vết chạy (hiện dùng danh sách an toàn); bản `.docx` có tracked changes (tùy chọn, không làm); pilot người học.
 
 ## 8. Lệnh git buổi sáng (PowerShell)
 Xem: 
