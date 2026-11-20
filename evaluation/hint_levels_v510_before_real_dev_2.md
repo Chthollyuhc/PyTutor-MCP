@@ -8,6 +8,7 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 |---|---|---|---|
 | do_dai | 10/15 | 13/14 | 15/15 |
 | dung_mot_buoc_ke_tiep | 1/15 | 0/14 | 1/15 |
+| khong_chep_lai_chu_thich | 2/2 | 2/2 | 2/2 |
 | khong_chuong_trinh_hoan_chinh | 14/14 | 14/14 | — |
 | khong_cum_chi_cach_sua | 14/14 | 14/14 | 13/14 |
 | khong_lap_voi_luot_truoc | 1/1 | 13/13 | 15/15 |

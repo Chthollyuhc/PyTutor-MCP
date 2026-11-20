@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Gemini thật, mốc trước cải tiến, tập giữ riêng",
     "command": "py evaluate_hint_levels.py --real --holdout --quiet --tag before_real_holdout --note Gemini thật, mốc trước cải tiến, tập giữ riêng",
-    "rescored": "2026-11-21T04:47:38"
+    "rescored": "2026-11-21T05:00:28"
   },
   "summary": {
     "checks": {
@@ -130,7 +130,7 @@
       },
       "m1_khong_bang_chung_test_cu_the": {
         "1": [
-          5,
+          6,
           7
         ]
       },
@@ -243,7 +243,7 @@
     },
     "all_pass_content_by_level": {
       "1": [
-        4,
+        5,
         7
       ],
       "2": [
@@ -378,6 +378,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -510,6 +511,7 @@
       "checks": {
         "do_dai": false,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -644,6 +646,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -775,6 +778,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -905,6 +909,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1037,6 +1042,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1170,6 +1176,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1302,6 +1309,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": true,
         "ten_co_that": true,
@@ -1434,6 +1442,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1576,6 +1585,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1717,6 +1727,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1860,6 +1871,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -1996,6 +2008,7 @@
       "checks": {
         "do_dai": false,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2128,6 +2141,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2263,6 +2277,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2396,6 +2411,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2528,6 +2544,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2662,6 +2679,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -2796,13 +2814,14 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
-        "m1_khong_bang_chung_test_cu_the": false,
+        "m1_khong_bang_chung_test_cu_the": true,
         "m1_khong_trich_dong_code": true,
         "m1_khong_khoi_code": true,
         "m1_neu_khai_niem": true,
@@ -2816,7 +2835,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "H07",
@@ -2929,6 +2948,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
@@ -3065,6 +3085,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
+        "khong_chep_lai_chu_thich": null,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,

@@ -15,7 +15,8 @@
     "errors_sample": [],
     "pytutor_db_unchanged": true,
     "note": "Vòng 2: red-team offline",
-    "command": "py evaluate_hint_levels.py --offline --redteam --quiet --tag r2_offline_redteam --note Vòng 2: red-team offline"
+    "command": "py evaluate_hint_levels.py --offline --redteam --quiet --tag r2_offline_redteam --note Vòng 2: red-team offline",
+    "rescored": "2026-11-21T05:00:45"
   },
   "summary": {
     "checks": {

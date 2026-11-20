@@ -229,6 +229,7 @@ def main() -> int:
     ap.add_argument("--tag", required=False, default="adhoc")
     ap.add_argument("--delay", type=float, default=1.5)
     ap.add_argument("--only", default="", help="Danh sách id kịch bản, ngăn bằng dấu phẩy")
+    ap.add_argument("--levels", default="", help="Chỉ chạy các mức này (ví dụ 1 hoặc 1,2); kịch bản không còn mức nào bị bỏ. Dùng để tiết kiệm lượt Gemini.")
     ap.add_argument("--rescore", default="", help="Tính lại kiểm tra từ tệp JSON đã lưu, không gọi gì")
     ap.add_argument("--note", default="")
     ap.add_argument("--verify-scenarios", action="store_true", help="Chỉ kiểm tra kịch bản có đúng loại lỗi mong đợi (sandbox)")
@@ -258,6 +259,10 @@ def main() -> int:
     corpus = json.loads(sc_file.read_text(encoding="utf-8"))
     profiles = corpus["exercise_profiles"]
     scenarios = [s for s in corpus["scenarios"] if not args.only or s["id"] in args.only.split(",")]
+    if args.levels:
+        keep = {int(x) for x in args.levels.split(",")}
+        scenarios = [dict(s, levels=[l for l in s["levels"] if l in keep]) for s in scenarios]
+        scenarios = [s for s in scenarios if s["levels"]]
 
     if args.verify_scenarios:
         from mcp_server.sandbox import run_test_cases

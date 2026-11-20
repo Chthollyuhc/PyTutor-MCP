@@ -38,6 +38,7 @@ _GENERIC_L3 = (
     "xử lý dữ liệu (rẽ nhánh hoặc lặp) và cập nhật biến kết quả", "in kết quả đúng định dạng đề yêu cầu",
 )
 _TIMEOUT_WORDS = re.compile(r"(quá\s+(?:thời gian|5\s*giây|năm giây)|không dừng|chạy mãi|vô hạn|time limit|timeout|không kết thúc|không bao giờ dừng|chạy hoài)", flags=re.IGNORECASE)
+_EVIDENCE_WORDS = re.compile(r"(đầu vào|input|kỳ vọng|mong đợi|expected|thực tế|nhận được|actual|đầu ra|output|in ra|kết quả|chương trình của bạn|bài làm của bạn)", flags=re.IGNORECASE)
 _EMPTY_ACTUAL = re.compile(r"(không in|không có (?:gì|đầu ra|kết quả)|rỗng|trống|chưa in)", flags=re.IGNORECASE)
 _GENERIC_NAMES = {"start", "stop", "step", "sep", "end", "file", "iterable", "key", "reverse", "default", "value", "values",
                   "item", "items", "index", "element", "string", "sub", "old", "new", "count", "obj", "args", "kwargs",
@@ -160,9 +161,12 @@ def check_grounded_names(reply: str, code: str, exercise: dict, extra_text: str 
         sources += [str(tc.get("input", "")), str(tc.get("expected_output", "")), str(tc.get("description", ""))]
     for src in sources:
         allowed |= set(re.findall(r"[A-Za-z_]\w*", src))
+    values_text = " ".join(str(tc.get(k, "")) for tc in exercise.get("test_cases", []) for k in ("input", "expected_output")) + " " + (extra_text or "")
     for span in _SPAN.findall(text):
         if not span.isascii() or len(span) > 60 or _EVIDENCE_LABEL.match(span):
             continue
+        if span in values_text and not re.search(r"[()=\[\]._]", span):
+            continue  # giá trị dữ liệu (chuỗi, số, mảnh của chuỗi trong vết chạy), không phải tên
         if not re.search(r"[()=\[\]._]", span) and not re.fullmatch(r"[A-Za-z_]\w*", span):
             continue
         for name in re.findall(r"[A-Za-z_]\w*", re.sub(r"(\"[^\"]*\"|'[^']*')", " ", span)):
@@ -200,11 +204,17 @@ def check_l1_no_test_specifics(reply: str, test_results: dict) -> bool:
     text, blocks = split_blocks(reply)
     if _LABELED_VALUE.search(text) or any(_EVIDENCE_LABEL.match(s) for s in _SPAN.findall(text)):
         return False
+    # Giá trị của test chỉ tính là "nêu bằng chứng" khi nằm trong câu nói về kết quả/đầu vào của chương trình; số trùng hợp trong
+    # ví dụ khái niệm ("range(1, 4) sinh các số `1`, `2`") không tính.
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+|\n+", text) if s.strip()]
     for tc in first_failures(test_results):
         for key in ("input", "expected_output", "actual_output"):
             val = (tc.get(key) or "").strip()
-            if val and any(span.strip() == val for span in _SPAN.findall(text)):
-                return False
+            if not val:
+                continue
+            for sent in sentences:
+                if any(span.strip() == val for span in _SPAN.findall(sent)) and _EVIDENCE_WORDS.search(sent):
+                    return False
     return True
 
 

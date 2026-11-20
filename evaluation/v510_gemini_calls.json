@@ -1,6 +1,6 @@
 {
   "limit": 300,
-  "total": 109,
+  "total": 153,
   "runs": [
     {
       "tag": "before_real_dev_1",
@@ -21,6 +21,13 @@
       "calls": 21,
       "finished": "2026-11-21T04:34:26",
       "gemini_success_replies": 20,
+      "stopped": ""
+    },
+    {
+      "tag": "r1_real_dev",
+      "calls": 44,
+      "finished": "2026-11-21T04:58:36",
+      "gemini_success_replies": 44,
       "stopped": ""
     }
   ]

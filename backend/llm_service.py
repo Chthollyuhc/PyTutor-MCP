@@ -81,10 +81,10 @@ _LEVEL_PASSED = """
 _LEVEL_1 = """
 [CẤP ĐỘ GỢI Ý 1: ĐỊNH HƯỚNG KHÁI NIỆM (SOCRATIC CONCEPTUAL HINT)]
 🎯 Mục tiêu: giúp sinh viên tự định hình lại hướng tiếp cận bằng KHÁI NIỆM, không chạm vào dòng code hay giá trị kiểm thử cụ thể.
-📋 Bố cục bắt buộc, theo đúng thứ tự (khoảng 90-150 từ):
+📋 Bố cục bắt buộc, theo đúng thứ tự (TỐI ĐA 130 từ). Vào thẳng mục 1, KHÔNG chào hỏi hay giới thiệu bản thân:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử (dùng số thật ở trên).
 2. 📖 **Khái niệm cần xem lại - <tên nhóm khái niệm>:** gọi đúng tên nhóm khái niệm gắn với dạng vấn đề quan sát được (xem [BẰNG CHỨNG TỔNG QUÁT]) và giải thích ngắn 2-3 câu bằng lời của bạn. Có thể kèm TỐI ĐA MỘT ví dụ rất ngắn viết trong dòng chữ (đặt giữa dấu backtick, một biểu thức, dữ kiện KHÁC bài đang làm), không dùng khối code.
-3. ❓ **Câu hỏi để tự kiểm:** đúng MỘT câu hỏi về khái niệm vừa nêu.
+3. ❓ **Câu hỏi để tự kiểm:** đúng MỘT câu hỏi về khái niệm vừa nêu, đặt trên một ví dụ KHÁC bài đang làm (dữ kiện khác) để sinh viên tự áp dụng vào bài của mình. Không hỏi thẳng về biến, tham số hay giá trị trong bài làm, và không nêu điều bài làm cần đạt (ví dụ "điểm kết thúc cần bao gồm n", "cần ép sang kiểu số nguyên").
 4. ➡️ **Bước kế tiếp:** một phép thử cụ thể sinh viên làm ngay với dữ kiện TỰ CHỌN (ví dụ: tự nghĩ một đầu vào nhỏ nhất hợp lệ, tính tay kết quả rồi bấm Chạy thử để so sánh). Chỉ MỘT bước.
 🚫 Ranh giới (Mức 1 không được làm việc của Mức 2): KHÔNG trích bất kỳ dòng code nào của sinh viên; KHÔNG nêu đầu vào, đầu ra kỳ vọng hay thực tế của kiểm thử; KHÔNG chỉ ra tham số, biểu thức hay dòng nào là sai; KHÔNG nêu cách sửa; KHÔNG dùng khối code.
 """
@@ -92,11 +92,11 @@ _LEVEL_1 = """
 _LEVEL_2 = """
 [CẤP ĐỘ GỢI Ý 2: CHẨN ĐOÁN CÓ BẰNG CHỨNG THỰC THI (DIAGNOSTIC HINT)]
 🎯 Mục tiêu: chỉ ra MỘT dòng code của sinh viên đáng xem nhất, kèm bằng chứng chạy thật, và giải thích vì sao kết quả lệch; KHÔNG nêu cách sửa.
-📋 Bố cục bắt buộc, theo đúng thứ tự (khoảng 120-190 từ):
+📋 Bố cục bắt buộc, theo đúng thứ tự (khoảng 120-180 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử.
-2. 📍 **Dòng cần xem (dòng N):** trích NGUYÊN VĂN đúng MỘT dòng code của sinh viên, đặt trong backtick. Ưu tiên dòng ở [BẰNG CHỨNG ƯU TIÊN]; nếu thấy rõ một dòng khác mới là chỗ gây lệch thì chọn dòng đó, vẫn chỉ MỘT dòng. Mọi dòng liên quan khác chỉ mô tả bằng lời, không chép lại.
+2. 📍 **Dòng cần xem (dòng N):** trích NGUYÊN VĂN đúng MỘT dòng code của sinh viên, đặt trong backtick. Ưu tiên dòng ở [BẰNG CHỨNG ƯU TIÊN]; nếu thấy rõ một dòng khác mới là chỗ gây lệch thì chọn dòng đó, vẫn chỉ MỘT dòng. Trong TOÀN BỘ phản hồi, kể cả bước kế tiếp, chỉ nhắc nguyên văn đúng MỘT dòng code của sinh viên; mọi dòng liên quan khác chỉ mô tả bằng lời, không chép lại.
 3. 🔎 **Bằng chứng:** nêu đầu vào, kết quả kỳ vọng và kết quả thực tế của test ở [BẰNG CHỨNG ƯU TIÊN], mỗi giá trị đặt trong backtick. Với lỗi cú pháp thì nêu thông báo và số dòng; với lỗi khi chạy thì nêu tên lỗi và đầu vào; với quá thời gian thì nêu đầu vào và việc chương trình không dừng. Nếu có vết chạy, dùng nó để nói giá trị biến thực tế (chỉ nêu điều vết cho thấy).
-4. 🧭 Giải thích bằng lời máy tính đã chạy như thế nào để ra kết quả lệch (mô tả hành vi, không nêu phép sửa), rồi đặt đúng MỘT câu hỏi để sinh viên tự tìm cách sửa.
+4. 🧭 Giải thích bằng lời máy tính đã chạy như thế nào để ra kết quả lệch (mô tả hành vi, không nêu phép sửa), rồi đặt đúng MỘT câu hỏi để sinh viên tự tìm cách sửa. Câu hỏi và bước kế tiếp KHÔNG được mô tả hành động sửa, kể cả dưới dạng câu hỏi (ví dụ "nên thêm vào trước thay vì sau", "cần thay đổi thế nào"); chỉ hỏi về điều quan sát được (giá trị biến, số lần chạy, thứ tự trong lần chạy).
 5. ➡️ **Bước kế tiếp:** đúng MỘT việc sinh viên làm ngay (ví dụ dùng Chạy từng bước với đầu vào trên).
 🚫 Ranh giới (Mức 2 không được làm việc của Mức 3): KHÔNG nêu cách sửa; cấm các cụm "đổi thành", "sửa thành", "thay bằng", "nên dùng điều kiện"; KHÔNG viết điều kiện, biểu thức, giá trị cận hay thuật toán thay thế; KHÔNG dùng khối code từ 3 dòng.
 """
@@ -104,7 +104,7 @@ _LEVEL_2 = """
 _LEVEL_3 = """
 [CẤP ĐỘ GỢI Ý 3: DÀN Ý THEO ĐỀ & KHUNG MÃ (STEP-BY-STEP & CODE SKELETON)]
 🎯 Mục tiêu: cho CẤU TRÚC của bài này, không cho LOGIC. Sinh viên tự điền các chỗ trống.
-📋 Bố cục bắt buộc (khoảng 200-380 từ):
+📋 Bố cục bắt buộc (khoảng 200-380 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử.
 2. ### 1. Dàn ý 4 bước theo đề: viết **Bước 1** đến **Bước 4** RIÊNG CHO BÀI NÀY (dựa vào đề bài và [DÀN Ý NỀN THEO ĐỀ] bên dưới, diễn đạt lại); mỗi bước nêu việc cần làm, KHÔNG chứa biểu thức hay điều kiện cụ thể; không dùng khuôn chung "nhập, khởi tạo, lặp, in" nếu đề không như vậy.
 3. ### 2. Khung mã: đúng MỘT khối ```python bám theo mã hiện tại của sinh viên. Giữ các dòng đọc dữ liệu thuần, in hằng hoặc biến và khởi tạo bằng hằng; thay MỌI điều kiện, miền lặp, vế phải phép gán và lời gọi xử lý bằng `...  # TODO (Bước k)`. Không sửa trực tiếp mã của sinh viên theo kiểu "đổi X thành Y". Không chép chú thích của sinh viên.
