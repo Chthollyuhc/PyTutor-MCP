@@ -31,7 +31,7 @@ Giữ đoạn này. **Thay Bảng 3.7** bằng bảng có thêm cột «Cấu tr
 
 **Thêm đoạn mới về bằng chứng ưu tiên** (đặt sau đoạn 229):
 
-> Bằng chứng ưu tiên được rút ra tất định bởi các hàm thuần trong backend/hint_evidence.py: chọn kiểm thử chưa đạt có đầu vào nhỏ nhất thay vì kiểm thử đầu tiên; chọn một dòng đáng xem kèm cơ sở quan sát được; gắn dạng lỗi với một nhóm khái niệm; dựng dàn ý nền theo đề bài. Với yêu cầu gợi ý trên bài chưa đạt, hệ thống còn lấy vết chạy của chính mã người học trên đầu vào lỗi bằng công cụ trace_code_execution trong cùng phiên MCP của đường ống chấm bài, có thời hạn sáu giây và quay về bằng chứng tĩnh nếu lỗi. Chi phí thêm đo được khoảng 0,8 giây ở trung vị. Vết chạy chỉ được lấy cho mã không nhập mô-đun ngoài một danh sách nhỏ và không gọi hàm như open, exec, eval, vì công cụ này chạy mã trong tiến trình MCP.
+> Bằng chứng ưu tiên được rút ra tất định bởi các hàm thuần trong backend/hint_evidence.py: chọn kiểm thử chưa đạt có đầu vào nhỏ nhất thay vì kiểm thử đầu tiên; chọn một dòng đáng xem kèm cơ sở quan sát được; gắn dạng lỗi với một nhóm khái niệm; dựng dàn ý nền theo đề bài. Với yêu cầu gợi ý trên bài chưa đạt, hệ thống còn lấy vết chạy của chính mã người học trên đầu vào lỗi bằng công cụ trace_code_execution trong cùng phiên MCP của đường ống chấm bài, có thời hạn sáu giây và quay về bằng chứng tĩnh nếu lỗi. Chi phí thêm nhỏ: phép đo từng lượt cho khoảng 0,8 giây ở trung vị, còn đo tải nhiều luồng không phân biệt được với nhiễu. Vết chạy chỉ được lấy cho mã không nhập mô-đun ngoài một danh sách nhỏ và không gọi hàm như open, exec, eval, vì công cụ này chạy mã trong tiến trình MCP.
 
 **Mục 3.4.1 (đoạn 222):** câu liệt kê thứ tự đường ống công cụ cần thêm "và, khi xin gợi ý trên bài chưa đạt, vết chạy trên đầu vào lỗi" sau "…lấy lịch sử…". Kiểm tra cả Hình 3.4 nếu hình liệt kê từng lời gọi công cụ.
 
@@ -53,13 +53,14 @@ Thêm vào hàng của lớp lọc đầu ra (hoặc thêm hàng thứ sáu nế
 
 **Câu mở đầu hiện tại (đoạn 325):** "Bộ kiểm thử đơn vị của hệ thống gồm tám mô-đun với tổng cộng 156 ca…"
 
-Số cũ phải đổi: **tám mô-đun, 156 ca**. Sau v5.10 có thêm bốn mô-đun, nên là **mười hai mô-đun, 209 ca** (156 + 17 + 14 + 2 + 20). Thêm bốn hàng vào Bảng 4.3 (cũng đổi dòng «Tổng»):
+Số cũ phải đổi: **tám mô-đun, 156 ca**. Sau v5.10 có thêm bốn mô-đun, nên là **mười ba mô-đun, 211 ca** (156 + 17 + 14 + 2 + 20 + 2). Thêm bốn hàng vào Bảng 4.3 (cũng đổi dòng «Tổng»):
 
 | Mô-đun | Số ca đạt | Phạm vi kiểm thử |
 |---|---|---|
 | test_hint_quality_v510 | 17/17 | Các hàm kiểm tra chất lượng gợi ý (ca đạt và ca trượt của từng kiểm tra) |
 | test_hint_evidence_v510 | 14/14 | Chọn kiểm thử, chọn dòng đáng xem, khái niệm, dàn ý theo đề, bảng chạy tay, bỏ chú thích khỏi dòng trích |
 | test_prompt_golden_v510 | 2/2 | Lời nhắc dựng lại giống từng ký tự trên 47 ca |
+| test_trace_integration_v510 | 2/2 | Bước vết chạy với máy chủ MCP thật trên cơ sở dữ liệu tạm: dạng kết quả, chọn đúng dòng, bỏ qua khi mã nguy hiểm hoặc đã đạt |
 | test_hint_resilience_v510 | 20/20 | Gemini lỗi, rỗng, quá ngắn; vết chạy lỗi; bộ chặn chép chú thích; các lỗi tìm thấy khi rà soát mã |
 
 Chú thích bảng hiện ghi «lần chạy ngày 18/11/2026» nhưng đoạn 325 ghi «ngày 19/11/2026»: hai ngày không khớp nhau; nên thống nhất. Lần chạy hồi quy cuối của v5.10 (21/11/2026) ở `evaluation/v510_final/`: toàn bộ module đạt; các kịch bản phân hệ (đoạn 328) vẫn 8/8, 6/6, 7/7, 6/6, 7/7, 6/6; bộ kiểm thử giao diện `test:ui-utils` từ 12 lên 17 ca, `test:theme` 3/3, build thành công; cơ sở dữ liệu trình diễn không đổi (SHA-256 trước/sau trùng). Ba bài kiểm tra chuỗi lời nhắc cũ phải đổi vì hành vi đổi có chủ đích (`test_pedagogy_v55`, `test_learner_model`, `test_thesis_upgrade`).
@@ -78,7 +79,7 @@ Phải nói thẳng trong báo cáo: Mức 1 với mô hình thật không cải
 
 **Đoạn 4.5.3 «Hai trường hợp mô hình vi phạm ràng buộc»:** giữ nguyên (mô tả đúng mốc 12/11). Thêm một câu cuối: "Từ v5.10, ca H4 và ca H3 được đo lại bằng bộ kịch bản riêng ở mục 4.5.7."
 
-**Mục 4.9.2 «Hạn chế»:** thêm các ý: bộ đo ba mức do chính tác giả viết và được tinh chỉnh trong quá trình làm (đã áp dụng đồng nhất cho trước và sau); chỉ một lần chạy dev sau cải tiến do giới hạn lượt gọi; điểm sư phạm chưa có người chấm độc lập; chưa pilot nên chưa có bằng chứng về hành vi người học; bước vết chạy chạy mã trong tiến trình MCP (đã giới hạn bằng danh sách an toàn, nhưng chưa có sandbox riêng); đường có vết chạy chưa được đo tải.
+**Mục 4.9.2 «Hạn chế»:** thêm các ý: bộ đo ba mức do chính tác giả viết và được tinh chỉnh trong quá trình làm (đã áp dụng đồng nhất cho trước và sau); chỉ một lần chạy dev sau cải tiến do giới hạn lượt gọi; điểm sư phạm chưa có người chấm độc lập; chưa pilot nên chưa có bằng chứng về hành vi người học; bước vết chạy chạy mã trong tiến trình MCP (đã giới hạn bằng danh sách an toàn, nhưng chưa có sandbox riêng); đo tải 1–20 luồng (`evaluation/load_benchmark_results_v510.json`) cho thấy đường có vết chạy gần như bằng đường không có (p50 ở 10 luồng: 3,52 s so với 3,62 s), nên chi phí thêm nhỏ nhưng chưa xác định chính xác (phép đo từng lượt cho +0,8 s, hai số không khớp nhau).
 
 ## 7. Phụ lục B «Các lệnh chạy lại kết quả đánh giá»: thêm hàng vào Bảng B.1
 
@@ -101,4 +102,4 @@ Nên thêm ca **D03** (sai cận `range(1, n)`) ở cả ba mức, trước và 
 3. Đoạn 232 nhắc hàm generate_rule_based_fallback: tên hàm giữ nguyên, nhưng thân hàm nay ủy quyền cho hint_rules.build_offline_hint.
 4. Bảng 3.7 cột «Được phép» của Mức 2 ghi «vùng cần xem lại»; mã hiện nêu đúng một dòng.
 5. Hai ngày chạy khác nhau (18/11 và 19/11) trong chú thích Bảng 4.3 và đoạn 325.
-6. Số «156 ca» và «tám mô-đun» ở đoạn 325/Bảng 4.3 (đổi thành 209 ca, mười hai mô-đun).
+6. Số «156 ca» và «tám mô-đun» ở đoạn 325/Bảng 4.3 (đổi thành 211 ca, mười ba mô-đun).
