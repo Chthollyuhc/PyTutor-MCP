@@ -115,3 +115,8 @@ Chưa tách. Khi lặp lại nhiều: `.claude/rules/{backend,frontend,evaluatio
 ## 10. v5.9 (chưa commit) — Lời thường
 - Câu nhận xét cho SV/GV chỉ sinh ở `backend/plain_language.py` (hàm thuần, có `BANNED_WORDS`); giao diện hiển thị nguyên văn các trường `*_vi`. Màn chính: SV `TodayCard` (trang chủ + Hành trình học); GV "Bản tin lớp" + 3 nhóm bạn + bài tập của lớp; số liệu v5.8 nằm trong "Xem số liệu đầy đủ".
 - Test: `.\.claude\run_isolated.ps1 test_plain_language_v59`; frontend `npm.cmd run test:ui-utils` (gồm quét từ cấm ở `components/plain/` và `StudentProfileModal.jsx`).
+
+## 11. v5.10 (nhánh `feat/overnight-deep-upgrade`) — 3 mức gợi ý
+- Lệnh đo: `py evaluate_hint_levels.py --offline --quiet --tag X` (thêm `--holdout` hoặc `--redteam`); `--real` gọi Gemini thật (trần 300 lượt cả đêm, `evaluation/v510_gemini_calls.json`; chỉ dữ liệu giả lập); `--rescore <json>` tính lại kiểm tra; `--levels 1` tiết kiệm lượt. Hồi quy đầy đủ: `.\.claudeun_suite_v510.ps1 -OutDir <thư mục>`.
+- Test: `test_hint_quality_v510`, `test_hint_evidence_v510`, `test_prompt_golden_v510`, `test_hint_resilience_v510` (không cần DB). Đổi prompt gợi ý thì sinh lại tệp vàng (`py scratch/gen_golden.py`) và ghi lý do.
+- Luật mới: Mức 1 **không nhận** giá trị kiểm thử trong prompt; dòng Mức 2 trích chỉ là điều quan sát được, không phải kết luận dòng sai; chú thích của người học không bao giờ được chép vào gợi ý; vết chạy chỉ cho `ask_ai`, có timeout và fallback. Tập giữ riêng gợi ý `evaluation/hint_scenarios_holdout.json` chỉ để đo. Điểm 0–5 trong `docs/HINT_LEVELS_BEFORE_AFTER_V510.md` là đề xuất của trợ lý, không ghi thành điểm tác giả.

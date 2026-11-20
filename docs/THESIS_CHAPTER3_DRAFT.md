@@ -72,13 +72,13 @@ Lý do tách: người học cần một không gian thử–sai không có hậ
 
 ### 3.2.2. Ba mức gợi ý
 
-| Mức | Loại trợ giúp | Được phép | Không được phép |
-|---|---|---|---|
-| 1. Gợi mở | Định hướng khái niệm | Câu hỏi, nhắc khái niệm liên quan | Chỉ dòng lỗi, đưa mã sửa |
-| 2. Chẩn đoán | Khoanh vùng lỗi | Kiểm thử chưa đạt, đầu vào/kỳ vọng/thực tế, vùng cần xem | Lời giải hoàn chỉnh |
-| 3. Dàn ý | Cấu trúc lời giải | Dàn ý bốn bước, khung mã có chỗ trống | Điều kiện, miền lặp, biểu thức của lời giải |
+| Mức | Mục tiêu sư phạm | Được nêu | Không được nêu | Cấu trúc nội dung (v5.10) |
+|---|---|---|---|---|
+| 1. Gợi mở | Định hướng khái niệm | Tên nhóm khái niệm gắn với dạng vấn đề quan sát được, giải thích ngắn bằng lời, một ví dụ ngắn với dữ kiện khác bài, một phép thử người học tự làm | Dòng code của người học, đầu vào/đầu ra của kiểm thử, tham số hay biểu thức sai, cách sửa | Đang ở đâu → khái niệm → một câu hỏi → một bước kế tiếp |
+| 2. Chẩn đoán | Khoanh vùng lỗi bằng bằng chứng thực thi | Đúng MỘT dòng code của người học (từ thông báo cú pháp, traceback, vết chạy hoặc cấu trúc), đầu vào/kỳ vọng/thực tế của test giàu thông tin nhất, vết chạy của chính mã người học | Cách sửa, điều kiện hay biểu thức thay thế, khối code từ 3 dòng | Đang ở đâu → dòng cần xem → bằng chứng → giải thích hành vi + một câu hỏi → một bước kế tiếp |
+| 3. Dàn ý | Cấu trúc của bài, không phải logic | Dàn ý 4 bước theo đề bài, khung mã bám mã người học (logic đã bị che), bảng chạy tay để trống | Điều kiện, miền lặp, vế phải phép gán, lời giải | Đang ở đâu → dàn ý → khung `# TODO` → bảng chạy tay → một bước kế tiếp |
 
-Người học chọn mức. Hệ thống **không tự nâng mức** vượt mức được yêu cầu.
+Người học chọn mức. Hệ thống **không tự nâng mức** vượt mức được yêu cầu. Từ v5.10, ranh giới giữa các mức được thực thi bằng ba lớp: (1) *rào chắn thông tin*: lời nhắc Mức 1 không chứa giá trị kiểm thử, Mức 2–3 chỉ nhận đúng phần bằng chứng của mình; (2) chỉ dẫn và bố cục riêng từng mức; (3) bộ lọc tất định ở đầu ra (code hoàn chỉnh, cụm tiết lộ, che logic khung Mức 3, chặn chép lại chú thích của người học). Lớp (2) vẫn có thể bị mô hình vượt (xem 4.5.7).
 
 ### 3.2.3. Khung phản hồi hình thành
 
@@ -171,15 +171,17 @@ Phạm vi do máy chủ quyết định từ cơ sở dữ liệu (`get_latest_p
 
 ### 3.4.2. Dựng prompt
 
-Prompt được dựng từ mẫu Jinja2 (`backend/prompt_templates.py`, chế độ `StrictUndefined` để thiếu biến là lỗi ngay). Nội dung do người học hoặc đề bài cung cấp được bọc trong thẻ và được tuyên bố là **dữ liệu không đáng tin cậy, không phải chỉ dẫn**, nhằm giảm rủi ro chèn lệnh.
+Prompt gợi ý được ghép từ các khối độc lập trong `build_scaffolding_prompt` (`backend/llm_service.py`): quy tắc dữ liệu không đáng tin cậy, đề bài, mã người học, kết quả chạy, phân tích AST, lịch sử và **nội dung tối đa ba gợi ý gần nhất cho cùng bài** (để gợi ý mới đi tiếp một bước, không lặp), hồ sơ và chiến lược thích ứng, bằng chứng ưu tiên theo mức, khung phản hồi hình thành, chỉ dẫn theo mức. Các khối được khóa bằng test vàng (`test_prompt_golden_v510.py`: prompt dựng lại giống từng ký tự trên 47 ca). Đề bài, mã và chú thích của người học được bọc trong thẻ và tuyên bố là **dữ liệu không đáng tin cậy, không phải chỉ dẫn**; nếu chú thích xin đáp án hay ra lệnh, gia sư từ chối ngắn bằng một câu rồi vẫn đưa gợi ý đúng mức. Lưu ý: chỉ lời nhắc trò chuyện dùng mẫu Jinja2 `StrictUndefined` (`backend/prompt_templates.py`); lời nhắc gợi ý là chuỗi định dạng nhiều khối.
+
+**Bằng chứng ưu tiên** (`backend/hint_evidence.py`, hàm thuần): chọn test lỗi có đầu vào nhỏ nhất, chọn một dòng đáng xem kèm cơ sở quan sát được, nhóm khái niệm gắn với dạng lỗi, dàn ý nền theo đề, và (với `ask_ai` khi bài chưa đạt) vết chạy của chính mã người học lấy bằng `trace_code_execution` trong cùng phiên MCP, có timeout 6 giây và fallback về bằng chứng tĩnh.
 
 ### 3.4.3. Chuỗi dự phòng
 
 ```text
-Gemini ──lỗi/không có khóa──► Qwen ──lỗi──► Bộ luật sư phạm tất định
+Gemini ──lỗi/rỗng/quá ngắn/không có khóa──► Qwen ──lỗi──► Bộ luật sư phạm tất định (hint_rules)
 ```
 
-Bộ luật tất định (`generate_rule_based_fallback`) chỉ nêu điều quan sát được: kiểm thử nào chưa đạt, khác biệt giữa kỳ vọng và thực tế, đặc điểm cấu trúc. Nó không suy đoán nguyên nhân và tự ghi rõ giới hạn của mình. Ở Mức 3, nó đối chiếu bài làm với dàn ý bốn bước và nêu đúng một bước còn thiếu.
+Bộ luật tất định (`generate_rule_based_fallback` → `backend/hint_rules.py`) dùng cùng bằng chứng với nhánh mô hình và chỉ nêu điều quan sát được. Mức 1 gọi tên khái niệm và đưa một phép thử; Mức 2 nêu đúng một dòng với cơ sở quan sát (có dòng ghi rõ "đây là nơi đáng quan sát, chưa phải kết luận dòng này sai") cùng bằng chứng thực thi; Mức 3 dựng dàn ý theo đề, khung mã từ mã người học đã che logic và bảng chạy tay để trống, rồi đối chiếu với dàn ý để nêu đúng một bước kế tiếp. Chú thích của người học không bao giờ được chép lại. Bộ luật cũng thay thế phản hồi của mô hình khi bộ lọc đầu ra chặn hoặc khi phản hồi chép lại chú thích người học.
 
 **[SV bổ sung: biểu đồ tuần tự cho luồng 3.4.1.]**
 

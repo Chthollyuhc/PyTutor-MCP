@@ -258,6 +258,29 @@ Bài học rút ra cho khóa luận: "không lộ lời giải" là điều ki�
 
 ---
 
+### 4.5.7. Đo riêng chất lượng ba mức gợi ý trước và sau cải tiến (v5.10)
+
+**Mục đích.** Các mục trên chỉ cho thấy chất lượng gợi ý ở mức tổng quát (5 ca nhóm H). Mục này đo riêng từng mức, trước và sau khi đổi cách dựng bằng chứng và lời nhắc, để trả lời: gợi ý có bám sát mã và kết quả chấm hơn không, các mức có tăng tiến, và ranh giới giữa các mức có được giữ không.
+
+**Phương pháp.** Bộ 15 kịch bản phát triển, 7 kịch bản giữ riêng (viết trước khi sửa, không dùng để chỉnh luật hay lời nhắc) và 9 kịch bản tấn công trên năm bài mẫu; mỗi kịch bản được hỏi lần lượt Mức 1, 2, 3 qua đúng đường `POST /api/submit` (`action_type='ask_ai'`) trên cơ sở dữ liệu tạm. Kiểm tra tất định (`hint_quality_checks.py`, có test riêng) gồm: độ dài theo mức, không lộ biểu thức lời giải, Mức 1 không trích dòng code và không nêu bằng chứng test, Mức 2 trích đúng một dòng có thật và nêu đầu vào/kỳ vọng/thực tế, Mức 3 có dàn ý bốn bước khớp bài và khung không đạt hết test khi đem chạy, độ trùng Jaccard 3-gram giữa hai lượt liên tiếp dưới 0,30. Đây là so khớp quy tắc, không phải điểm sư phạm.
+
+**Kết quả (số ca đạt mọi kiểm tra nội dung, trước → sau).**
+
+| Phép đo | Mức 1 | Mức 2 | Mức 3 |
+|---|---|---|---|
+| Gemini thật, tập phát triển (lần chạy dev 1 trước; 1 lần sau) | 9/15 → 9/15 | 8/14 → 14/14 | 5/15 → 12/15 |
+| Gemini thật, tập giữ riêng | 5/7 → 4/7 | 3/7 → 4/7 | 2/7 → 5/7 |
+| Offline (rule-based), tập phát triển* | 9/15 → 15/15 | 0/14 → 14/14 | 0/15 → 15/15 |
+| Offline (rule-based), tập giữ riêng | 6/7 → 6/7 | 0/7 → 3/7 | 0/7 → 7/7 |
+
+*Số đã tinh chỉnh trên chính tập này; số khách quan là tập giữ riêng. Nguồn: `evaluation/hint_levels_v510_*.json`, báo cáo chi tiết kèm nguyên văn ở `docs/HINT_LEVELS_BEFORE_AFTER_V510.md`. Hai lần chạy dev trước cho kết quả khác nhau (Mức 1: 9/15 và 8/15; Mức 2: 8/14 và 9/14; Mức 3: 5/15 và 7/15), cho thấy dao động của mô hình; mốc sau chỉ có một lần chạy dev vì hết ngân sách lượt gọi.
+
+**Điều đo được.** Mức 2 và Mức 3 cải thiện rõ ở cả hai tập: bằng chứng thực thi đầy đủ (giữ riêng 5/7 → 7/7), tăng tiến so với lượt trước (Mức 2 5/7 → 7/7; Mức 3 4/7 → 7/7), dàn ý theo bài thay vì khuôn chung. Trên tập tấn công (27 phản hồi Gemini), không phản hồi nào lộ biểu thức lời giải hay chương trình hoàn chỉnh.
+
+**Điều không cải thiện hoặc xấu đi.** Mức 1 không tăng ở Gemini thật trên cả hai tập: mô hình vẫn viết dài hơn khoảng đặt ra ở 2/7 ca giữ riêng và 1 ca nêu giá trị test. Độ chính xác của "dòng trích đúng chỗ lỗi" trên tập giữ riêng vẫn 4/7: ở hai ca giai thừa (H01, H06) bản trước chọn đúng dòng còn bản sau chọn sai vì mô hình tin theo "dòng đáng xem" do luật tất định đề xuất. Kiểm tra từ khóa không bắt được việc câu hỏi hay bước kế tiếp vẫn gợi cách sửa; việc này chỉ thấy khi đọc tay (D03 Mức 1, D12 Mức 2). Chi phí thêm của bước vết chạy khoảng 0,8 giây ở trung vị mỗi lượt xin gợi ý.
+
+**Giới hạn.** Cỡ mẫu nhỏ và tự soạn, một mô hình, một thời điểm, bộ đo được tinh chỉnh trong quá trình làm (đã áp dụng đồng nhất cho trước và sau), điểm sư phạm đề xuất do bên có xung đột lợi ích chấm và chưa được tác giả chốt. Kết quả không cho phép kết luận về hiệu quả học tập; điều đó cần pilot người học.
+
 ## 4.6. Hiệu năng của đường ống chấm bài
 
 Nguồn: `evaluation/load_benchmark_results.json`, sinh bởi `py evaluate_load_benchmark.py --levels 1,5,10,20 --per-level 20` ngày 13/11/2026. Backend chạy riêng trên cơ sở dữ liệu tạm, tắt LLM; client và server cùng một máy (16 luồng CPU); một tài khoản mẫu dùng cho mọi luồng.
