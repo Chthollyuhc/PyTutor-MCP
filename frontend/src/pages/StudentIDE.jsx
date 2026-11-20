@@ -12,6 +12,7 @@ import StudentProfileModal from '../components/StudentProfileModal';
 import ExecutionVisualizerModal from '../components/ExecutionVisualizerModal';
 import PythonicReviewModal from '../components/PythonicReviewModal';
 import { isBlankCode } from '../utils/blankCode';
+import { rememberLastClassId } from '../utils/lastClass';
 import { 
   fetchExercises, 
   fetchExerciseDetail, 
@@ -34,6 +35,7 @@ export default function StudentIDE() {
   const { exerciseId: paramExerciseId } = useParams();
   const [searchParams] = useSearchParams();
   const classIdParam = searchParams.get('classId');
+  useEffect(() => { rememberLastClassId(classIdParam); }, [classIdParam]);
   const sessionIdParam = searchParams.get('sessionId');
   const navigate = useNavigate();
 

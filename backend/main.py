@@ -155,7 +155,7 @@ from backend.llm_service import (generate_tutor_hint, generate_chat_followup, ge
 from backend.guardrails import check_student_input
 from backend.adaptive_policy import is_blank_attempt, select_hint_strategy
 from backend.class_overview import build_class_overview, build_action_cards
-from backend.student_journey import build_student_headline, describe_exercise_journey, DISCLAIMER_VI
+from backend.student_journey import build_student_headline, describe_exercise_journey, pick_path_class, DISCLAIMER_VI
 from backend.plain_language import (build_class_plain_view, build_course_path, build_story, build_today_card,
                                     class_brief_line, story_one_liner)
 from pytutor_shared.learner_model import summarize_attempt_features
@@ -1037,8 +1037,9 @@ async def get_student_profile_endpoint(
         )
 
 
-def _pick_path_class(username: str, class_id: Optional[str], recent: list[dict]) -> Optional[dict]:
-    """Lớp để vẽ chặng đường: lớp đang xem; nếu không có thì lớp chứa bài vừa làm gần nhất; nếu không thì lớp đầu tiên."""
+def _pick_path_class(username: str, class_id: Optional[str], recent: list[dict],
+                     focus_class_id: Optional[str] = None) -> Optional[dict]:
+    """Lớp để vẽ chặng đường: lớp đang xem; nếu không thì lớp sinh viên vừa mở, lớp chứa nhiều bài làm gần đây nhất, lớp đầu tiên."""
     if class_id:
         cls = get_credit_class_by_id(class_id) or {}
         return {"id": class_id, "class_name": cls.get("class_name"), "exercises": get_class_exercises(class_id, username)}
@@ -1047,17 +1048,14 @@ def _pick_path_class(username: str, class_id: Optional[str], recent: list[dict])
         return None
     loaded = [{"id": c["id"], "class_name": c.get("class_name"), "exercises": get_class_exercises(c["id"], username)}
               for c in classes]
-    for item in recent or []:
-        for c in loaded:
-            if any(e.get("exercise_id") == item.get("exercise_id") for e in c["exercises"]):
-                return c
-    return loaded[0]
+    return pick_path_class(loaded, recent, focus_class_id)
 
 
 @app.get("/api/student/journey")
 async def get_student_journey_endpoint(
     class_id: Optional[str] = None,
     exercise_id: Optional[str] = None,
+    focus_class_id: Optional[str] = None,
     token_data: dict = Depends(require_student),
 ):
     """Hành trình học (v5.8): câu tóm tắt, bản đồ khái niệm, dấu chân. Chỉ dữ liệu của chính người dùng trong token."""
@@ -1084,7 +1082,7 @@ async def get_student_journey_endpoint(
         current = get_exercise_journey(username, exercise_id, include_code=True)
         current["description_vi"] = describe_exercise_journey(current["points"], current["summary"])
         current["story"] = build_story(current["points"], current["summary"], audience="student")
-    path_class = _pick_path_class(username, class_id, overview["recent_exercises"])
+    path_class = _pick_path_class(username, class_id, overview["recent_exercises"], focus_class_id)
     path = (build_course_path(path_class["exercises"], path_class["id"], path_class["class_name"])
             if path_class else None)
     today = build_today_card(full_name=token_data.get("name"), concepts=lm.get("concepts", []),

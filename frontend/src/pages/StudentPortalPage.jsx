@@ -27,6 +27,8 @@ import LeaderboardModal from '../components/LeaderboardModal';
 // Flag điều khiển hiển thị 'Lịch Thi & Thực Hành' (đặt true khi muốn mở lại tính năng này)
 const SHOW_EXAM_SESSIONS = false;
 
+import { readLastClassId } from '../utils/lastClass';
+
 export default function StudentPortalPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function StudentPortalPage() {
   const [today, setToday] = useState({ loading: true, error: false, data: null });
   const loadToday = useCallback(() => {
     setToday((s) => ({ ...s, loading: true, error: false }));
-    fetchStudentJourney()
+    fetchStudentJourney(null, '', readLastClassId())
       .then((res) => setToday({ loading: false, error: false, data: res.today || null }))
       .catch(() => setToday({ loading: false, error: true, data: null }));
   }, []);

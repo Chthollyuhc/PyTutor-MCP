@@ -19,6 +19,7 @@ import {
   fetchLeaderboard 
 } from '../services/api';
 import StudentProfileModal from '../components/StudentProfileModal';
+import { rememberLastClassId } from '../utils/lastClass';
 
 // Flag điều khiển hiển thị tab 'Thực hành & Kỳ thi' (đặt true khi muốn mở lại tính năng này)
 const SHOW_EXAM_SESSIONS = false;
@@ -26,6 +27,7 @@ const SHOW_EXAM_SESSIONS = false;
 export default function StudentClassDetailPage() {
   const { classId } = useParams();
   const navigate = useNavigate();
+  useEffect(() => { rememberLastClassId(classId); }, [classId]);
   const { user } = useAuth();
 
   const [currentClass, setCurrentClass] = useState(null);

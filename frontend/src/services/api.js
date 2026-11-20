@@ -377,9 +377,10 @@ export const deleteKnowledgeComponent = async (kc) => {
 };
 
 // v5.8 — Hành trình học (sinh viên) và dấu chân từng bài (giảng viên). Chỉ đọc.
-export const fetchStudentJourney = async (classId = null, exerciseId = '') => {
+export const fetchStudentJourney = async (classId = null, exerciseId = '', focusClassId = null) => {
   const params = {};
   if (classId) params.class_id = classId;
+  if (focusClassId) params.focus_class_id = focusClassId; // lớp sinh viên vừa mở: dùng để chọn lớp vẽ chặng đường
   if (exerciseId) params.exercise_id = exerciseId;
   const response = await apiClient.get('/student/journey', { params });
   return response.data;

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/index.css"
+        ],
+        "createdAt": "2026-11-12T14:19:54.272Z",
+        "reason": "Claude triage: index.css compat rules remap legacy slate text to the muted token (6.9:1 on neutral Night Surface); attribute selectors are not gray-on-color usages"
+      }
+    ]
+  }
+}

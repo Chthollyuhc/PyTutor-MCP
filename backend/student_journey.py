@@ -97,3 +97,28 @@ def describe_exercise_journey(points: list[dict], summary: dict) -> str:
         return "Bạn đã xem gợi ý ở bài này nhưng chưa chạy thử. Thử chạy một lần để xem test nào qua."
     return (f"Bạn đã thử {len(attempts)} lượt; số test đạt tốt nhất hiện là {best.get('passed', 0)}/{best.get('total', 0)}. "
             "Tiếp tục sửa từng chỗ một.")
+
+
+def pick_path_class(loaded: list[dict], recent: Optional[list[dict]], focus_class_id: Optional[str] = None) -> Optional[dict]:
+    """Chọn lớp để vẽ "chặng đường" ở trang chủ. Hàm thuần.
+
+    `loaded`: [{id, class_name, exercises: [{exercise_id, ...}]}] theo thứ tự lớp của sinh viên.
+    Thứ tự ưu tiên: (1) lớp sinh viên vừa mở (`focus_class_id`) nếu họ có trong danh sách; (2) lớp chứa nhiều nhất các bài làm
+    gần đây, bài càng mới trọng số càng lớn; (3) lớp đầu tiên. Lỗi cũ (v5.8): lấy lớp ĐẦU TIÊN có chứa bài làm gần nhất; các lớp
+    dùng chung bài tập (bài làm không gắn với lớp) nên lớp khác môn có thể được chọn và hiện sai tên học phần.
+    """
+    if not loaded:
+        return None
+    if focus_class_id:
+        for cls in loaded:
+            if cls["id"] == focus_class_id:
+                return cls
+    recent_ids = [r.get("exercise_id") for r in (recent or [])]
+    weight = {eid: len(recent_ids) - i for i, eid in enumerate(recent_ids) if eid}
+    best, best_score = loaded[0], 0
+    for cls in loaded:
+        ids = {e.get("exercise_id") for e in cls.get("exercises") or []}
+        score = sum(w for eid, w in weight.items() if eid in ids)
+        if score > best_score:
+            best, best_score = cls, score
+    return best
