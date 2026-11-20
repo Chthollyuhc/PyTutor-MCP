@@ -1,0 +1,72 @@
+﻿py : 2026-11-21 04:16:02,381 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At line:6 char:3
++   py "$m.py" 2>&1 | Out-File $log -Encoding utf8
++   ~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 04:1...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 04:16:03,052 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 04:16:03,940 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
+2026-11-21 04:16:03,987 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 04:16:04,034 [INFO] httpx: HTTP Request: POST http://test/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 04:16:04,038 [INFO] httpx: HTTP Request: GET http://test/api/auth/me "HTTP/1.1 200 OK"
+2026-11-21 04:16:05,035 [INFO] httpx: HTTP Request: POST http://test/api/run-test "HTTP/1.1 200 OK"
+2026-11-21 04:16:06,942 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 04:16:06,946 [INFO] httpx: HTTP Request: GET http://test/api/student-model/student "HTTP/1.1 200 OK"
+2026-11-21 04:16:06,946 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 403 Forbidden"
+2026-11-21 04:16:06,954 [INFO] httpx: HTTP Request: POST http://test/api/instructor/exercises "HTTP/1.1 200 OK"
+2026-11-21 04:16:06,956 [INFO] httpx: HTTP Request: GET http://test/api/instructor/dashboard "HTTP/1.1 200 OK"
+2026-11-21 04:16:06,961 [INFO] httpx: HTTP Request: DELETE http://test/api/instructor/exercises/ex_test_fibonacci 
+"HTTP/1.1 200 OK"
+======================================================================
+🚀 BẮT ĐẦU KIỂM THỬ BACKEND PHASE 5 (AUTH, INSTRUCTOR CRUD, ADAPTIVE MCP)
+======================================================================
+
+[1] Kiểm tra /api/health...
+    ✅ Health Status: ok
+    ✅ Đã phát hiện 8 MCP Tools:
+       • run_test_cases
+       • analyze_code_ast
+       • get_exercise_list
+       • get_exercise_details
+       • save_learning_event
+       • get_attempt_history
+       • get_student_model
+       • trace_code_execution
+
+[2] Kiểm tra Đăng nhập & Phân quyền...
+    ✅ Đăng nhập Sinh viên thành công: Trần Minh Khánh - SV K65 CNTT (MSV: 11236131) (Role: student)
+    ✅ Đăng nhập Giảng viên thành công: Nguyễn Văn A (Giảng viên Khoa Công nghệ thông tin - NEU) (Role: instructor)
+    ✅ Token xác thực hợp lệ cho người dùng: student
+
+[3] Kiểm tra /api/run-test (Chạy thử độc lập, không tốn quota AI)...
+    ✅ Chạy thử thành công! Kết quả: 5/5 tests passed.
+    ✅ AST Summary: Không sử dụng vòng lặp nào; Không phát hiện biến tích lũy rõ ràng; Mã nguồn dạng script tuần tự (không định nghĩa hàm riêng) (Tổng 3 dòng code thực tế).
+
+[4] Kiểm tra /api/submit (Nộp bài thích ứng + Gemini AI + Learning Event)...
+    ✅ Nộp bài thành công! Nguồn LLM: System-Celebration
+    ✅ Phản hồi AI (trích 100 ký tự đầu): 🎉 **Chúc mừng!** Bài làm của bạn đã vượt qua 5/5 kiểm thử của Bài 01: Tính tổng từ 1 đến n.
+
+🔎 **Bằn...
+
+[5] Kiểm tra /api/student-model/{session_id}...
+    ✅ Student Model: 🎯 Xếp loại: Chưa đủ dữ liệu để phân loại | Chỉ số tự lực: 100/100.
+🌟 Điểm mạnh: Đã ghi nhận hoạt động học tập; cần thêm bài làm để nhận diện điểm mạnh ổn định.
+⚠️ Cần lưu ý: Chưa đủ dữ liệu để kết luận về điểm nghẽn hoặc dạng lỗi thường gặp.
+🧭 Khuyến nghị: Tiếp tục luyện thêm bài tập trong học phần để hồ sơ có đủ dữ liệu phân tích.
+    ✅ Mastered Exercises: ['ex_01_sum_1_to_n']
+
+[6] Kiểm tra Quyền Giảng viên: Thêm bài tập mới & Xem thống kê...
+    ✅ Xác nhận Sinh viên bị chặn (403 Forbidden) khi vào route Giảng viên.
+    ✅ Giảng viên đã tạo bài tập mới: Bài Test: Dãy số Fibonacci
+    ✅ Thống kê Giảng viên:
+       • Tổng số bài tập: 5
+       • Tổng lượt nộp bài: 1
+       • Số học viên active: 1
+       • Tỷ lệ pass: 100.0%
+    ✅ Giảng viên đã xóa bài tập test thành công.
+
+======================================================================
+🎉 TẤT CẢ TEST CASES BACKEND PHASE 5 ĐỀU ĐẠT CHUẨN 100%!
+======================================================================

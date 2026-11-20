@@ -1,0 +1,39 @@
+﻿py : test_endpoint_rbac (test_class_overview_v57.OverviewIntegrationTests.test_endpoint_rbac) ... 
+C:\Users\Admin\AppData\Local\Programs\Python\Python314\Lib\site-packages\starlette\testclient.py:53: 
+DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:33 char:24
++   Invoke-Isolated $m { py -m unittest $m -v }
++                        ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_endpoint_r...Portal instead.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi 
+trường JWT_SECRET_KEY trước khi triển khai.
+C:\Users\Admin\Downloads\PyTutor-Thesis\backend\schemas.py:563: PydanticDeprecatedSince20: `min_items` is deprecated 
+and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at https://errors.pydantic.dev/2.13/migration/
+  keywords: list[str] = Field(..., min_items=1, description="Danh sách các từ khóa nhận diện")
+2026-11-21 04:14:22,596 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 04:14:22,605 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 04:14:22,623 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+"HTTP/1.1 200 OK"
+2026-11-21 04:14:22,628 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+"HTTP/1.1 404 Not Found"
+2026-11-21 04:14:22,629 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes/v57_class/insights 
+"HTTP/1.1 403 Forbidden"
+ok
+test_new_keys_and_overview (test_class_overview_v57.OverviewIntegrationTests.test_new_keys_and_overview) ... ok
+test_attention_rules (test_class_overview_v57.OverviewPureTests.test_attention_rules) ... ok
+test_bottleneck_threshold (test_class_overview_v57.OverviewPureTests.test_bottleneck_threshold) ... ok
+test_empty (test_class_overview_v57.OverviewPureTests.test_empty) ... ok
+test_failing_test_and_format (test_class_overview_v57.OverviewPureTests.test_failing_test_and_format) ... ok
+test_kc_and_positives (test_class_overview_v57.OverviewPureTests.test_kc_and_positives) ... ok
+test_limited_gives_no_class_conclusion 
+(test_class_overview_v57.OverviewPureTests.test_limited_gives_no_class_conclusion) ... ok
+test_no_data (test_class_overview_v57.OverviewPureTests.test_no_data) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.242s
+
+OK

@@ -1,0 +1,69 @@
+﻿py : 2026-11-21 04:16:27,570 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At line:6 char:3
++   py "$m.py" 2>&1 | Out-File $log -Encoding utf8
++   ~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 04:1...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 04:16:28,256 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 04:16:28,323 [INFO] httpx2: HTTP Request: POST http://testserver/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 04:16:28,375 [INFO] httpx2: HTTP Request: POST http://testserver/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,262 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,267 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,277 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/classes "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,284 [INFO] httpx2: HTTP Request: POST 
+http://testserver/api/classes/cls_it1110_test_1795209389/enroll "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,294 [INFO] httpx2: HTTP Request: POST 
+http://testserver/api/instructor/classes/cls_it1110_test_1795209389/exercises "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,304 [INFO] httpx2: HTTP Request: POST 
+http://testserver/api/instructor/classes/cls_it1110_test_1795209389/exercises "HTTP/1.1 200 OK"
+2026-11-21 04:16:29,314 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/exam-sessions "HTTP/1.1 200 
+OK"
+2026-11-21 04:16:31,225 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+2026-11-21 04:16:31,231 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 04:16:31,240 [INFO] httpx2: HTTP Request: DELETE 
+http://testserver/api/instructor/exam-sessions/exam_635ef64a "HTTP/1.1 200 OK"
+================================================================================
+🧪 [PHASE 12] BẮT ĐẦU KIỂM THỬ MÔ HÌNH LỚP TÍN CHỈ, KỲ THI & CẤU HÌNH TRÌNH BIÊN DỊCH
+================================================================================
+
+[1] Xác thực tài khoản Giảng viên và Sinh viên...
+    ✅ PASS: Đăng nhập thành công, đã cấp phát JWT Bearer Tokens.
+
+[2] Kiểm tra Cấu hình Trình biên dịch & Sandbox qua GET /api/health...
+    • Đường dẫn Trình thông dịch: C:\Users\Admin\AppData\Local\Programs\Python\Python314\python.exe
+    • Phiên bản Python: 3.14.0
+    • Nền tảng: win32
+    • Cờ thực thi: ['-u (Unbuffered I/O)', '-c (In-memory bytecode compile)']
+    • Bảng mã I/O: utf-8 (PYTHONIOENCODING=utf-8)
+    • Cơ chế cô lập: OS Subprocess Popen via MCP JSON-RPC 2.0 stdio
+    • Sandbox Timeout: 5.0s
+    • Tracer: Max 150 steps / 3.0s timeout (sys.settrace)
+    • Database Engine: SQLite3 WAL Mode (timeout=20.0s)
+    ✅ PASS: Cấu hình Trình biên dịch và Sandbox hiển thị minh bạch 100%.
+
+[3] Kiểm tra Quản lý Lớp tín chỉ (GET /api/classes & POST /api/instructor/classes)...
+    • Tìm thấy 14 lớp tín chỉ ban đầu (cls_it1110_01, cls_it1110_02).
+    ✅ PASS: Giảng viên tạo mới lớp tín chỉ thành công: IT1110-TEST-1795209389 (ID: cls_it1110_test_1795209389).
+    ✅ PASS: Sinh viên ghi danh vào lớp cls_it1110_test_1795209389 thành công.
+
+[4] Kiểm tra Tạo Kỳ thi với Danh sách Bài tập chọn lọc (POST /api/instructor/exam-sessions)...
+    ✅ PASS: Tạo Kỳ thi thành công (ID: exam_635ef64a) với 2 bài tập chọn lọc: ['ex_01_sum_1_to_n', 'ex_02_prime_check'].
+
+[5] Kiểm tra Chốt chặn Bảo mật Chế độ Thi khi Nộp bài (POST /api/submit)...
+    • Kết quả chấm Sandbox: 5/5 tests PASS (All Passed: True)
+    • Nguồn sinh gợi ý: Exam-Mode-Guard
+    • Thông báo Sư phạm: 🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Hệ thống đã ghi nhận kết quả chấm điểm Test C...
+    ✅ PASS: MCP Sandbox chấm điểm chính xác 100% nhưng Trợ lý AI bị khóa hoàn toàn theo đúng quy chế thi cử.
+
+[6] Kiểm tra Chốt chặn Bảo mật trong Chat làm rõ (POST /api/tutor/chat)...
+    • Phản hồi Chat Guard: 🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Bạn đang trong thời gian làm bài thi. Tính năng tr...
+    ✅ PASS: Chatbot AI từ chối giải thích và giữ nghiêm kỷ luật phòng thi.
+
+[7] Kiểm tra Giảng viên xóa Kỳ thi kiểm thử (DELETE /api/instructor/exam-sessions)...
+    ✅ PASS: Đã xóa thành công Kỳ thi kiểm thử exam_635ef64a.
+
+================================================================================
+🎉 TẤT CẢ 7 HẠNG MỤC KIỂM THỬ CỦA PHASE 12 ĐỀU ĐẠT CHUẨN 100%!
+================================================================================

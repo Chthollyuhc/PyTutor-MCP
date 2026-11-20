@@ -1,0 +1,59 @@
+﻿py : 
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:33 char:24
++   Invoke-Isolated $m { py -m unittest $m -v }
++                        ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+----------------------------------------------------------------------
+Ran 0 tests in 0.000s
+
+NO TESTS RAN
+======================================================================
+KIỂM THỬ TÀI LIỆU GIÁO TRÌNH MỚI TẢI LÊN TRÊN HỆ THỐNG PYTUTOR
+======================================================================
+
+1. THÔNG TIN TÀI LIỆU TRONG CƠ SỞ DỮ LIỆU:
+ - ID: 1
+ - Lớp học phần: cls_neu_cntt1128_02
+ - Tiêu đề: giáo trình python cơ bản (p1)
+ - Tên tệp: python_c_b_n_utehy_ph_n_1.txt
+ - Định dạng: txt
+ - Dung lượng văn bản: 135,305 ký tự
+ - Nguồn gốc / Giấy phép: TS. Nguyễn Văn Hậu · Giấy phép: CC By (licensed)
+ - Trạng thái hoạt động: Đang kích hoạt (Active)
+ - Thời điểm tải lên: 2026-11-19 14:15:14
+
+2. KẾT QUẢ PHÂN ĐOẠN & LẬP CHỈ MỤC (CHUNK INDEXING):
+ - Tổng số phân đoạn (chunks) bóc tách cho lớp cls_neu_cntt1128_02: 254 đoạn
+   [1] Phân đoạn class/cls_neu_cntt1128_02/1::0: "TS. NGUYỄN VĂN HẬU - TS. NGUYỄN DUY TÂN ThS. NGUYỄN THỊ HẢI NĂNG - ThS. NGUYỄN HOÀNG ĐIỆP  PYTHON CƠ BẢN  Khoa CNTT - ĐHSPKT Hưng Yên NHÀ XUẤT BẢN ĐẠI..."
+   [2] Phân đoạn class/cls_neu_cntt1128_02/1::1: "Cách mạng công nghiệp tạo nên sự phát triển vượt bậc của nền công nghiệp, kéo theo sự thay đổi cơ bản các điều kiện kinh tế, văn hóa và kỹ thuật,... t..."
+   [3] Phân đoạn class/cls_neu_cntt1128_02/1::2: "Ba cuộc cách mạng đầu tiên, suy cho cùng vẫn chỉ là sự phát triển mang tính tự động và độ chính xác (ở mức rất cao) của máy móc ("cơ bắp"): lần thứ nh..."
+
+3. THỬ NGHIỆM TRUY XUẤT NGỮ NGHĨA (RAG RETRIEVAL TEST) CHO LỚP cls_neu_cntt1128_02:
+
+❓ Truy vấn: "cú pháp vòng lặp for và duyệt tập hợp"
+   ⚠️ Không có đoạn nào vượt ngưỡng độ tương quan tối thiểu.
+
+❓ Truy vấn: "cách nhập dữ liệu từ bàn phím bằng hàm input"
+   ⚠️ Không có đoạn nào vượt ngưỡng độ tương quan tối thiểu.
+
+❓ Truy vấn: "cấu trúc điều kiện rẽ nhánh if else"
+   ⚠️ Không có đoạn nào vượt ngưỡng độ tương quan tối thiểu.
+
+❓ Truy vấn: "cách khai báo biến và các kiểu dữ liệu số nguyên số thực"
+   ⚠️ Không có đoạn nào vượt ngưỡng độ tương quan tối thiểu.
+
+4. KIỂM TRA PHÂN QUYỀN TRI THỨC THEO LỚP (ISOLATION TEST):
+ - Truy vấn từ lớp khác ('cls_other_dummy'): Có bị lộ giáo trình của lớp này không? KHÔNG (CHUẨN)
+
+5. THỬ DỰNG NGỮ CẢNH RAG VÀ NGUỒN TRÍCH DẪN CHO GIA SƯ AI:
+ - Câu hỏi của sinh viên: "Thầy cô dạy cấu trúc vòng lặp for và duyệt tập hợp như thế nào ạ?"
+ - Số đoạn trích xuất thành công: 0 đoạn
+ - Danh sách nguồn trích dẫn hiển thị cho sinh viên (source_refs):
+ - Ngữ cảnh giáo trình được đưa vào Prompt Gia sư AI:
+   ...
+
+======================================================================
+KẾT LUẬN: TÀI LIỆU ĐÃ ĐƯỢC NẠP, PHÂN ĐOẠN VÀ HOẠT ĐỘNG HOÀN TOÀN CHUẨN XÁC!
+======================================================================
