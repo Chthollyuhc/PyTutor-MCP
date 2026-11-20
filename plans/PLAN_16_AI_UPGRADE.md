@@ -147,7 +147,7 @@ Embedding provider mặc định cho MVP là sparse TF-IDF local. Knowledge base
 
 ## 5. 🛡️ QUY TẮC AN TOÀN, TƯƠNG THÍCH & XỬ LÝ NGOẠI LỆ
 
-1. **Bảo toàn hệ thống:** Không thay đổi ý nghĩa ba hành động Chạy thử / Hỏi AI / Nộp bài, cơ chế sao tự lực, EXAM Guard, MCP True Discovery hoặc các MCP tools hiện có.
+1. **Bảo toàn hệ thống:** Không thay đổi ý nghĩa ba hành động Chạy thử / Hỏi AI / Nộp bài, cơ chế sao tự làm, EXAM Guard, MCP True Discovery hoặc các MCP tools hiện có.
 2. **Phân quyền server-side:** Không dựa vào role, tên lớp, session ID hay quyền do frontend gửi nếu không được đối chiếu với JWT và dữ liệu lớp.
 3. **Dữ liệu riêng tư:** Student Model chỉ được dùng cho chính người học; dữ liệu lớp cho giảng viên phải thuộc lớp được phân quyền và chỉ tổng hợp theo nhu cầu câu hỏi.
 4. **RAG có nguồn:** Chỉ dùng nguồn đã đăng ký; giữ metadata nguồn; không xem văn bản truy xuất là chỉ dẫn hệ thống; không khẳng định tài liệu NEU đã có trước khi được cung cấp.

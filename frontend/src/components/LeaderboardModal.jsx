@@ -56,14 +56,14 @@ export default function LeaderboardModal({
             <div>
               <div className="flex items-center space-x-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-wide">
-                  🏆 Bảng Vàng Lớp Học & Vinh Danh Sao Tự Lực
+                  🏆 Bảng Vàng Lớp Học & Vinh Danh Sao Tự Làm
                 </h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-medium">
                   Leaderboard
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Xếp hạng dựa trên Tổng số Sao Tự lực (⭐), Số bài giải đúng và Điểm Clean Code
+                Xếp hạng dựa trên Tổng số Sao Tự làm (⭐), Số bài giải đúng và Điểm Clean Code
               </p>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function LeaderboardModal({
                     </h3>
                     <div className="flex items-center space-x-1.5 text-amber-800 dark:text-amber-300 font-extrabold text-sm mt-1 bg-amber-100 dark:bg-amber-500/20 px-3 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40">
                       <Star className="w-4 h-4 fill-current text-amber-500" />
-                      <span>{top1.total_stars} Sao Tự Lực</span>
+                      <span>{top1.total_stars} Sao Tự Làm</span>
                     </div>
                     <span className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                       {top1.completed_exercises} bài • Clean Max: {top1.highest_clean_score}

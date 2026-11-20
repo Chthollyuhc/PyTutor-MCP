@@ -445,7 +445,7 @@ class EndpointTests(unittest.TestCase):
         self.assertFalse(fetch(self.instructor))               # không lộ trạng thái của sinh viên cho vai trò khác
 
     def test_chat_explains_star_rules_from_system_text(self):
-        body, prompt = self._chat("tu_ex_chat_rules", "Làm sao để được 3 sao tự lực?")
+        body, prompt = self._chat("tu_ex_chat_rules", "Làm sao để được 3 sao tự làm?")
         self.assertIn("LUẬT HỆ THỐNG PYTUTOR", prompt)
         for required in ("3⭐", "Mức 2", "Mức 3", "lần nộp đạt đầu tiên", "không phải điểm học phần"):
             self.assertIn(required, prompt)

@@ -67,7 +67,7 @@ def run_tests():
     assert ex1["status"] == "MASTERED", f"Expected MASTERED, got {ex1['status']}"
     assert ex1["stars_earned"] == 3
     assert ex1["is_unlocked"] is True
-    print(f"    ✅ PASS: ex_01 đã pass ({ex1['stars_earned']} ⭐ tự lực) -> Trạng thái: {ex1['status']}")
+    print(f"    ✅ PASS: ex_01 đã pass ({ex1['stars_earned']} ⭐ tự làm) -> Trạng thái: {ex1['status']}")
 
     # ex_03_factorial phải là AVAILABLE vì tiên quyết ex_01 đã MASTERED
     ex3 = curr_items["ex_03_factorial"]
@@ -124,7 +124,7 @@ def run_tests():
     conn.close()
 
     # 6. Kiểm tra Profile Analytics Metrics
-    print("\n[6] Kiểm tra Điểm Tự lực trong GET /api/student/profile...")
+    print("\n[6] Kiểm tra Điểm Tự làm trong GET /api/student/profile...")
     res_prof = client.get("/api/student/profile?session_id=student", headers=student_headers)
     assert res_prof.status_code == 200
     prof_data = res_prof.json()

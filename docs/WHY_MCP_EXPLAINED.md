@@ -102,7 +102,7 @@ Toàn bộ logic nghiệp vụ cốt lõi của hệ thống được đóng gó
 > **Hoàn toàn khả thi và có tính ứng dụng rất cao:**
 > 1. **Tương thích hệ thống sẵn có (LMS Compatibility):** Ngân hàng bài tập lưu trữ trong SQLite chuẩn hóa, dễ dàng đồng bộ với Moodle, Canvas hay Blackboard.
 > 2. **Học tập linh hoạt mọi lúc mọi nơi:** Sinh viên có thể học trên web (PyTutor IDE) hoặc cài extension MCP trực tiếp vào môi trường lập trình chuyên nghiệp của họ (VS Code, Cursor) mà vẫn sử dụng chung một ngân hàng đề bài và gia sư chấm điểm.
-> 3. **Hỗ trợ Giảng viên:** Giảng viên theo dõi được bức tranh toàn cảnh của cả lớp thông qua Bảng điều khiển Instructor Dashboard và Bảng vàng xếp hạng sao tự lực, dễ dàng phát hiện những sinh viên đang gặp khó khăn để can thiệp kịp thời.
+> 3. **Hỗ trợ Giảng viên:** Giảng viên theo dõi được bức tranh toàn cảnh của cả lớp thông qua Bảng điều khiển Instructor Dashboard và Bảng vàng xếp hạng sao tự làm, dễ dàng phát hiện những sinh viên đang gặp khó khăn để can thiệp kịp thời.
 
 ---
 

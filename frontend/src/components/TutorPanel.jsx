@@ -273,12 +273,12 @@ export default function TutorPanel({
                 <h4 className="text-sm font-bold text-success-strong">Đã vượt qua toàn bộ kiểm thử</h4>
                 <p className="text-[0.8125rem] text-foreground">
                   {officialStars != null
-                    ? `Sao tự lực lượt nộp này: ${officialStars}/3`
-                    : 'Sao tự lực chỉ được ghi nhận khi bạn bấm "Nộp bài".'}
+                    ? `Sao tự làm lượt nộp này: ${officialStars}/3`
+                    : 'Sao tự làm chỉ được ghi nhận khi bạn bấm "Nộp bài".'}
                 </p>
               </div>
               {officialStars != null && (
-                <div className="flex shrink-0 items-center gap-0.5" role="img" aria-label={`${officialStars} trên 3 sao tự lực`}>
+                <div className="flex shrink-0 items-center gap-0.5" role="img" aria-label={`${officialStars} trên 3 sao tự làm`}>
                   {Array.from({ length: 3 }).map((_, i) => (
                     <Star key={i} aria-hidden="true" className={`size-6 ${i < officialStars ? 'fill-warning text-warning' : 'text-warning-line'}`} />
                   ))}
@@ -456,7 +456,7 @@ export default function TutorPanel({
                     <p className="text-[0.8125rem] leading-relaxed">Bạn đã nộp bài đạt. Giờ bạn có thể hỏi chi tiết về code đã nộp: vì sao nó chạy đúng, từng dòng làm gì, hay cách viết khác.</p>
                   ) : (
                     <p className="text-[0.8125rem] leading-relaxed">
-                      Khung này giải thích <strong className="font-bold">khái niệm Python tổng quát</strong> và luật Sao tự lực; Gia sư không xem code bài đang làm ở đây. Cần gỡ lỗi bài làm, hãy bấm <strong className="font-bold text-ai-strong">Hỏi gia sư AI</strong>. Sau khi <strong className="font-bold">Nộp bài</strong> đạt, bạn hỏi được chi tiết về code đã nộp.
+                      Khung này giải thích <strong className="font-bold">khái niệm Python tổng quát</strong> và luật Sao tự làm; Gia sư không xem code bài đang làm ở đây. Cần gỡ lỗi bài làm, hãy bấm <strong className="font-bold text-ai-strong">Hỏi gia sư AI</strong>. Sau khi <strong className="font-bold">Nộp bài</strong> đạt, bạn hỏi được chi tiết về code đã nộp.
                     </p>
                   )}
                 </div>

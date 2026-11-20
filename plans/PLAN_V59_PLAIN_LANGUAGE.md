@@ -31,7 +31,7 @@
 1. **Làm lại cả chữ lẫn biểu đồ.**
 2. **Người dùng là sinh viên nhập môn CNTT.**
    - Giữ từ của môn học: vòng lặp, câu lệnh if, hàm, lỗi cú pháp, chạy thử, nộp bài, gợi ý mức 1/2/3, sao.
-   - Bỏ từ của người làm hệ thống: khái niệm, trạng thái, bằng chứng, nhóm quá trình, mức tự lực, trung vị, dữ liệu hạn chế, quy ước.
+   - Bỏ từ của người làm hệ thống: khái niệm, trạng thái, bằng chứng, nhóm quá trình, mức tự làm, trung vị, dữ liệu hạn chế, quy ước.
    - Màn giảng viên cũng bỏ nhóm từ thứ hai.
 3. **Yếu tố "game" nhẹ, chỉ giữ thứ gắn với việc học thật.**
    - Có: chặng đường học phần có sao, tin vui về tiến bộ của chính mình, lời khen cụ thể, "còn N bài nữa".
@@ -49,13 +49,13 @@
 
 | Chỗ | Trước (v5.8) | Sau (v5.9) |
 |---|---|---|
-| Trang chủ sinh viên | 4 ô số: Lớp học phần, Bài hoàn thành, Sao tự lực tích lũy, Chỉ số tự lập (mã còn hiện **85%** mặc định khi chưa có dữ liệu) | Thẻ **"Hôm nay của bạn"** (xem mục 6, Bước 3) |
+| Trang chủ sinh viên | 4 ô số: Lớp học phần, Bài hoàn thành, Sao tự làm tích lũy, Chỉ số tự lập (mã còn hiện **85%** mặc định khi chưa có dữ liệu) | Thẻ **"Hôm nay của bạn"** (xem mục 6, Bước 3) |
 | Câu chính | "Khái niệm “Vòng lặp” đáng luyện thêm" | "Tuần này bạn làm đúng 2 bài mới, nhiều hơn tuần trước 1 bài." |
 | Tin vui | không có | "Bạn không bỏ cuộc: bài Số nguyên tố đúng hết sau 7 lần thử." |
 | Chặng đường | không có ở trang chủ | 5 trạm theo lộ trình lớp: bài xong có ★★★, "Bạn ở đây", bài khóa có ổ khóa; "Còn 2 bài nữa là xong học phần." |
-| Kỹ năng | 6 ô "Khá vững / Đang hình thành / Đang vướng / Chưa có bằng chứng" + "Vì sao hệ thống nghĩ vậy" (câu có ≥ và "tự lực trung bình") | Một dòng: "Bạn làm tốt: Vòng lặp · Đang luyện: Câu lệnh if · Nên luyện thêm: Đệ quy" |
+| Kỹ năng | 6 ô "Khá vững / Đang hình thành / Đang vướng / Chưa có bằng chứng" + "Vì sao hệ thống nghĩ vậy" (câu có ≥ và "tự làm trung bình") | Một dòng: "Bạn làm tốt: Vòng lặp · Đang luyện: Câu lệnh if · Nên luyện thêm: Đệ quy" |
 | Dấu chân một bài | Biểu đồ có trục "số test đạt", ký hiệu M1, ×8, chú giải 4 mục | Các bước bằng lời: "Chạy thử: đúng 3 trên 5 · Đúng thêm", "Nộp bài: đúng hết" |
-| Sau khi nộp đạt | "Hệ thống đã ghi nhận 3 sao tự lực vào hồ sơ năng lực và cập nhật lộ trình kỹ năng của bạn." | "**Đúng hết rồi!** Bạn làm đúng hết bài này và có 3 sao. Bạn tự làm, không cần gợi ý lớn." + một tin vui nếu có |
+| Sau khi nộp đạt | "Hệ thống đã ghi nhận 3 sao tự làm vào hồ sơ năng lực và cập nhật lộ trình kỹ năng của bạn." | "**Đúng hết rồi!** Bạn làm đúng hết bài này và có 3 sao. Bạn tự làm, không cần gợi ý lớn." + một tin vui nếu có |
 | Đầu màn giảng viên | "7 ngày qua · 8/10 SV có hoạt động · 3 việc nên xem" + nhãn "Mẫu nhỏ · chỉ mô tả" | **Bản tin lớp** 3–5 câu: "Tuần này có 8 trong 10 bạn vào làm bài, làm đúng thêm 23 bài. Phần lớn các bạn đang ổn. 2 bạn nên được hỏi thăm: An, Hà. Bài khó nhất lúc này: Số nguyên tố. Nhiều bạn sai ở trường hợp “n = 1” (ví dụ đầu vào: 1)." |
 | Nhóm sinh viên | Ma trận 7 màu + chú giải | Ba cột tên: **Nên hỏi thăm / Đang cố gắng / Đang ổn**, mỗi tên có một câu lý do; dòng "Chưa bắt đầu (2): …" |
 | Theo bài | Thanh chồng 6 loại lỗi, "trung vị (n=6)" | "6 trong 10 bạn đã làm xong, 3 bạn đang làm." + lỗi hay gặp nói bằng ví dụ + "Các bạn làm xong thường mất khoảng 20 phút." |
@@ -238,7 +238,7 @@ FEW_DATA_VI = "Lớp mới có ít hoạt động nên nhận xét có thể ch�
 # Từ cấm trong MỌI câu do module này sinh ra (test kiểm tra). Tên bài, tên sinh viên và mô tả test do giảng viên
 # viết được chèn nguyên văn nên không thuộc phạm vi kiểm tra.
 BANNED_WORDS = (
-    "khái niệm", "trạng thái", "bằng chứng", "quy ước", "hiệu chuẩn", "trung vị", "tự lực", "nhóm quá trình",
+    "khái niệm", "trạng thái", "bằng chứng", "quy ước", "hiệu chuẩn", "trung vị", "tự làm", "nhóm quá trình",
     "mắc kẹt", "đạt độc lập", "thử–sửa", "thử-sửa", "dữ liệu hạn chế", "mẫu nhỏ", "heuristic", "lượt", "xếp hạng",
     "kém", "yếu", "thất bại", "expected", "≥", "≤", "%", "#", "n=", " sv ", "kc", "test",
 )
@@ -1375,7 +1375,7 @@ const FILES = [
   ...readdirSync(join(components, 'plain')).filter((f) => f.endsWith('.jsx')).map((f) => join(components, 'plain', f)),
   join(components, 'StudentProfileModal.jsx'),
 ];
-const BANNED = ['khái niệm', 'trạng thái', 'bằng chứng', 'quy ước', 'hiệu chuẩn', 'trung vị', 'tự lực',
+const BANNED = ['khái niệm', 'trạng thái', 'bằng chứng', 'quy ước', 'hiệu chuẩn', 'trung vị', 'tự làm',
   'nhóm quá trình', 'mắc kẹt', 'đạt độc lập', 'thử–sửa', 'lượt', 'heuristic', 'xếp hạng'];
 
 test('các màn lời thường không chứa từ chuyên môn', () => {
@@ -1960,7 +1960,7 @@ export default function StudentProfileModal({ isOpen, onClose, classId, currentE
 6. Xóa dòng `const autonomyScore = profile?.analytics_metrics?.autonomy_score ?? 85;`.
 7. Trong khối "Tiến độ học tập", đổi câu:
    ```jsx
-   Bạn đã hoàn thành <strong className="text-foreground">{totalSolved} bài tập</strong> với độ tự lực thuật toán đạt <strong className="text-foreground">{autonomyScore}%</strong>.
+   Bạn đã hoàn thành <strong className="text-foreground">{totalSolved} bài tập</strong> với độ tự làm thuật toán đạt <strong className="text-foreground">{autonomyScore}%</strong>.
    ```
    thành:
    ```jsx
@@ -2009,8 +2009,8 @@ export default function StudentProfileModal({ isOpen, onClose, classId, currentE
 #### 4.4. Chữ nhỏ ở trang lớp và Header (chỉ đổi chữ, không đổi logic)
 
 - `frontend/src/pages/StudentClassDetailPage.jsx`:
-  - `{totalClassStars} sao tự lực đã tích lũy` → `{totalClassStars} sao đã nhận`
-  - trong Badge vàng: `{earnedStars} sao tự lực` → `{earnedStars} sao`
+  - `{totalClassStars} sao tự làm đã tích lũy` → `{totalClassStars} sao đã nhận`
+  - trong Badge vàng: `{earnedStars} sao tự làm` → `{earnedStars} sao`
 - `frontend/src/components/Header.jsx`: đổi thuộc tính `title="Xem hành trình học: bạn đang ở đâu, tiến bộ thế nào, và nạp lại code đã nộp"` thành `title="Xem hành trình học của bạn"`.
 
 **Kiểm tra Bước 4:** `cd frontend; npm.cmd run test:ui-utils; npm.cmd run build; cd ..`. Cả ba test đều đạt, kể cả test từ cấm, và build thành công.
@@ -2246,7 +2246,7 @@ export default function StudentProfileModal({ isOpen, onClose, classId, currentE
 - [ ] Không có thay đổi nào ở: logic sao, `compute_student_model`, `derive_learner_model`, `classify_learning_process`, guardrails, RAG, `/api/submit`.
 - [ ] Không có khóa API cũ nào bị đổi hay xóa.
 - [ ] Phản hồi cho giảng viên không chứa `code`.
-- [ ] Màn sinh viên không có chữ "mắc kẹt", "xếp hạng", "tự lực".
+- [ ] Màn sinh viên không có chữ "mắc kẹt", "xếp hạng", "tự làm".
 - [ ] Không `git commit`, không đụng `pytutor.db`.
 - [ ] Tài liệu ở Bước 7 đã cập nhật.
 - [ ] Đã kiểm tra trình duyệt, hoặc đã ghi rõ là chưa.

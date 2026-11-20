@@ -303,7 +303,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
         total_hint_sum += max_hint
         total_hint_count += 1
 
-        # Tính điểm tự lực cho bài này
+        # Tính điểm tự làm cho bài này
         if has_passed:
             mastered_exercises.append(eid)
             passed_sub = next(s for s in s_list if s["all_passed"] == 1)
@@ -421,7 +421,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     elif len(mastered_exercises) >= 4 and autonomy_score >= 80:
         level_classification = "Hoàn thành nhiều bài với mức hỗ trợ thấp"
         strengths_analysis = (
-            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập đã thử với chỉ số tự lực {autonomy_score}/100. "
+            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập đã thử với chỉ số tự làm {autonomy_score}/100. "
             f"Tỷ lệ hoàn thành ngay lần đầu đạt {first_try_pass_rate}%, trung bình chỉ mất {avg_attempts_to_solve} lần nộp/bài."
         )
         if struggling_exercises:
@@ -434,7 +434,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     elif len(mastered_exercises) >= 2 and autonomy_score >= 60:
         level_classification = "Hoàn thành ổn định, còn dùng gợi ý ở một số bài"
         strengths_analysis = (
-            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập với chỉ số tự lực {autonomy_score}/100. "
+            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập với chỉ số tự làm {autonomy_score}/100. "
             f"Vượt qua bài tập với mức trợ giúp trung bình Level {avg_hint} (chủ yếu dùng Gợi ý nhẹ hoặc Chỉ chỗ sai)."
         )
         if struggling_exercises:
@@ -502,7 +502,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     )
 
     summary = (
-        f"🎯 Xếp loại: {level_classification} | Chỉ số tự lực: {autonomy_score}/100.\n"
+        f"🎯 Xếp loại: {level_classification} | Chỉ số tự làm: {autonomy_score}/100.\n"
         f"🌟 Điểm mạnh: {strengths_analysis}\n"
         f"⚠️ Cần lưu ý: {weaknesses_and_bottlenecks}\n"
         f"🧭 Khuyến nghị: {recommended_next_action}"

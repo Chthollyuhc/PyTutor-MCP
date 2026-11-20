@@ -44,7 +44,7 @@
     },
     {
       "id": "secure_all",
-      "description": "Bốn bài đạt ngay không gợi ý; tự lực cao.",
+      "description": "Bốn bài đạt ngay không gợi ý; tự làm cao.",
       "target": "ex_05_count_vowels",
       "expected_gate": "open",
       "events": [

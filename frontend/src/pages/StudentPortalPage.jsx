@@ -63,7 +63,7 @@ export default function StudentPortalPage() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
-  // Dữ liệu mở rộng: Đợt thi tín chỉ và sao tự lực
+  // Dữ liệu mở rộng: Đợt thi tín chỉ và sao tự làm
   const [examSessions, setExamSessions] = useState([]);
   const [achievements, setAchievements] = useState(null);
 

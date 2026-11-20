@@ -4,7 +4,7 @@ Bộ kiểm thử Tự động Toàn diện cho PHASE 13 & 14 (v4.0 NEU Enterpri
 2. Quản lý Đa Lớp học phần (Multi-Class Enrollment & Per-Class Exercises).
 3. Ghi danh qua Mã tham gia lớp (Enrollment Code) và Rời lớp.
 4. Quản lý danh sách bài tập và quan hệ tiên quyết theo lớp.
-5. Tiến trình hoàn thành dựa trên kết quả pass; sao tự lực chỉ dùng để ghi nhận/xếp hạng.
+5. Tiến trình hoàn thành dựa trên kết quả pass; sao tự làm chỉ dùng để ghi nhận/xếp hạng.
 6. Động cơ Phân tích Năng lực 4 Chiều (4D Analytics: Autonomy Score, First-try Pass Rate, Error Breakdown) & 3 Thẻ Chẩn đoán Sư phạm.
 """
 
@@ -178,7 +178,7 @@ def test_phase13_14_comprehensive():
     assert len(roadmap["nodes"]) >= 4
     print(f"    • Lộ trình lớp: {roadmap['class_code']} - {roadmap['class_name']} ({roadmap['total_mastered']}/{roadmap['total_exercises']} làm chủ)")
     for node in roadmap["nodes"]:
-        print(f"      [{node['status']}] {node['id']} - {node['title']} ({node['stars_earned']} ⭐ tự lực) -> {node['status_description']}")
+        print(f"      [{node['status']}] {node['id']} - {node['title']} ({node['stars_earned']} ⭐ tự làm) -> {node['status_description']}")
     print("    ✅ PASS: Endpoint cũ phản ánh trạng thái hoàn thành và quan hệ tiên quyết.")
 
     # 8. KIỂM TRA ĐỘNG CƠ PHÂN TÍCH NĂNG LỰC 4 CHIỀU & 3 THẺ CHẨN ĐOÁN SƯ PHẠM
@@ -189,7 +189,7 @@ def test_phase13_14_comprehensive():
 
     assert profile["analytics_metrics"] is not None, "Missing analytics_metrics in profile"
     am = profile["analytics_metrics"]
-    print(f"    • Điểm Tự lực Sư phạm (Autonomy Score): {am['autonomy_score']}/100")
+    print(f"    • Điểm Tự làm Sư phạm (Autonomy Score): {am['autonomy_score']}/100")
     print(f"    • Tỷ lệ Pass Lần đầu (First-try Pass Rate): {am['first_try_pass_rate']}%")
     print(f"    • Số lần nộp trung bình / bài: {am['avg_attempts_to_solve']}")
     print(f"    • Phân tích Lỗi (Error Breakdown): {am['error_breakdown']}")

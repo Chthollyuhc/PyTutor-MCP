@@ -493,7 +493,7 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
             save_llm_interaction({"id": hint_interaction_id, "username": student_username,
                                   "role": "student", "task_type": "adaptive_hint", **hint_telemetry})
 
-        # 2.1. Ngữ cảnh sao tự lực phải đọc TRƯỚC khi lưu lượt hiện tại (để biết đã từng nộp pass hay chưa).
+        # 2.1. Ngữ cảnh sao tự làm phải đọc TRƯỚC khi lưu lượt hiện tại (để biết đã từng nộp pass hay chưa).
         star_context = None
         if request.action_type == "submit" and test_results_raw.get("all_passed", False):
             star_context = get_autonomy_hint_context(student_username, request.exercise_id)
@@ -516,7 +516,7 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
         except Exception as e:
             logger.warning(f"Không thể lưu learning event qua MCP: {e}")
 
-        # 3.1. Tính và lưu sao tự lực
+        # 3.1. Tính và lưu sao tự làm
         stars_earned = 0
         star_rationale = None
         new_badges = []
@@ -1148,7 +1148,7 @@ async def get_skill_roadmap_endpoint(
                     prereqs = [prereq] if prereq else []
                     if ex_id in completed_set:
                         st = "MASTERED"
-                        desc = f"Đã hoàn thành ({stars_earned} ⭐ tự lực)"
+                        desc = f"Đã hoàn thành ({stars_earned} ⭐ tự làm)"
                         unlocked = True
                     elif ex_id in in_prog_set or ex_id in struggling_set:
                         st = "IN_PROGRESS"
@@ -1328,7 +1328,7 @@ async def pythonic_review_endpoint(request: PythonicReviewRequest, token_data: d
 async def get_leaderboard_endpoint(limit: int = 20, token_data: dict = Depends(verify_token)):
     """
     [Phase 10: Bảng Xếp Hạng Lớp Học (Classroom Leaderboard)]
-    Xếp hạng học viên theo tổng số sao tự lực, số bài đã làm chủ và điểm Clean Code.
+    Xếp hạng học viên theo tổng số sao tự làm, số bài đã làm chủ và điểm Clean Code.
     """
     try:
         leaderboard = get_class_leaderboard(limit=limit)
@@ -1347,7 +1347,7 @@ async def get_leaderboard_endpoint(limit: int = 20, token_data: dict = Depends(v
 @app.get("/api/student/achievements", response_model=UserAchievementsResponse)
 async def get_student_achievements_endpoint(username: str = "student", token_data: dict = Depends(require_student)):
     """
-    Lấy tổng số sao tự lực và số sao theo từng bài tập.
+    Lấy tổng số sao tự làm và số sao theo từng bài tập.
     """
     try:
         username = token_data["sub"]

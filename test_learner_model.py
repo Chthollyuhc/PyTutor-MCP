@@ -172,7 +172,7 @@ class StateRuleTests(unittest.TestCase):
         model = compute_student_model(two)
         self.assertEqual(concept(model, "loop")["state"], "secure")
         self.assertEqual(concept(model, "loop")["data_status"], "sufficient")
-        self.assertIn("tự lực", concept(model, "loop")["explanation"])
+        self.assertIn("tự làm", concept(model, "loop")["explanation"])
         self.assertEqual(concept(model, "string")["state"], "no_evidence")
 
     def test_ask_ai_does_not_change_official_metrics(self):

@@ -4,7 +4,7 @@
 Giảng viên hướng dẫn nhận xét: nhật ký học tập của sinh viên và biểu đồ của giảng viên chi tiết nhưng **quá nhiều số, máy móc**. Người xem không biết khối nào hữu dụng. Thầy cần một thứ trực quan, khiến cả GV và SV **muốn mở xem** và **có tác dụng**.
 
 Hiện trạng (đã đọc mã ngày 20/11/2026):
-- `frontend/src/components/StudentProfileModal.jsx` có khoảng 10 khối ngang nhau: 4 ô số (mức tự lực /100, đạt ngay lần đầu, số lần nộp TB, mức gợi ý TB), thanh kết quả, 2 thẻ nhận xét, khó khăn lặp lại, bước luyện tập, 6 thẻ KC, lịch sử nộp.
+- `frontend/src/components/StudentProfileModal.jsx` có khoảng 10 khối ngang nhau: 4 ô số (mức tự làm /100, đạt ngay lần đầu, số lần nộp TB, mức gợi ý TB), thanh kết quả, 2 thẻ nhận xét, khó khăn lặp lại, bước luyện tập, 6 thẻ KC, lịch sử nộp.
 - `ClassInsightsPanel` trong `frontend/src/components/InstructorPedagogyPanels.jsx` có khoảng 16 khối: 4 ô số, 3 danh sách tóm tắt, 7 biểu đồ/danh sách, nhóm quá trình vẽ lần 2, cơ cấu lỗi vẽ lần 2, 2 bảng, chú thích.
 
 Vấn đề cần sửa:
@@ -14,7 +14,7 @@ Vấn đề cần sửa:
 4. Một số chỉ số đi ngược sư phạm của chính hệ thống:
    - "Đạt ngay lần đầu" và "số lần nộp TB" ngược với luật sao (nộp nhiều lần không trừ sao).
    - "Mức gợi ý TB" lấy trung bình một thang thứ bậc. Khi chưa có dữ liệu, mã còn hiện mặc định `1.0` kèm nhãn "Độc lập tư duy cao" (`StudentProfileModal.jsx:235`).
-   - "Mức tự lực /100" là chỉ số gộp chưa hiệu chuẩn nhưng hiện như điểm chính xác.
+   - "Mức tự làm /100" là chỉ số gộp chưa hiệu chuẩn nhưng hiện như điểm chính xác.
 5. Phần trăm trên mẫu nhỏ.
 
 Hướng đã chốt (theo bản phác thảo đã trao đổi):

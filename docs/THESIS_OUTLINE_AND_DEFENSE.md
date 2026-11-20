@@ -114,7 +114,7 @@ Mỗi câu kèm hướng trả lời và nơi lấy bằng chứng. Hãy tập t
 21. *"'Thích ứng' trong tên đề tài nghĩa là gì? Có chứng minh học tốt hơn không?"*
     Nghĩa là phản hồi thay đổi theo hồ sơ người học theo luật tường minh, đo được: trên 120 ô phát lại tổng hợp, chính sách khác đối chứng bỏ qua mô hình ở 51 ô (42,5%), mức gợi ý yêu cầu giữ 120/120, cổng dữ liệu đúng 30/30 (mục 4.4.4). Đây là hành vi chính sách, **không** phải kết quả học tập: chưa có pilot, chưa dùng mô hình ngôn ngữ thật, và không tuyên bố học tốt hơn.
 
-22. *"Các ngưỡng (2 bài, tự lực 70, 45, 80...) lấy từ đâu?"*
+22. *"Các ngưỡng (2 bài, tự làm 70, 45, 80...) lấy từ đâu?"*
     Là quy ước vận hành do dự án chọn, chưa hiệu chuẩn bằng dữ liệu thực; được ghi rõ trong `THRESHOLDS`, trong câu miễn trừ của mô hình hiển thị cho người học và ở mục hạn chế. Cổng dữ liệu (chỉ dùng khi đủ bằng chứng từ bài khác) giảm rủi ro kích hoạt sai khi dữ liệu thưa. Hiệu chuẩn là việc cần làm sau pilot.
 
 ## Phần 4. Kịch bản demo 7 phút

@@ -1,7 +1,7 @@
 """
 Test Suite: Phase 15.4 Verification
 - Tách biệt 3 hành động: Chạy thử, Hỏi Gia sư AI (action_type='ask_ai'), Nộp bài (action_type='submit')
-- Kiểm tra tính toán sao tự lực và không lưu sao khi hỏi AI
+- Kiểm tra tính toán sao tự làm và không lưu sao khi hỏi AI
 - Kiểm tra API health compiler_config python_version
 """
 
@@ -71,10 +71,10 @@ def test_phase15_4_actions():
     assert res_submit.status_code == 200, f"Submit nộp bài thất bại: {res_submit.status_code}"
     sub_data = res_submit.json()
     assert sub_data["test_results"]["all_passed"] is True, "Bài nộp phải pass 100% test cases"
-    # Vì trước đó đã từng hỏi AI ở Mức 2 (ở test 2), sao tự lực phải đạt đúng 2 Sao
+    # Vì trước đó đã từng hỏi AI ở Mức 2 (ở test 2), sao tự làm phải đạt đúng 2 Sao
     print(f"    • Số sao đạt được: {sub_data['stars_earned']} ⭐ (Do lần trước đó đã dùng gợi ý Mức 2)")
     assert sub_data["stars_earned"] == 2, f"Kỳ vọng 2 sao nhưng nhận được {sub_data['stars_earned']}"
-    print(f"    ✅ PASS: 'submit' chính thức cấp sao tự lực dựa trên lịch sử gợi ý: {sub_data['stars_earned']} ⭐")
+    print(f"    ✅ PASS: 'submit' chính thức cấp sao tự làm dựa trên lịch sử gợi ý: {sub_data['stars_earned']} ⭐")
 
     # 4. Kiểm tra student roster API
     print("\n[4] Kiểm tra Roster Giảng viên (GET /api/instructor/classes/cls_neu_cntt1128_02/students)...")

@@ -26,7 +26,7 @@ Khác biệt cần giữ: Mẫu 1 chấm chất lượng câu trả lời LLM b�
 | Kết quả kèm xếp loại + bảng điểm chi tiết của phiên | Phản hồi đọc được, không chỉ một con số | Thẻ "Vì sao số sao này" + cách cải thiện |
 | Lịch sử luyện tập, lọc theo khoảng thời gian, 3 biểu đồ tiến độ | Hỗ trợ tự theo dõi | Mục "Lỗi lặp lại" và "Bước luyện tập tiếp theo" trong hồ sơ; GV lọc insight theo 7/30/90 ngày |
 | Quản lý mục tiêu có thanh tiến độ | Tự điều chỉnh học tập | Khuyến nghị bài kế tiếp tất định (không thêm bảng mục tiêu mới — tránh phình phạm vi) |
-| Kết luận: "công thức chấm chưa được chuyên gia kiểm chứng, kết quả mang tính tham khảo" | Trung thực về tính hợp lệ của thang đo | Ghi rõ sao tự lực / `autonomy_score` / `data_status` là quy ước vận hành; bỏ nhãn kiểu "Chuẩn A+ NEU" |
+| Kết luận: "công thức chấm chưa được chuyên gia kiểm chứng, kết quả mang tính tham khảo" | Trung thực về tính hợp lệ của thang đo | Ghi rõ sao tự làm / `autonomy_score` / `data_status` là quy ước vận hành; bỏ nhãn kiểu "Chuẩn A+ NEU" |
 | Schema gọn (6 bảng), service tách khỏi UI | Thiết kế mạch lạc | Hàm tổng hợp nằm ở `backend/database.py`, endpoint mỏng, UI chỉ hiển thị |
 
 ## 2. Khoảng trống của PyTutor (kiểm chứng trên mã nguồn ngày 12/11/2026)
@@ -57,19 +57,19 @@ Mỗi lát cắt: DB/schema → backend/MCP → UI → test. Xong và pass mới
   - *Nghiệm thu*: test owner/duplicate/role; endpoint tổng hợp chỉ trả số đếm.
 - **S1.3 Nguồn RAG**: chunk có tiêu đề mục; ngưỡng liên quan tối thiểu; `TutorChatResponse.sources` + `knowledge_status` (`grounded` | `no_source`); UI hiện nguồn hoặc ghi rõ "không có tài liệu nội bộ phù hợp".
   - *Nghiệm thu*: câu trong KB trả đúng mục; câu ngoài KB trả `no_source` và danh sách rỗng.
-- **S1.4 Khóa phạm vi Chat & Minh bạch luật Sao tự lực** (bổ sung theo góp ý chủ dự án 12/11/2026):
-  - Dạy rõ quy tắc 3 nút & Sao tự lực (1–3⭐) vào `SOCRATIC_TEMPLATE` (`backend/prompt_templates.py`) để gia sư trả lời đúng luật hệ thống khi sinh viên hỏi, không tự bịa.
+- **S1.4 Khóa phạm vi Chat & Minh bạch luật Sao tự làm** (bổ sung theo góp ý chủ dự án 12/11/2026):
+  - Dạy rõ quy tắc 3 nút & Sao tự làm (1–3⭐) vào `SOCRATIC_TEMPLATE` (`backend/prompt_templates.py`) để gia sư trả lời đúng luật hệ thống khi sinh viên hỏi, không tự bịa.
   - Tách 2 chế độ cho `POST /api/tutor/chat` theo trạng thái `has_passed_submit` (`action_type='submit'` & `all_passed=1` trên `(username, exercise_id)`):
     1. **Chưa nộp bài pass:** Chỉ giải thích **khái niệm Python tổng quát**; backend **không truyền `<student_code>`** vào prompt chat (giữ signature `render_socratic_prompt` tương thích test cũ), cấm chẩn đoán dòng lỗi hay chỉnh trực tiếp code bài tập; nếu sinh viên hỏi gỡ lỗi code bài đang làm thì nhắc bấm `🤖 Hỏi Gia sư AI`.
     2. **Đã hoàn thành & nộp bài pass:** Mở khóa hỏi và làm rõ chi tiết về code đã nộp (vì sao bài đã chốt).
   - Cập nhật copy/placeholder trong `TutorPanel.jsx` (dòng 434, 496) cho đúng phạm vi trước và sau khi nộp bài đạt.
-  - *Nghiệm thu*: unittest xác nhận trước khi nộp pass, prompt chat không chứa `<student_code>` bài làm và yêu cầu gỡ code được chuyển hướng về `Hỏi Gia sư AI`; sau khi nộp pass mới mở ngữ cảnh code đã nộp; AI trả lời đúng luật sao tự lực.
+  - *Nghiệm thu*: unittest xác nhận trước khi nộp pass, prompt chat không chứa `<student_code>` bài làm và yêu cầu gỡ code được chuyển hướng về `Hỏi Gia sư AI`; sau khi nộp pass mới mở ngữ cảnh code đã nộp; AI trả lời đúng luật sao tự làm.
 
 ### S2 — Minh bạch cho sinh viên
 - **S2.1** `SubmitResponse.star_rationale`: số sao, mức gợi ý cao nhất đã dùng, số lần thử, quy tắc, cách đạt mức cao hơn; ghi chú đây là quy ước sản phẩm.
 - **S2.2** Student model (cả hai bản, đồng bộ): `recurring_difficulties`, `next_practice`; bỏ nhãn vượt bằng chứng; bản MCP có đủ `data_status`.
 - **S2.3** UI: thẻ lý do sao khi nộp; hồ sơ hiển thị lỗi lặp lại + bước tiếp theo + trạng thái dữ liệu.
-- **S2.4** Chống "cày sao" tự lực (bổ sung theo góp ý chủ dự án 12/11/2026): tính `max_hint_used` trên **toàn bộ** lượt `action_type = 'ask_ai'` cho tới lần `submit` pass đầu tiên (không bị giới hạn `LIMIT 5` làm trôi lịch sử Mức 3 cũ, và không gộp `hint_level` của nút `submit` fail); sau khi đã từng pass ở bài đó thì làm lại chỉ phục vụ ôn tập/Pythonic Review, không cày tăng sao từ bài đã xem gợi ý; đồng thời sửa lời khuyên trong `explain_autonomy_stars` (`backend/database.py`) từ *"thử làm lại bài này..."* sang hướng dẫn áp dụng sang **các bài mới/tiếp theo** ở Mức 1–2 hoặc không cần gợi ý (cập nhật khớp `test_thesis_upgrade.py`).
+- **S2.4** Chống "cày sao" tự làm (bổ sung theo góp ý chủ dự án 12/11/2026): tính `max_hint_used` trên **toàn bộ** lượt `action_type = 'ask_ai'` cho tới lần `submit` pass đầu tiên (không bị giới hạn `LIMIT 5` làm trôi lịch sử Mức 3 cũ, và không gộp `hint_level` của nút `submit` fail); sau khi đã từng pass ở bài đó thì làm lại chỉ phục vụ ôn tập/Pythonic Review, không cày tăng sao từ bài đã xem gợi ý; đồng thời sửa lời khuyên trong `explain_autonomy_stars` (`backend/database.py`) từ *"thử làm lại bài này..."* sang hướng dẫn áp dụng sang **các bài mới/tiếp theo** ở Mức 1–2 hoặc không cần gợi ý (cập nhật khớp `test_thesis_upgrade.py`).
   - *Nghiệm thu*: test parity so khớp toàn bộ `analytics_metrics` và `diagnostic_evaluation` giữa hai bản trên cùng DB; `ask_ai` không đổi metric; nộp lại >5 lần sau khi từng dùng `ask_ai` Mức 3 vẫn không thể đẩy mất vết Mức 3 để lấy 3 sao.
 
 ### S3 — Không gian sư phạm cho giảng viên
@@ -127,7 +127,7 @@ Trạng thái mới: **S1 = 🟡 S1.1–S1.3 xong, chờ bổ sung S1.4 (khóa p
 - `components/TutorFeedbackButtons.jsx` (mới, dùng chung), `TutorPanel.jsx` (feedback gợi ý, nguồn chat, thẻ lý do sao; khi chỉ chạy thử/hỏi AI không còn hiện 3 sao mặc định), `PythonicReviewModal.jsx` (feedback + ghi chú tham khảo), `StudentProfileModal.jsx` (chip trạng thái dữ liệu, khó khăn lặp lại, bước luyện tập tiếp theo; dải phân hạng đổi sang nền phẳng để đọc được ở light), `pages/StudentIDE.jsx` (truyền `interaction_id`, `star_rationale`), `services/api.js` (3 hàm cho endpoint giảng viên, UI chưa dùng).
 - Thêm `.claude/launch.json` (chạy Vite cho preview).
 
-**Còn lại:** Bổ sung **S1.4 khóa phạm vi Chat + luật Sao** (`backend/prompt_templates.py`, `backend/llm_service.py`, `backend/main.py`, `TutorPanel.jsx`), **S2.4 chống cày sao tự lực** (`backend/main.py`, `backend/database.py`, `test_thesis_upgrade.py`), UI giảng viên S3 (`InstructorDashboard.jsx`), `docs/EVALUATION_REPORT_V5_3.md`, `docs/PILOT_KIT.md`, cập nhật `PLAN.md`/`AI_HANDOFF_CONTEXT.md`/`CLAUDE.md`, pilot người dùng.
+**Còn lại:** Bổ sung **S1.4 khóa phạm vi Chat + luật Sao** (`backend/prompt_templates.py`, `backend/llm_service.py`, `backend/main.py`, `TutorPanel.jsx`), **S2.4 chống cày sao tự làm** (`backend/main.py`, `backend/database.py`, `test_thesis_upgrade.py`), UI giảng viên S3 (`InstructorDashboard.jsx`), `docs/EVALUATION_REPORT_V5_3.md`, `docs/PILOT_KIT.md`, cập nhật `PLAN.md`/`AI_HANDOFF_CONTEXT.md`/`CLAUDE.md`, pilot người dùng.
 
 ### 5.1. Đã làm ở backend (S1–S3)
 
@@ -182,7 +182,7 @@ RAG (17 đoạn KB, top-3, ngưỡng 0,16): hit@1 33/38 = 86,84%; hit@3 36/38 = 
 
 ### 5.5. Cập nhật phiên 12/11/2026 (lần 3) — S1.4, S2.4, UI giảng viên S3
 
-**S1.4 Khóa phạm vi Chat + luật Sao tự lực**
+**S1.4 Khóa phạm vi Chat + luật Sao tự làm**
 - `backend/prompt_templates.py`: thêm `SYSTEM_RULES_TEXT` (ba nút, luật 1–3⭐, "tới lần nộp đạt đầu tiên", sao là quy ước sản phẩm) và nạp vào `SOCRATIC_TEMPLATE`; `render_socratic_prompt` nhận thêm `chat_scope` (`"concept_only"` | `"code_review"` | `"legacy"` mặc định — nơi gọi cũ và `test_phase16_ai_upgrade` không đổi). Ở `concept_only` prompt **không có** khối `<student_code>`.
 - `backend/database.py`: `get_latest_passed_submission_code(username, exercise_id)` (lượt `action_type='submit'` & `all_passed=1` gần nhất).
 - `backend/main.py` (`POST /api/tutor/chat`): chưa có lượt nộp pass → `concept_only`, không truyền code; đã pass → `code_review` với **code đã nộp đọc từ DB** (không dùng `code` do client gửi). `TutorChatResponse` thêm trường tùy chọn `chat_scope`. EXAM guard vẫn chạy trước.
@@ -242,7 +242,7 @@ Mọi unittest/script và cặp server QA chạy với `PYTUTOR_DB_PATH` tạm, 
 **Sửa lỗi (UI sinh viên + nhánh offline S8a)**
 - `TutorPanel.jsx`: khung Chat mở sẵn ngay khi vào bài (bỏ điều kiện `tutorHint`), chỉ khóa ô nhập ở chế độ kỳ thi; nhận `hasPassedBefore` để hiện đúng phạm vi "Trò chuyện về bài đã nộp" cả khi tải lại trang; sửa ô "Vòng lặp" hiện `Có dùng ()` (đọc sai khóa `for_loops`/`while_loops` → `for_count`/`while_count`).
 - `backend/schemas.py` + `GET /api/exercises/{id}`: thêm `has_passed` (chỉ `true` khi chính sinh viên đang đăng nhập có lượt `submit` đạt; vai trò khác luôn `false`; lỗi DB không làm hỏng việc xem đề). Quyền thật vẫn do `/api/tutor/chat` quyết định từ DB.
-- `StudentIDE.jsx`: `Chạy thử` và `Hỏi Gia sư AI` xóa `starRationale` → không còn hiện nhầm thẻ "Sao tự lực lượt nộp này" của lần nộp trước; `starsEarned` không còn mặc định 3 (đặt `null`, đặt lại khi đổi bài).
+- `StudentIDE.jsx`: `Chạy thử` và `Hỏi Gia sư AI` xóa `starRationale` → không còn hiện nhầm thẻ "Sao tự làm lượt nộp này" của lần nộp trước; `starsEarned` không còn mặc định 3 (đặt `null`, đặt lại khi đổi bài).
 - `PythonicReviewModal.jsx`: dòng sao chỉ hiện khi vừa có lượt nộp đạt trong phiên (trước đây hiện 3 sao mặc định dù bài chỉ được 1⭐ — phát hiện khi kiểm tra trình duyệt).
 - `index.css`: Light mode có luật cho `hover:bg-slate-800/700` → nút 👍/👎 rê chuột ra nền sáng `rgb(220,229,222)`, chữ tối (đã đo bằng computed style).
 - `StudentProfileModal.jsx`: trạng thái lỗi tải (`role="alert"`) + nút **Thử lại**, không giữ số liệu cũ, ẩn bộ đếm khi lỗi; nhãn dạng lỗi `syntax_or_runtime` đổi thành "chủ yếu không đạt kiểm thử nào (lỗi cú pháp/ngoại lệ hoặc sai toàn bộ kết quả)" vì nhóm này thực chất là "0 kiểm thử đạt".

@@ -130,7 +130,7 @@ class SubmitResponse(BaseModel):
     attempt_history: list[dict] = Field(default_factory=list, description="Lịch sử nộp bài gần nhất")
     student_model: Optional[dict] = Field(default=None, description="Mô hình học sinh thích ứng")
     mcp_trace: list[MCPTraceItem] = Field(default_factory=list, description="Nhật ký các lệnh MCP JSON-RPC 2.0")
-    stars_earned: int = Field(0, description="Số sao tự lực đạt được (0-3 ⭐)")
+    stars_earned: int = Field(0, description="Số sao tự làm đạt được (0-3 ⭐)")
     star_rationale: Optional[dict] = Field(None, description="Giải thích vì sao nhận số sao này; chỉ có khi nộp bài chính thức và pass")
     new_badges: list[dict] = Field(default_factory=list, description="Trường tương thích cũ; luôn rỗng")
 

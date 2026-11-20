@@ -46,7 +46,9 @@ class SeededAccountsTests(unittest.TestCase):
     def test_new_database_stores_hashed_seed_passwords(self):
         for name in ("student", "gv_tran", "gv_tuan"):
             self.assertTrue(is_hashed(self.stored[name]), name)
-            self.assertNotIn("123", self.stored[name])
+            # Không dùng assertNotIn("123", ...): chuỗi băm ngẫu nhiên đôi khi chứa "123" (test chập chờn ~1/2 nghìn lần chạy).
+            self.assertNotIn(name + "123", self.stored[name])
+            self.assertTrue(self.stored[name].startswith("pbkdf2_sha256$"), name)
 
     def test_demo_logins_still_work_and_wrong_password_fails(self):
         from backend.auth import authenticate_user

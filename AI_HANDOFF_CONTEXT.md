@@ -13,7 +13,7 @@
 4. [Cơ Sở Dữ Liệu SQLite `pytutor.db` (Schema 9 Bảng & Concurrency WAL)](#4-cơ-sở-dữ-liệu-sqlite-pytutordb-schema--concurrency-wal)
 5. [Đặc Tả Chi Tiết 8 MCP Tools (Engine Lõi Giao Thức stdio)](#5-đặc-tả-chi-tiết-8-mcp-tools-engine-lõi-giao-thức-stdio)
 6. [Chiến Lược Sư Phạm Giàn Giáo (Scaffolding Pedagogy & Prompt Engineering)](#6-chiến-lược-sư-phạm-giàn-giáo-scaffolding-pedagogy--prompt-engineering)
-7. [Hệ Thống Gamification, Sao Tự Lực & Code Review Tech Lead](#7-hệ-thống-gamification-sao-tự-lực--code-review-tech-lead)
+7. [Hệ Thống Gamification, Sao Tự Làm & Code Review Tech Lead](#7-hệ-thống-gamification-sao-tự-lực--code-review-tech-lead)
 8. [Đặc Tả Toàn Bộ Danh Mục 30+ API Endpoints (FastAPI Backend)](#8-đặc-tả-toàn-bộ-danh-mục-30-api-endpoints-fastapi-backend)
 9. [Cấu Trúc Giao Diện React 18, Monaco Editor & 7 Modals](#9-cấu-trúc-giao-diện-react-18-monaco-editor--7-modals)
 10. [Khả Năng Cắm Đa Nền Tảng (Multi-Host: Claude Desktop, Cursor, VS Code)](#10-khả-năng-cắm-đa-nền-tảng-multi-host-claude-desktop-cursor-vs-code)
@@ -104,7 +104,7 @@ Trước khi có MCP, các ứng dụng AI dạy lập trình (như ChatGPT, Cop
 |  │     ├── Anti-Spoil Guard (Bộ lọc Regex tự động ẩn code giải dài >= 3 dòng ở Level 1-2)                |
 |  │     ├── Multi-turn Follow-up Chat (Gia sư đàm thoại làm rõ, không lộ code giải)                      |
 |  │     └── Senior Pythonic Code Review (Đánh giá Clean Code score 70-98, Strengths, Improvements)        |
-|  ├── Gamification Engine: backend/database.py (Sao tự lực 1-3⭐, 5 Huy hiệu, Bảng xếp hạng)             |
+|  ├── Gamification Engine: backend/database.py (Sao tự làm 1-3⭐, 5 Huy hiệu, Bảng xếp hạng)             |
 |  └── MCP Host Client: backend/mcp_client.py (True Discovery qua tools/list, stdio JSON-RPC 2.0)         |
 +---------------------------------------------------------------------------------------------------------+
                                                      │ ▲
@@ -210,7 +210,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ```
 
-#### Bảng 4: `user_exercise_stars` (Đánh giá Sao tự lực & Điểm Clean Code cao nhất)
+#### Bảng 4: `user_exercise_stars` (Đánh giá Sao tự làm & Điểm Clean Code cao nhất)
 ```sql
 CREATE TABLE IF NOT EXISTS user_exercise_stars (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS class_exercises (
     module_name TEXT NOT NULL,                -- Tên chương (vd: 'Chương 1: Biến & I/O')
     order_idx INTEGER DEFAULT 0,              -- Thứ tự trong module
     prerequisite_id TEXT DEFAULT NULL,        -- Bài tập tiên quyết cần MASTERED
-    min_stars_required INTEGER DEFAULT 1,     -- Số sao tự lực tối thiểu để đạt chuẩn (1-3 ⭐)
+    min_stars_required INTEGER DEFAULT 1,     -- Số sao tự làm tối thiểu để đạt chuẩn (1-3 ⭐)
     skill_tag TEXT DEFAULT 'General',         -- Nhãn kỹ năng: Variables, Loops, Conditionals,...
     weight_point REAL DEFAULT 1.0,            -- Trọng số điểm
     added_at TEXT DEFAULT (datetime('now', 'localtime')),
@@ -422,15 +422,15 @@ Khi học viên gặp lỗi, hệ thống không bao giờ giải hộ ngay lậ
 
 ---
 
-## 7. HỆ THỐNG GAMIFICATION, SAO TỰ LỰC & CODE REVIEW TECH LEAD
+## 7. HỆ THỐNG GAMIFICATION, SAO TỰ LÀM & CODE REVIEW TECH LEAD
 
 File logic: [`backend/database.py`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/backend/database.py).
 
-### 7.1. Thuật Toán Chấm Sao Tự Lực (Autonomy Stars Rating)
+### 7.1. Thuật Toán Chấm Sao Tự Làm (Autonomy Stars Rating)
 * **Hàm:** `calculate_autonomy_stars(attempt_count, max_hint_level_used, all_passed)`.
 * **Quy tắc sư phạm:**
   * **0 Sao:** Chưa vượt qua 100% test cases.
-  * **3 Sao ⭐⭐⭐ (Tự lực Xuất sắc):** Pass 100% mà chỉ dùng gợi ý $\le$ Mức 1 (hoặc tự giải không hỏi AI).
+  * **3 Sao ⭐⭐⭐ (Tự làm Xuất sắc):** Pass 100% mà chỉ dùng gợi ý $\le$ Mức 1 (hoặc tự giải không hỏi AI).
   * **2 Sao ⭐⭐ (Khá giỏi):** Pass 100% nhưng cần sự hỗ trợ của Mức 2 (Chỉ chỗ sai).
   * **1 Sao ⭐ (Hoàn thành):** Pass 100% nhưng cần hướng dẫn từng bước của Mức 3.
 * Điểm sao được lưu vào bảng `user_exercise_stars`. Mỗi bài tập lưu lại số sao cao nhất mà học viên từng đạt được.
@@ -438,7 +438,7 @@ File logic: [`backend/database.py`](file:///c:/Users/Admin/Downloads/PyTutor-The
 ### 7.2. Hệ Thống 5 Huy Hiệu Vinh Danh (Achievement Badges)
 Định nghĩa trong `BADGE_DEFINITIONS`:
 1. `FIRST_SOLVE` (**Bước Chân Đầu Tiên** 🌟): Mở khóa ngay khi hoàn thành bài tập đầu tiên trong đời.
-2. `INDEPENDENT_HERO` (**Bậc Thầy Tự Lực** 🦸‍♂️): Đạt điểm tối đa **3 Sao trên ít nhất 3 bài tập khác nhau**.
+2. `INDEPENDENT_HERO` (**Bậc Thầy Tự Làm** 🦸‍♂️): Đạt điểm tối đa **3 Sao trên ít nhất 3 bài tập khác nhau**.
 3. `BUG_HUNTER` (**Thợ Săn Lỗi Tự Thân** ⚡): Hoàn thành bài tập đúng 100% sau ít nhất một lần nộp bài trước đó bị fail (biểu dương tinh thần tự sửa lỗi).
 4. `PYTHONIC_EXPLORER` (**Nhà Khai Phá Pythonic** 🐍): Đạt điểm Clean Code $\ge 90$ điểm trong phần review code chuyên sâu.
 5. `MARATHON_CODER` (**Kiên Trì Bền Bỉ** 🧗): Hoàn thành một bài tập sau hơn 5 lần kiên trì thử sức.
@@ -464,14 +464,14 @@ Port: `http://127.0.0.1:8000`.
 | `GET` | `/api/exercises` | Public | Lấy danh mục bài tập tóm tắt qua MCP tool `get_exercise_list`. |
 | `GET` | `/api/exercises/{id}` | Public | Lấy chi tiết đề bài, starter code, test cases qua MCP tool `get_exercise_details`. |
 | `POST` | `/api/run-test` | Public | **Chạy thử siêu tốc (Không tốn AI quota):** Gọi MCP pipeline lấy test cases, chạy Sandbox và phân tích AST. Trả về kết quả kèm `mcp_trace`. |
-| `POST` | `/api/submit` | Public | **Điểm chạm nộp bài chính (Main E2E Route):** Gọi MCP Sandbox + AST + Lịch sử + Student Model $\rightarrow$ Nếu `EXAM mode`: khóa AI, ghi nhận kết quả chấm khách quan $\rightarrow$ Nếu `PRACTICE mode`: gọi Gemini sinh gợi ý sư phạm $\rightarrow$ Lưu `save_learning_event` $\rightarrow$ Tính sao tự lực & mở khóa badge. |
+| `POST` | `/api/submit` | Public | **Điểm chạm nộp bài chính (Main E2E Route):** Gọi MCP Sandbox + AST + Lịch sử + Student Model $\rightarrow$ Nếu `EXAM mode`: khóa AI, ghi nhận kết quả chấm khách quan $\rightarrow$ Nếu `PRACTICE mode`: gọi Gemini sinh gợi ý sư phạm $\rightarrow$ Lưu `save_learning_event` $\rightarrow$ Tính sao tự làm & mở khóa badge. |
 | `POST` | `/api/tutor/chat` | Public | **Trò chuyện đa lượt Socratic (Phase 8):** Gửi câu hỏi làm rõ kèm ngữ cảnh bài làm và lịch sử chat, gọi Gemini với Anti-Spoil Guard. Bị chặn tuyệt đối nếu đang trong chế độ `EXAM`. |
 | `POST` | `/api/custom-run` | Public | **Chạy thử Custom Stdin (Phase 8):** Nhận code và stdin tùy ý, thực thi qua Sandbox an toàn có timeout 5.0s. |
 | `POST` | `/api/trace-execution`| Public | **Tracing bước chạy (Phase 9):** Gọi MCP tool `trace_code_execution`, trả về frame-by-frame snapshot biến số cho Visualizer. |
 | `GET` | `/api/student/profile` | Public | Gọi MCP tools `get_student_model` và `get_attempt_history`, trả về hồ sơ năng lực và các lần nộp gần nhất để nạp lại code. |
 | `GET` | `/api/skill-roadmap` | Public | Xây dựng đồ thị DAG phụ thuộc bài tập 4 tầng, gán trạng thái `MASTERED`, `IN_PROGRESS`, `AVAILABLE`, `LOCKED`. |
 | `POST` | `/api/tutor/pythonic-review`| Public | Đánh giá Clean Code chuẩn Senior Tech Lead cho bài đã pass 100%, tự động mở khóa badge `PYTHONIC_EXPLORER` nếu điểm $\ge 90$. |
-| `GET` | `/api/leaderboard` | Public | Lấy bảng vàng xếp hạng học viên theo tổng sao tự lực và số bài giải. |
+| `GET` | `/api/leaderboard` | Public | Lấy bảng vàng xếp hạng học viên theo tổng sao tự làm và số bài giải. |
 | `GET` | `/api/student/achievements`| Public | Lấy tổng số sao, chi tiết sao từng bài và danh sách huy hiệu đã mở khóa của học viên. |
 | `GET` | `/api/classes` | Public | Lấy danh sách toàn bộ Lớp tín chỉ kèm thông tin giảng viên phụ trách, sĩ số sinh viên và số kỳ thi. |
 | `POST` | `/api/instructor/classes`| Giảng viên | Giảng viên tạo mới một lớp tín chỉ (`class_code`, `class_name`, `semester`, `description`). |
@@ -538,7 +538,7 @@ Frontend chạy bằng **Vite + React 18 + Tailwind CSS** tại cổng `http://l
     * **Thẻ AST Nhận diện nhanh code:** Thu gọn/mở rộng hiển thị số dòng lệnh, có vòng lặp for/while không, có biến tích lũy không, có đệ quy không.
     * Nút leo thang gợi ý: *"Vẫn thấy khó? Xem gợi ý chi tiết hơn (Mức X) ▶"*.
     * **Khung Chat Đa lượt:** Học viên gõ câu hỏi thắc mắc trực tiếp với Gia sư AI.
-    * **Huy hiệu Sao & Nút Kích hoạt Pythonic Review:** Khi pass 100%, hiển thị số sao tự lực đạt được (⭐⭐⭐) và nút bấm `🚀 Thử thách Tối ưu Code Pythonic`.
+    * **Huy hiệu Sao & Nút Kích hoạt Pythonic Review:** Khi pass 100%, hiển thị số sao tự làm đạt được (⭐⭐⭐) và nút bấm `🚀 Thử thách Tối ưu Code Pythonic`.
 
 ### 9.2. Trung Tâm 6 Modals Chuyên Dụng & Dashboard Giảng Viên
 
@@ -571,7 +571,7 @@ Frontend chạy bằng **Vite + React 18 + Tailwind CSS** tại cổng `http://l
 
 #### Modal 4: `LeaderboardModal.jsx` (Bảng Vàng Lớp Học & Bộ Sưu Tập Huy Hiệu)
 * Vinh danh Top 3 Podium: 🥇 Quán quân (Vàng), 🥈 Á quân (Bạc), 🥉 Quý quân (Đồng).
-* Bảng xếp hạng chi tiết toàn lớp theo tổng số sao tự lực, số bài đã giải và điểm Clean Code cao nhất.
+* Bảng xếp hạng chi tiết toàn lớp theo tổng số sao tự làm, số bài đã giải và điểm Clean Code cao nhất.
 * Showcase bộ sưu tập 5 huy hiệu danh giá kèm điều kiện mở khóa.
 
 #### Modal 5: `PythonicReviewModal.jsx` (Thử Thách Tối Ưu Code Chuẩn Tech Lead)
@@ -720,7 +720,7 @@ py test_phase8_chat.py
 # 5. Kiểm thử Backend Phase 9 (MCP Tool 8 trace_code_execution, Visualizer, Skill Roadmap DAG)
 py test_phase9_visualizer.py
 
-# 6. Kiểm thử Backend Phase 10 (Sao tự lực 1-3⭐, 5 Huy hiệu, Review Pythonic, Leaderboard)
+# 6. Kiểm thử Backend Phase 10 (Sao tự làm 1-3⭐, 5 Huy hiệu, Review Pythonic, Leaderboard)
 py test_phase10_gamification.py
 
 # 7. Kiểm thử tích hợp E2E Backend tổng thể
@@ -762,7 +762,7 @@ Hệ thống PyTutor-MCP được thiết kế đặc thù phục vụ giảng d
 | **Cơ chế Chốt chặn Backend** | `POST /api/submit` kích hoạt Scaffolding Prompt | `EXAM Mode Guard` phát hiện session thi, **bỏ qua gọi LLM**, gán `llm_source="Exam-Mode-Guard"` |
 | **Cơ chế Chấm điểm** | MCP Sandbox thực thi test cases độc lập (timeout 5s) | MCP Sandbox thực thi test cases độc lập (timeout 5s) |
 | **Giao diện IDE** | IDE 3 cột bình thường, đầy đủ tính năng trợ giúp | Banner đỏ cảnh báo thi cử, **Live Countdown Timer** (đếm ngược thời gian) |
-| **Đánh giá & Thưởng** | Đánh giá 1-3 ⭐ tự lực, mở khóa huy hiệu, Pythonic Review | Chấm điểm PASS/FAIL test cases khách quan, lưu vết bài làm vào SQLite |
+| **Đánh giá & Thưởng** | Đánh giá 1-3 ⭐ tự làm, mở khóa huy hiệu, Pythonic Review | Chấm điểm PASS/FAIL test cases khách quan, lưu vết bài làm vào SQLite |
 
 ### 13.3. Minh Bạch Hóa Trình Biên Dịch & Hạ Tầng Thực Thi Sandbox
 Để trả lời các câu hỏi kỹ thuật từ Hội đồng Chấm đồ án về môi trường thực thi mã nguồn:
@@ -812,7 +812,7 @@ Hệ thống v4.0 được chuẩn hóa hoàn toàn theo cấu trúc quản lý 
    * Giảng viên xem danh sách các lớp học phần do mình phụ trách tại Tab 2 của **Instructor Dashboard (`InstructorDashboard.jsx`)**.
    * Mỗi thẻ lớp cung cấp 2 công cụ quản trị nâng cao:
      * **⚙️ Lộ trình Kỹ năng (`Curriculum & Skill Matrix`):** Quản lý ma trận bài tập, module và điều kiện mở khóa riêng cho từng lớp.
-     * **👥 Danh sách SV (`Class Student Roster`):** Tra cứu toàn bộ sinh viên đã ghi danh, xem số bài đã giải, tổng điểm kinh nghiệm (XP), số sao tự lực tích lũy và tỷ lệ hoàn thành học phần (%) của từng em.
+     * **👥 Danh sách SV (`Class Student Roster`):** Tra cứu toàn bộ sinh viên đã ghi danh, xem số bài đã giải, tổng điểm kinh nghiệm (XP), số sao tự làm tích lũy và tỷ lệ hoàn thành học phần (%) của từng em.
 
 ---
 
@@ -828,7 +828,7 @@ CREATE TABLE IF NOT EXISTS class_exercises (
     module_name TEXT NOT NULL,          -- Tên chương/module (vd: Chương 1: Cú pháp & I/O)
     order_idx INTEGER DEFAULT 0,        -- Thứ tự hiển thị trong module
     prerequisite_id TEXT DEFAULT NULL,  -- Bài tập tiên quyết cần vượt qua
-    min_stars_required INTEGER DEFAULT 1, -- Số sao tự lực tối thiểu để đạt chuẩn (1-3 ⭐)
+    min_stars_required INTEGER DEFAULT 1, -- Số sao tự làm tối thiểu để đạt chuẩn (1-3 ⭐)
     skill_tag TEXT DEFAULT 'General',   -- Nhãn kỹ năng (Variables, Conditionals, Loops, ...)
     weight_point REAL DEFAULT 1.0,      -- Hệ số điểm đánh giá
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -840,8 +840,8 @@ CREATE TABLE IF NOT EXISTS class_exercises (
 
 #### 14.3.2. Thang Đo Định Lượng (Mastery Rubric & State Machine)
 Mỗi node kỹ năng trong đồ thị định hướng có chu trình (DAG) của lớp học phần được tính toán động dựa trên trạng thái học tập của sinh viên:
-* **`MASTERED` (Đã làm chủ):** Sinh viên đã vượt qua 100% test case (`all_passed == 1`) **VÀ** số sao tự lực đạt được lớn hơn hoặc bằng chuẩn tối thiểu (`stars_earned >= min_stars_required`). Node hiển thị màu xanh lá rực rỡ kèm số sao đạt được.
-* **`NEEDS_MORE_STARS` (Cần cải thiện sao tự lực):** Sinh viên đã giải được bài (`all_passed == 1`) nhưng do lạm dụng gợi ý hoặc chat AI nên số sao tự lực thấp hơn chuẩn của Giảng viên (`stars_earned < min_stars_required`). Hệ thống thông báo học viên cần làm lại bài tập độc lập hơn để mở khóa node tiên quyết tiếp theo.
+* **`MASTERED` (Đã làm chủ):** Sinh viên đã vượt qua 100% test case (`all_passed == 1`) **VÀ** số sao tự làm đạt được lớn hơn hoặc bằng chuẩn tối thiểu (`stars_earned >= min_stars_required`). Node hiển thị màu xanh lá rực rỡ kèm số sao đạt được.
+* **`NEEDS_MORE_STARS` (Cần cải thiện sao tự làm):** Sinh viên đã giải được bài (`all_passed == 1`) nhưng do lạm dụng gợi ý hoặc chat AI nên số sao tự làm thấp hơn chuẩn của Giảng viên (`stars_earned < min_stars_required`). Hệ thống thông báo học viên cần làm lại bài tập độc lập hơn để mở khóa node tiên quyết tiếp theo.
 * **`IN_PROGRESS` (Đang giải):** Sinh viên đã nộp bài ít nhất 1 lần nhưng chưa vượt qua toàn bộ test cases. Node hiển thị màu hổ phách.
 * **`AVAILABLE` (Sẵn sàng mở khóa):** Toàn bộ bài tập tiên quyết (`prerequisite_id`) đã đạt trạng thái `MASTERED`. Sinh viên có thể bấm vào làm ngay.
 * **`LOCKED` (Bị khóa):** Bài tập tiên quyết chưa đạt chuẩn năng lực tối thiểu. Node bị làm mờ kèm biểu tượng ổ khóa 🔒.
@@ -849,7 +849,7 @@ Mỗi node kỹ năng trong đồ thị định hướng có chu trình (DAG) c�
 #### 14.3.3. Quyền Chỉnh Sửa Trực Tiếp Cho Giảng Viên (Instructor Direct Configuration)
 Tại giao diện Giảng viên, Giảng viên có toàn quyền:
 * **Gán bài tập từ Ngân hàng đề vào Lớp:** Thiết lập Module, Thứ tự, Bài tiên quyết và Chuẩn sao yêu cầu (1-3 ⭐).
-* **Chỉnh sửa trực tiếp (Inline Edit):** Điều chỉnh nhanh `min_stars_required` (1 ⭐ Cơ bản, 2 ⭐ Khá, 3 ⭐ Tự lực tuyệt đối) ngay trên bảng danh sách.
+* **Chỉnh sửa trực tiếp (Inline Edit):** Điều chỉnh nhanh `min_stars_required` (1 ⭐ Cơ bản, 2 ⭐ Khá, 3 ⭐ Tự làm tuyệt đối) ngay trên bảng danh sách.
 * **Gỡ bài tập khỏi Lớp:** Loại bỏ bài tập khỏi lộ trình học phần mà không làm mất dữ liệu gốc trong ngân hàng đề.
 
 ---
@@ -860,7 +860,7 @@ Hàm `compute_student_model(session_id, class_id=None)` được tái cấu trú
 * `backend/database.py` (Lõi phân tích phía Backend Service)
 
 #### 14.4.1. 4 Chiều Chỉ Số Định Lượng (4D Quantitative Metrics)
-1. **Chỉ số Tự lực / Độc lập Tư duy (`autonomy_score` - Thang điểm 0 - 100):**
+1. **Chỉ số Tự làm / Độc lập Tư duy (`autonomy_score` - Thang điểm 0 - 100):**
    $$\text{Autonomy Score} = 0.7 \times \left(\frac{\sum \text{stars\_earned}}{3 \times N_{\text{solved}}} \times 100\right) + 0.3 \times \left(\frac{N_{\text{passed without hint lvl 2/3}}}{N_{\text{passed}}} \times 100\right)$$
    Đo lường mức độ tự mình giải quyết vấn đề của sinh viên mà không bị phụ thuộc vào gợi ý chi tiết của gia sư AI.
 2. **Tỷ lệ Vượt qua Ngay Lần Đầu (`first_try_pass_rate` - %):**
@@ -885,7 +885,7 @@ Hệ thống tự động sinh 3 thẻ chẩn đoán năng lực dựa trên d�
   * `Đang phát triển (Developing)`: Đang trong quá trình tích lũy kiến thức cơ bản.
 * **Thẻ 1 - Điểm mạnh Kỹ thuật (`strengths_analysis`):** Xác định khả năng tư duy tự lập, tỷ lệ giải đúng lần đầu và các chủ đề đã làm chủ hoàn toàn.
 * **Thẻ 2 - Điểm nghẽn & Khó khăn Thường gặp (`weaknesses_and_bottlenecks`):** Nhận diện chính xác tỷ lệ lỗi logic so với lỗi cú pháp, phát hiện dấu hiệu lạm dụng gợi ý hoặc các chủ đề còn bị mắc kẹt.
-* **Thẻ 3 - Khuyến nghị Hành động Kế tiếp (`recommended_next_action`):** Đưa ra chỉ dẫn học tập cụ thể (vd: *Cần giải lại bài XYZ với 0 gợi ý để nâng cao sao tự lực*, hoặc *Tiến hành mở khóa Chương tiếp theo*).
+* **Thẻ 3 - Khuyến nghị Hành động Kế tiếp (`recommended_next_action`):** Đưa ra chỉ dẫn học tập cụ thể (vd: *Cần giải lại bài XYZ với 0 gợi ý để nâng cao sao tự làm*, hoặc *Tiến hành mở khóa Chương tiếp theo*).
 
 ---
 
@@ -936,7 +936,7 @@ Hệ thống kết hợp hài hòa giữa 2 chuẩn mực EdTech hàng đầu:
                  │
                  ▼
 [Tầng 1: Cổng Học tập Sinh viên NEU (/student)]
-  ├── 4 Thẻ KPI Tổng quan: Số lớp đang học, Bài đã giải, Sao tự lực, Autonomy Score / 100
+  ├── 4 Thẻ KPI Tổng quan: Số lớp đang học, Bài đã giải, Sao tự làm, Autonomy Score / 100
   ├── Lưới Thẻ Lớp học phần đang theo học (Thanh tiến độ %, Giảng viên, Mã tham gia)
   ├── Form Đăng ký Ghi danh Lớp học phần mới bằng Mã tham gia (vd: NEU-PY02)
   └── Phòng Tự Luyện tập Tự do (Ngân hàng đề mở rộng)
@@ -957,7 +957,7 @@ Hệ thống kết hợp hài hòa giữa 2 chuẩn mực EdTech hàng đầu:
   ├── Banner đếm ngược thời gian làm bài nếu đang trong Kỳ thi (EXAM mode)
   ├── Cột 1: Đề bài Markdown, Bảng test cases mẫu, Chuẩn đầu ra số sao yêu cầu
   ├── Cột 2: Monaco Editor (Auto-save, tô đỏ lỗi, phím tắt), Visualizer, Custom Stdin, Kết quả Sandbox
-  └── Cột 3: Gia sư AI Socratic 3 cấp độ, Nhận diện AST, Đánh giá 3 sao tự lực, Review Pythonic
+  └── Cột 3: Gia sư AI Socratic 3 cấp độ, Nhận diện AST, Đánh giá 3 sao tự làm, Review Pythonic
 ```
 
 ---
@@ -1114,8 +1114,8 @@ Qua quá trình kiểm thử mã nguồn tĩnh (Static QA Audit) và rà soát �
      - Nhánh `NEEDS_MORE_STARS` được kích hoạt chính xác: khi bài tập đã giải đúng toàn bộ test cases nhưng `stars_earned < min_stars` (thông báo: *"Đã giải đúng nhưng mới đạt X/Y ⭐. Hãy tự giải lại với ít gợi ý hơn để đạt chuẩn!"*).
      - Kiểm tra bài tiên quyết: bài phụ thuộc chỉ được chuyển sang `AVAILABLE` hoặc `IN_PROGRESS` khi bài tiên quyết đã nằm trong `mastered_set` (đạt đủ số sao tối thiểu).
 
-4. **Sửa Lỗi Hiển Thị Điểm Tự Lực & Thống Nhất Chỉ Số Năng Lực 4D (`StudentPortalPage.jsx` & `StudentClassDetailPage.jsx`):**
-   - *Hiện trạng cũ:* Thẻ KPI "Chỉ số Tự lực" trên Cổng Sinh viên hiển thị fallback cứng `profile?.analytics_metrics?.pedagogical_autonomy_score ?? 95` (sai key backend trả về `autonomy_score`). Tại thẻ tổng quan lớp, trường tổng sao đọc nhầm `currentClass?.total_stars` (thay vì `total_stars_in_class`).
+4. **Sửa Lỗi Hiển Thị Điểm Tự Làm & Thống Nhất Chỉ Số Năng Lực 4D (`StudentPortalPage.jsx` & `StudentClassDetailPage.jsx`):**
+   - *Hiện trạng cũ:* Thẻ KPI "Chỉ số Tự làm" trên Cổng Sinh viên hiển thị fallback cứng `profile?.analytics_metrics?.pedagogical_autonomy_score ?? 95` (sai key backend trả về `autonomy_score`). Tại thẻ tổng quan lớp, trường tổng sao đọc nhầm `currentClass?.total_stars` (thay vì `total_stars_in_class`).
    - *Khắc phục:* Cập nhật đọc chính xác `profile?.analytics_metrics?.autonomy_score ?? 0` và `currentClass?.total_stars_in_class`. Xác minh toàn bộ 4D metrics (`autonomy_score`, `first_try_pass_rate`, `avg_attempts_to_solve`, `error_breakdown`, `diagnostic_evaluation`) đồng bộ hoàn hảo giữa Backend và UI.
 
 5. **Hoàn Thiện Tương Thích HTTP Methods & Luồng Điều Hướng (`backend/main.py`, `StudentIDE.jsx`, `InstructorDashboard.jsx`):**
@@ -1132,7 +1132,7 @@ Nhằm giải quyết triệt để nhu cầu phân tách rõ ràng giữa việ
 1. **Tách biệt 3 Nút Hành Động Độc Lập Trên Toolbar IDE & API (`EditorPanel.jsx`, `StudentIDE.jsx`, `backend/schemas.py`, `backend/main.py`):**
    - **`▶ Chạy thử` (Ctrl + Enter - Màu Cyan):** Chạy kiểm tra nhanh trong MCP Sandbox, không tốn quota AI, không tính điểm nộp bài.
    - **`🤖 Hỏi Gia sư AI` (Màu Vàng Amber):** Gửi yêu cầu với `action_type = 'ask_ai'`. Backend thực thi MCP Sandbox + AST + Gemini Scaffolding sinh `tutor_hint` đúng theo mức gợi ý (1, 2, 3), ghi vết vào `submissions` nhưng **KHÔNG** tính hay lưu sao hoàn thành vào `user_exercise_stars` (`stars_earned = 0`, `new_badges = []`). Không mở modal chúc mừng để sinh viên yên tâm xem gợi ý tại Cột 3 và tiếp tục code.
-   - **`🚀 Nộp bài` (Ctrl + Shift + Enter - Màu Xanh Emerald):** Gửi yêu cầu với `action_type = 'submit'`. Backend chấm điểm chính thức: nếu pass 100% test cases, hệ thống kiểm tra lịch sử các lần hỏi AI trước đó của sinh viên ở bài tập này để chấm đúng 1, 2 hoặc 3 Sao Tự Lực, lưu vào `user_exercise_stars`, mở khóa huy hiệu, bắn pháo hoa confetti và hiển thị Modal Chúc Mừng.
+   - **`🚀 Nộp bài` (Ctrl + Shift + Enter - Màu Xanh Emerald):** Gửi yêu cầu với `action_type = 'submit'`. Backend chấm điểm chính thức: nếu pass 100% test cases, hệ thống kiểm tra lịch sử các lần hỏi AI trước đó của sinh viên ở bài tập này để chấm đúng 1, 2 hoặc 3 Sao Tự Làm, lưu vào `user_exercise_stars`, mở khóa huy hiệu, bắn pháo hoa confetti và hiển thị Modal Chúc Mừng.
    - **Tích hợp Nút Nhận Gợi Ý Trực Tiếp tại Cột 3 (`TutorPanel.jsx`):** Bổ sung nút `🤖 Nhận gợi ý Mức ${hintLevel} từ Gia sư AI` ngay dưới 3 thẻ chọn mức gợi ý và gắn trực tiếp vào nút leo thang gợi ý (`Vẫn thấy khó? Xem gợi ý chi tiết hơn`).
 
 2. **Vá 3 Lỗi Dữ Liệu Trên Dashboard Giảng Viên (`InstructorDashboard.jsx`):**
@@ -1151,7 +1151,7 @@ Nhằm giải quyết triệt để nhu cầu phân tách rõ ràng giữa việ
    - Chuẩn hóa fallback `autonomyScore` trên Cổng Sinh viên: `profile?.analytics_metrics?.autonomy_score ?? 85`.
 
 5. **Bộ Kiểm Thử Tự Động Toàn Diện (`test_phase15_4_action_buttons.py`):**
-   - Xác nhận 100% các kịch bản: `action_type = 'ask_ai'` không cấp sao; `action_type = 'submit'` tính đúng số sao tự lực dựa trên lịch sử gợi ý trước đó; thông số trình thông dịch Python và danh sách sinh viên lớp học phần hoạt động chuẩn xác. Kết quả: **4/4 tests PASS 100%**.
+   - Xác nhận 100% các kịch bản: `action_type = 'ask_ai'` không cấp sao; `action_type = 'submit'` tính đúng số sao tự làm dựa trên lịch sử gợi ý trước đó; thông số trình thông dịch Python và danh sách sinh viên lớp học phần hoạt động chuẩn xác. Kết quả: **4/4 tests PASS 100%**.
 
 #### 15.6.9. Tạm Ẩn Phân Hệ "Thực Hành & Kỳ Thi" & Cải Tiến Giao Diện Vinh Danh Sinh Viên K65 (Phase 15.5)
 Nhằm đáp ứng yêu cầu người dùng về việc tinh giản giao diện, tập trung cao độ vào việc tự học và làm bài tập học phần, hệ thống đã tạm ẩn phân hệ kỳ thi theo cơ chế cờ đảo chiều tức thì:
@@ -1167,7 +1167,7 @@ Nhằm đáp ứng yêu cầu người dùng về việc tinh giản giao diện
    - Trong [`StudentPortalPage.jsx`](file:///c:/Users/Admin/Downloads/PyTutor-Thesis/frontend/src/pages/StudentPortalPage.jsx):
      - Khai báo flag: `const SHOW_EXAM_SESSIONS = false;`.
      - Chuyển đổi Cột 3 thành **"Vinh Danh & Năng Lực"** (Icon Trophy, Badge `SV K65 CNTT`).
-     - Khi `!SHOW_EXAM_SESSIONS`: Ẩn danh sách ca thi, hiển thị thẻ **"Thành Tích Học Phần"** (Tổng sao tự lực `totalStars`, Số bài hoàn thành `totalSolved`, Chỉ số tự lực `autonomyScore`), đi kèm danh sách huy hiệu và 2 nút mở nhanh **Bảng Vàng K65** và **Hồ Sơ 4D**. Bố cục 3 cột giữ nguyên độ cân xứng, không có khoảng trống thừa.
+     - Khi `!SHOW_EXAM_SESSIONS`: Ẩn danh sách ca thi, hiển thị thẻ **"Thành Tích Học Phần"** (Tổng sao tự làm `totalStars`, Số bài hoàn thành `totalSolved`, Chỉ số tự làm `autonomyScore`), đi kèm danh sách huy hiệu và 2 nút mở nhanh **Bảng Vàng K65** và **Hồ Sơ 4D**. Bố cục 3 cột giữ nguyên độ cân xứng, không có khoảng trống thừa.
 2. **Bảo Toàn Tuyệt Đối Backend & Khôi Phục Dễ Dàng:**
    - Toàn bộ bảng `exam_sessions`, các route `/api/exam-sessions`, logic EXAM Mode Guard trong Backend vẫn được giữ nguyên vẹn 100%.
    - Khi cần khôi phục lại tính năng, chỉ cần sửa `SHOW_EXAM_SESSIONS = true` trong 2 file trên là giao diện kỳ thi sẽ lập tức hiển thị trở lại.
@@ -1334,7 +1334,7 @@ Nguồn chi tiết: `plans/PLAN_THESIS_PEDAGOGICAL_UPGRADE.md` (mục 5.0–5.7 
 
 - Chưa có dữ liệu người dùng thật: **pilot 2–3 người chưa chạy**; không tuyên bố learning gain, nhân quả hay mức hài lòng.
 - Chưa kiểm chứng với LLM thật: khóa phạm vi chat (S1.4) và giải thích code ở S8a khi có LLM phụ thuộc prompt.
-- Benchmark là corpus tự soạn, cỡ nhỏ; tập phát triển RAG không hoàn toàn mù. Sao tự lực, `data_status`, `autonomy_score` là quy ước vận hành, không phải thang đo đã kiểm chứng.
+- Benchmark là corpus tự soạn, cỡ nhỏ; tập phát triển RAG không hoàn toàn mù. Sao tự làm, `data_status`, `autonomy_score` là quy ước vận hành, không phải thang đo đã kiểm chứng.
 
 ##### 18.4b. v5.4 (12/11/2026)
 - **UI không còn MCP/4D/Autonomy/Sandbox:** giữ nguyên backend MCP stdio, `/api/health`, `mcp_trace`. Thanh tiến độ dùng `bg-primary`. Field `recommended_next_action` còn trong API (lấy lý do của `next_practice`), giao diện bỏ thẻ này; hai bản `compute_student_model` vẫn phải khớp.

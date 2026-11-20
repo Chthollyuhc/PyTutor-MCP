@@ -27,6 +27,6 @@ Số liệu bằng biểu đồ và tóm tắt tất định đáng tin hơn câ
 | Nhóm quá trình theo cặp SV–bài | Không hiện nhãn nhóm tiêu cực; chỉ câu mô tả kèm bước tiếp | Ô ma trận SV × bài; thẻ "Việc nên xem" |
 | Test sai, sai định dạng, loại lỗi | Không hiện (Anti-Spoil) | Ngăn bài; thẻ test sai và định dạng |
 | Bài đạt lần đầu theo tuần | Dòng "tuần này / tuần trước" (số đếm) | Không dùng |
-| Chỉ số gộp cũ (mức tự lực /100, đạt ngay lần đầu, số lần nộp TB, mức gợi ý TB) | **Bỏ khỏi giao diện** (backend giữ khóa) | "Dữ liệu chi tiết" giữ bảng bài nghẽn và bảng sinh viên |
+| Chỉ số gộp cũ (mức tự làm /100, đạt ngay lần đầu, số lần nộp TB, mức gợi ý TB) | **Bỏ khỏi giao diện** (backend giữ khóa) | "Dữ liệu chi tiết" giữ bảng bài nghẽn và bảng sinh viên |
 
 Chi tiết lý do ở `docs/VISUAL_DESIGN_RATIONALE.md`.

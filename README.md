@@ -80,7 +80,7 @@ Hệ thống kết hợp nhiều thành phần để hỗ trợ quy trình này:
 │  [Cổng Đăng Nhập /login] ──► 1-Click Quick Login (Sinh viên K65 / GV)   │
 │                                                                        │
 │  [Cổng Sinh Viên /student]                                             │
-│  ├── Thống kê KPIs Tín chỉ: Số môn, Sao tự lực, Điểm Tự lực 4D        │
+│  ├── Thống kê KPIs Tín chỉ: Số môn, Sao tự làm, Điểm Tự làm 4D        │
 │  ├── Danh mục Lớp học phần NEU: Tìm kiếm thời gian thực, Lưới/Cột      │
 │  └── Trung tâm Vinh danh: Huy hiệu đạt được, Bảng Vàng K65, Hồ sơ 4D   │
 │                                                                        │
@@ -94,7 +94,7 @@ Hệ thống kết hợp nhiều thành phần để hỗ trợ quy trình này:
 │  ├── Cột 2: Monaco Editor, Custom Stdin, Visualizer, 3 NÚT ĐỘC LẬP:    │
 │  │     ▶ [Chạy thử]       ── Chấm Sandbox siêu tốc (0.07s)             │
 │  │     🤖 [Hỏi Gia sư AI]  ── Gợi ý Socratic 3 Mức (Không cấp sao)      │
-│  │     🚀 [Nộp bài]       ── Chấm điểm sao tự lực & Mở khóa bài mới   │
+│  │     🚀 [Nộp bài]       ── Chấm điểm sao tự làm & Mở khóa bài mới   │
 │  └── Cột 3: Gia sư AI Socratic, Nhận diện AST, Review chuẩn Pythonic   │
 │                                                                        │
 │  [Bảng Điều Khiển Giảng Viên /instructor]                              │
@@ -158,7 +158,7 @@ Tất cả 8 công cụ được Host tự động khám phá động (*Dynamic 
 Thanh công cụ Monaco Editor cung cấp 3 nút bấm với màu sắc và phím tắt chuyên biệt:
 - **`▶ Chạy thử` (Ctrl + Enter | Màu Cyan):** Chạy kiểm tra nhanh trong Sandbox chỉ tốn **0.07 giây**, hoàn toàn không tiêu tốn quota AI, không ghi nhận điểm nộp.
 - **`🤖 Hỏi Gia sư AI` (Màu Vàng Amber):** Gửi yêu cầu với `action_type = 'ask_ai'`. AI phân tích AST + Sandbox để trả lời theo mức gợi ý (1, 2, 3), **không cấp sao và không mở modal chúc mừng** để sinh viên tiếp tục hoàn thiện mã nguồn.
-- **`🚀 Nộp bài` (Ctrl + Shift + Enter | Màu Xanh Emerald):** Gửi yêu cầu với `action_type = 'submit'`. Hệ thống chấm điểm chính thức: nếu vượt qua 100% test cases, hệ thống kiểm tra lịch sử các lần hỏi AI để cấp đúng số **Sao Tự Lực (1 - 3 ⭐)**, mở khóa huy hiệu, kích hoạt pháo hoa confetti và cập nhật Cây lộ trình.
+- **`🚀 Nộp bài` (Ctrl + Shift + Enter | Màu Xanh Emerald):** Gửi yêu cầu với `action_type = 'submit'`. Hệ thống chấm điểm chính thức: nếu vượt qua 100% test cases, hệ thống kiểm tra lịch sử các lần hỏi AI để cấp đúng số **Sao Tự Làm (1 - 3 ⭐)**, mở khóa huy hiệu, kích hoạt pháo hoa confetti và cập nhật Cây lộ trình.
 
 ### 3.4. Phương Pháp Sư Phạm Giàn Giáo 3 Cấp Độ & Các Lớp Kiểm Soát Đầu Ra
 Người học tự chọn mức gợi ý; hệ thống **không tự nâng mức**. Mỗi gợi ý theo khung *đang ở đâu → bằng chứng → một bước kế tiếp*.
@@ -174,7 +174,7 @@ Người học tự chọn mức gợi ý; hệ thống **không tự nâng mứ
   - Bài phụ thuộc trong Đồ thị có hướng (DAG) chỉ mở khóa khi bài tiên quyết đã đạt chuẩn (`MASTERED`).
 - **5 Huy hiệu Vinh danh:** `first_blood` (Bước Chân Đầu Tiên), `clean_coder` (Bậc Thầy Clean Code), `independent_thinker` (Nhà Tư Duy Độc Lập), `speed_demon` (Chiến Binh Tốc Độ), `bug_hunter` (Dũng Sĩ Diệt Bug).
 - **Động cơ Phân tích 4D (Student 4D Analytics):** Đo lường Định lượng:
-  1. *Điểm Tự lực Sư phạm (Autonomy Score / 100)*.
+  1. *Điểm Tự làm Sư phạm (Autonomy Score / 100)*.
   2. *Tỷ lệ Vượt qua Lần đầu (First-try Pass Rate %)*.
   3. *Số lần Nộp bài Trung bình / Bài*.
   4. *Cơ cấu Lỗi (Error Breakdown %)*: Tỷ lệ lỗi logic vs lỗi cú pháp/runtime.
@@ -192,7 +192,7 @@ Trang `/login` tích hợp sẵn nút bấm **1-Click Quick Login** để Hội 
 
 | Tài khoản | Mật khẩu | Vai trò | Họ tên & Đơn vị đào tạo | Chức năng trải nghiệm |
 |:---|:---|:---|:---|:---|
-| `student` | `student123` | **Sinh viên** | **Trần Minh Khánh**<br>*(SV K65 CNTT — MSV: 11236131)* | Truy cập Cổng sinh viên, vào Lớp học phần, làm bài trên IDE 3 cột, nhận gợi ý AI, nộp bài tính sao tự lực, xem Bảng Vàng và Hồ sơ 4D. |
+| `student` | `student123` | **Sinh viên** | **Trần Minh Khánh**<br>*(SV K65 CNTT — MSV: 11236131)* | Truy cập Cổng sinh viên, vào Lớp học phần, làm bài trên IDE 3 cột, nhận gợi ý AI, nộp bài tính sao tự làm, xem Bảng Vàng và Hồ sơ 4D. |
 | `gv_tran` | `gv123` | **Giảng viên** | **Nguyễn Văn A**<br>*(Khoa CNTT — ĐH Kinh tế Quốc dân)* | Toàn quyền Dashboard Giảng viên: CRUD bài tập, xem lịch sử nộp bài của sinh viên, xem cấu hình sandbox, xuất báo cáo CSV UTF-8 BOM. |
 | `gv_tuan` | `gv123` | **Giảng viên** | **Trần Văn B**<br>*(Khoa CNTT — ĐH Kinh tế Quốc dân)* | Giảng viên phụ trách các lớp học phần được phân công trong học kỳ. |
 
@@ -349,7 +349,7 @@ Hệ thống cung cấp hơn 30+ endpoints RESTful chuẩn mực được bảo 
 - `POST /api/run-test`: chạy thử mã trên bộ kiểm thử; không gọi AI, không cấp sao.
 - `POST /api/submit`: hai hành động theo `action_type`:
   - `"ask_ai"`: sinh gợi ý theo Mức 1–3, không cấp sao, không tính vào chỉ số chính thức.
-  - `"submit"`: chấm chính thức; khi đạt mọi kiểm thử thì cấp sao tự lực (1–3 ⭐) kèm thẻ lý do.
+  - `"submit"`: chấm chính thức; khi đạt mọi kiểm thử thì cấp sao tự làm (1–3 ⭐) kèm thẻ lý do.
 - `POST /api/custom-run`: chạy mã với dữ liệu đầu vào tự nhập (stdin).
 - `POST /api/trace-execution`: truy vết thực thi từng bước cho trình "Chạy từng bước".
 - `POST /api/tutor/chat`: trò chuyện với gia sư; phạm vi (`concept_only` / `code_review`) do máy chủ quyết định từ lịch sử nộp bài.
@@ -384,7 +384,7 @@ Khi đứng trước Hội đồng chấm Đồ án Tốt nghiệp, sinh viên t
 
 ### Bước 2: Trình diễn Không gian Lớp học phần & Điều hướng Đa tầng
 - Tại Cổng sinh viên, chọn lớp **"Cơ sở lập trình"** (`CNTT1128(223)_02`).
-- Trình diễn **Cây kỹ năng & Chuẩn sao (Mastery Rubric)**: Chứng minh tính phân cấp kiến thức theo đồ thị có hướng (DAG), các bài tập mở khóa tuần tự dựa trên chuẩn sao tự lực tích lũy.
+- Trình diễn **Cây kỹ năng & Chuẩn sao (Mastery Rubric)**: Chứng minh tính phân cấp kiến thức theo đồ thị có hướng (DAG), các bài tập mở khóa tuần tự dựa trên chuẩn sao tự làm tích lũy.
 
 ### Bước 3: Trình diễn 3 Nút Độc lập & Sư phạm Giàn giáo (Scaffolding Pedagogy)
 - Mở bài tập *"Bài 01: Tính tổng từ 1 đến n"*.
@@ -392,7 +392,7 @@ Khi đứng trước Hội đồng chấm Đồ án Tốt nghiệp, sinh viên t
 - **Thao tác 2 (Hỏi Gia sư AI):** Cố ý sửa code sai logic (`tong = n * 2`), chọn **Mức 1** và bấm **"🤖 Hỏi Gia sư AI"**:
   - Gia sư đặt câu hỏi gợi mở về khái niệm và không đưa lời giải; việc này được ràng buộc bằng các lớp kiểm soát ở mục 3.4 (không phải bảo đảm tuyệt đối).
   - Bấm **Mức 2** (chẩn đoán, không nêu cách sửa) và **Mức 3** (dàn ý & khung mã có `...`, logic đã bị che).
-- **Thao tác 3 (Nộp bài):** Viết code đúng và bấm **"🚀 Nộp bài"**: Modal chúc mừng xuất hiện, cấp sao tự lực (1-3 ⭐) dựa trên mức độ sử dụng gợi ý AI và trao huy hiệu vinh danh.
+- **Thao tác 3 (Nộp bài):** Viết code đúng và bấm **"🚀 Nộp bài"**: Modal chúc mừng xuất hiện, cấp sao tự làm (1-3 ⭐) dựa trên mức độ sử dụng gợi ý AI và trao huy hiệu vinh danh.
 
 ### Bước 4: Trình diễn Công cụ Trực quan hóa (Visualizer) & Đánh giá Mã nguồn (Review)
 - Bấm nút **"👁️ Trực quan hóa"**: Trình diễn từng bước nhảy của biến số $i$ và biến tổng qua từng vòng lặp.
