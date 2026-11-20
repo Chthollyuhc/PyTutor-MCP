@@ -18,7 +18,7 @@
     "pytutor_db_unchanged": true,
     "note": "Gemini thật, mốc trước cải tiến, lần 2",
     "command": "py evaluate_hint_levels.py --real --quiet --tag before_real_dev_2 --note Gemini thật, mốc trước cải tiến, lần 2",
-    "rescored": "2026-11-21T04:35:36"
+    "rescored": "2026-11-21T04:47:36"
   },
   "summary": {
     "checks": {
@@ -52,7 +52,7 @@
       },
       "khung_muc_tieu_bang_chung_buoc": {
         "1": [
-          10,
+          14,
           15
         ],
         "2": [
@@ -60,7 +60,7 @@
           14
         ],
         "3": [
-          11,
+          14,
           15
         ]
       },
@@ -80,11 +80,11 @@
       },
       "ten_co_that": {
         "1": [
-          14,
+          15,
           15
         ],
         "2": [
-          12,
+          14,
           14
         ],
         "3": [
@@ -204,7 +204,7 @@
           14
         ],
         "2": [
-          8,
+          9,
           12
         ]
       },
@@ -216,13 +216,13 @@
       },
       "m2_dung_mot_dong_that": {
         "2": [
-          9,
+          10,
           13
         ]
       },
       "m2_dong_dung_cho_loi": {
         "2": [
-          10,
+          11,
           13
         ]
       },
@@ -249,15 +249,15 @@
     },
     "all_pass_content_by_level": {
       "1": [
-        5,
+        8,
         15
       ],
       "2": [
-        7,
+        9,
         14
       ],
       "3": [
-        5,
+        7,
         15
       ]
     },
@@ -1160,7 +1160,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -1180,7 +1180,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D03",
@@ -1691,7 +1691,7 @@
       "checks": {
         "do_dai": false,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -2652,7 +2652,7 @@
         "khong_nhan_xet_nang_luc": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -2661,7 +2661,7 @@
         "m2_co_bang_chung_thuc_thi": true,
         "m2_khong_khoi_code_3_dong": true,
         "khong_lap_voi_luot_truoc": true,
-        "tang_tien_so_voi_luot_truoc": false
+        "tang_tien_so_voi_luot_truoc": true
       },
       "info": {
         "words": 223,
@@ -2672,7 +2672,7 @@
       },
       "overlap_prev": 0.037,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D06",
@@ -3341,9 +3341,9 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3361,7 +3361,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D08",
@@ -3475,7 +3475,7 @@
         "khong_nhan_xet_nang_luc": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -4029,7 +4029,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -4049,7 +4049,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D10",
@@ -4161,7 +4161,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -4182,7 +4182,7 @@
       },
       "overlap_prev": 0.223,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D11",
@@ -4950,7 +4950,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -5744,7 +5744,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -5765,7 +5765,7 @@
       },
       "overlap_prev": 0.063,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D15",
@@ -6011,8 +6011,8 @@
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
-        "m2_dung_mot_dong_that": false,
-        "m2_dong_dung_cho_loi": false,
+        "m2_dung_mot_dong_that": true,
+        "m2_dong_dung_cho_loi": true,
         "m2_co_bang_chung_thuc_thi": true,
         "m2_khong_khoi_code_3_dong": true,
         "khong_lap_voi_luot_truoc": true,
@@ -6021,11 +6021,13 @@
       "info": {
         "words": 200,
         "leaks": [],
-        "quoted_lines": []
+        "quoted_lines": [
+          "dem = 1"
+        ]
       },
       "overlap_prev": 0.067,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D15",

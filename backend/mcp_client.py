@@ -13,6 +13,7 @@ import sys
 import os
 import json
 import time
+import asyncio
 import logging
 from pathlib import Path
 from typing import Any
@@ -154,8 +155,51 @@ async def run_test_only_pipeline(exercise_id: str, code: str) -> dict:
             }
 
 
+TRACE_TIMEOUT_S = 6.0
+TRACE_MAX_STEPS = 200
+
+
+async def _trace_failure(session: ClientSession, code: str, test_results: dict, ast_analysis: dict, mcp_trace: list) -> dict | None:
+    """Vết chạy của CHÍNH mã người học trên đầu vào của test lỗi giàu thông tin nhất (cùng phiên MCP, không thêm handshake).
+
+    Chỉ chạy khi mã hợp lệ cú pháp và test lỗi không phải TIMEOUT. Có timeout riêng; mọi lỗi đều chỉ ghi vào `mcp_trace`
+    rồi trả None để luồng gợi ý dùng bằng chứng tĩnh. Vết cho thấy mã của người học đang làm gì, không cho thấy mã đúng.
+    """
+    from backend.hint_evidence import pick_failure
+    step_no = len(mcp_trace) + 1
+    failure = pick_failure(test_results)
+    if not failure or failure.get("status") in ("TIMEOUT", "SYNTAX_ERROR") or not ast_analysis.get("valid", True):
+        return None
+    t0 = time.time()
+    try:
+        res = await asyncio.wait_for(session.call_tool("trace_code_execution", arguments={
+            "code": code, "stdin_input": (failure.get("input") or "").rstrip("\n") + "\n", "max_steps": TRACE_MAX_STEPS}), timeout=TRACE_TIMEOUT_S)
+        data = json.loads(res.content[0].text)
+        steps = data.get("steps", [])
+        counts: dict[int, int] = {}
+        for st in steps:
+            if st.get("event") == "line":
+                counts[st["line"]] = counts.get(st["line"], 0) + 1
+        main_steps = [st for st in steps if st.get("func_name") == "<main>"]
+        final_locals = {k: v.get("value", "") for k, v in (main_steps[-1].get("locals", {}) if main_steps else {}).items()
+                        if len(str(v.get("value", ""))) <= 40}
+        ms = round((time.time() - t0) * 1000, 2)
+        mcp_trace.append({"step": step_no, "tool_name": "trace_code_execution", "action": "Vết chạy trên đầu vào của test lỗi",
+                          "protocol": "JSON-RPC 2.0 (stdio)", "duration_ms": ms, "status": "SUCCESS",
+                          "summary": f"{data.get('total_steps', len(steps))} bước, {len(counts)} dòng được chạy" + (" (bị cắt)" if data.get("truncated") else "")})
+        return {"ok": True, "input": failure.get("input", ""), "line_counts": counts, "final_locals": final_locals,
+                "total_steps": data.get("total_steps", len(steps)), "truncated": bool(data.get("truncated")), "duration_ms": ms}
+    except Exception as exc:  # noqa: BLE001 — vết chạy là phần phụ, không được làm hỏng luồng gợi ý
+        ms = round((time.time() - t0) * 1000, 2)
+        logger.warning(f"Không lấy được vết chạy: {exc}")
+        mcp_trace.append({"step": step_no, "tool_name": "trace_code_execution", "action": "Vết chạy trên đầu vào của test lỗi",
+                          "protocol": "JSON-RPC 2.0 (stdio)", "duration_ms": ms, "status": "SKIPPED",
+                          "summary": "Không lấy được vết chạy; gợi ý dùng bằng chứng tĩnh từ kiểm thử và AST"})
+        return None
+
+
 async def execute_submission_pipeline(exercise_id: str, code: str, session_id: str = "default_session",
-                                      class_id: str | None = None) -> dict:
+                                      class_id: str | None = None, with_trace: bool = False) -> dict:
     """
     [Pipeline Nộp bài & Thích ứng Sư phạm - Ghi nhận MCP Trace]
     1 phiên kết nối MCP duy nhất:
@@ -165,6 +209,7 @@ async def execute_submission_pipeline(exercise_id: str, code: str, session_id: s
     4. get_student_model (Mô hình học sinh thích ứng)
     5. run_test_cases (Sandbox Ground Truth)
     6. analyze_code_ast (Phân tích cú pháp AST)
+    7. (với_trace=True, chưa đạt) trace_code_execution trên đầu vào của test lỗi, có timeout và fallback
     """
     mcp_trace = []
     params = get_server_params()
@@ -281,6 +326,11 @@ async def execute_submission_pipeline(exercise_id: str, code: str, session_id: s
                 "summary": ast_analysis.get("structural_summary", "AST analysis complete")
             })
 
+            # 7. Vết chạy (chỉ khi xin gợi ý và bài chưa đạt hết)
+            failure_trace = None
+            if with_trace and "trace_code_execution" in discovered and not test_results.get("all_passed") and (code or "").strip():
+                failure_trace = await _trace_failure(session, code, test_results, ast_analysis, mcp_trace)
+
             return {
                 "exercise": exercise_data,
                 "test_results": test_results,
@@ -288,7 +338,8 @@ async def execute_submission_pipeline(exercise_id: str, code: str, session_id: s
                 "attempt_history": history_data,
                 "student_model": student_model,
                 "discovered_tools": discovered,
-                "mcp_trace": mcp_trace
+                "mcp_trace": mcp_trace,
+                "failure_trace": failure_trace,
             }
 
 

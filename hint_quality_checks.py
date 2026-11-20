@@ -17,7 +17,8 @@ from typing import Optional
 
 LENGTH_RANGE = {1: (45, 190), 2: (60, 230), 3: (110, 430)}
 OVERLAP_MAX = 0.30
-MIN_LINE_CHARS = 8
+MIN_LINE_CHARS = 5
+_TRIVIAL_LINES = {"break", "continue", "pass", "else:", "try:", "finally:", "return"}
 
 _FENCE = re.compile(r"(?:```|~~~)([^\n]*)\n(.*?)(?:```|~~~)", flags=re.DOTALL)
 _SPAN = re.compile(r"`([^`\n]+)`")
@@ -88,7 +89,7 @@ def quoted_student_lines(reply: str, code: str, starter: str = "") -> list[str]:
     starter_lines = set(code_lines(starter))
     found = []
     for line in dict.fromkeys(code_lines(code)):
-        if len(line) < MIN_LINE_CHARS or line in starter_lines:
+        if len(line) < MIN_LINE_CHARS or line in _TRIVIAL_LINES or line in starter_lines:
             continue
         if line in text:
             found.append(line)
@@ -123,8 +124,9 @@ def check_no_full_program(reply: str, code: str, level: int) -> Optional[bool]:
     return safe
 
 
-def check_length(reply: str, level: int) -> bool:
-    lo, hi = LENGTH_RANGE[level]
+def check_length(reply: str, level: int, passed: bool = False) -> bool:
+    """Độ dài theo mức. Bài đã đạt hết kiểm thử dùng khoảng riêng (phản hồi rút giàn giáo ngắn hơn theo thiết kế)."""
+    lo, hi = (30, 230) if passed else LENGTH_RANGE[level]
     return lo <= len(words(reply)) <= hi
 
 
@@ -135,7 +137,7 @@ def check_no_ability_remark(reply: str) -> bool:
 def check_frame(reply: str) -> bool:
     """Heuristic từ khóa: có ý 'đang ở đâu', 'bằng chứng', 'bước kế tiếp'. Không đo chất lượng từng ý."""
     t = (reply or "").lower()
-    goal = bool(re.search(r"(đang ở đâu|mục tiêu|đề bài yêu cầu|bài yêu cầu|đang đạt|đạt \d+\s*/\s*\d+|bài làm hiện|bài của bạn)", t))
+    goal = bool(re.search(r"(đang ở đâu|mục tiêu|đề bài yêu cầu|bài yêu cầu|đang đạt|vượt qua|\d+\s*/\s*\d+\s*kiểm thử|đạt \d+\s*/\s*\d+|bài làm hiện|bài của bạn)", t))
     evidence = bool(re.search(r"(bằng chứng|kiểm thử|test|kết quả|quan sát|thông báo|dòng \d+|lỗi)", t))
     nxt = bool(re.search(r"(bước kế tiếp|bước tiếp theo|việc tiếp theo|hãy thử|thử\s|tự kiểm|chạy thử|chạy từng bước|\?)", t))
     return goal and evidence and nxt
@@ -149,6 +151,7 @@ def check_single_next_step(reply: str) -> bool:
 
 
 def check_grounded_names(reply: str, code: str, exercise: dict, extra_text: str = "") -> bool:
+    # extra_text: văn bản được phép trích nguyên văn (thông báo lỗi của trình thông dịch, traceback) của lần chạy hiện tại.
     """Mọi tên biến/hàm trong `backtick` phải có trong code người học, đề bài, test hoặc là built-in Python."""
     text, _ = split_blocks(reply)
     allowed = set(_PY_NAMES) | _GENERIC_NAMES
@@ -259,7 +262,7 @@ def check_l2_evidence(reply: str, test_results: dict, ast_analysis: dict, expect
         status = tc.get("status")
         inp_ok = _values_in_spans(text, tc.get("input", ""))
         if status == "TIMEOUT":
-            if _TIMEOUT_WORDS.search(text):
+            if inp_ok and _TIMEOUT_WORDS.search(text):
                 return True
             continue
         if status == "RUNTIME_ERROR":
@@ -335,7 +338,7 @@ def check_l3_keeps_student_lines(reply: str, code: str, starter: str) -> bool:
     _, blocks = split_blocks(reply)
     body = norm(" ".join(blocks))
     starter_lines = set(code_lines(starter))
-    lines = [ln for ln in code_lines(code) if len(ln) >= MIN_LINE_CHARS and ln not in starter_lines]
+    lines = [ln for ln in code_lines(code) if len(ln) >= MIN_LINE_CHARS and ln not in _TRIVIAL_LINES and ln not in starter_lines]
     return any(ln in body for ln in lines)
 
 

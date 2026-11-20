@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Mốc trước cải tiến, tập giữ riêng (không đọc nguyên văn cho tới Pha 3 vòng 3)",
     "command": "py evaluate_hint_levels.py --offline --holdout --quiet --tag before_offline_holdout --note Mốc trước cải tiến, tập giữ riêng (không đọc nguyên văn cho tới Pha 3 vòng 3)",
-    "rescored": "2026-11-21T04:35:27"
+    "rescored": "2026-11-21T04:47:28"
   },
   "summary": {
     "checks": {

@@ -448,7 +448,9 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
             exercise_id=request.exercise_id,
             code=request.code,
             session_id=student_username,
-            class_id=model_class_id
+            class_id=model_class_id,
+            # Vết chạy chỉ phục vụ gợi ý (ask_ai) và chỉ khi AI không bị khóa; lỗi vết chạy không làm hỏng chấm bài.
+            with_trace=request.action_type == "ask_ai" and not is_exam_mode,
         )
 
         exercise = pipeline_res["exercise"]
@@ -481,7 +483,8 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
                 hint_level=request.hint_level,
                 attempt_history=attempt_history,
                 student_model=student_model,
-                adaptive_strategy=adaptive_strategy
+                adaptive_strategy=adaptive_strategy,
+                trace=pipeline_res.get("failure_trace"),
             )
 
         hint_interaction_id = None

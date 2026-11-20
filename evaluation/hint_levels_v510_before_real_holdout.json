@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Gemini thật, mốc trước cải tiến, tập giữ riêng",
     "command": "py evaluate_hint_levels.py --real --holdout --quiet --tag before_real_holdout --note Gemini thật, mốc trước cải tiến, tập giữ riêng",
-    "rescored": "2026-11-21T04:35:39"
+    "rescored": "2026-11-21T04:47:38"
   },
   "summary": {
     "checks": {
@@ -50,7 +50,7 @@
       },
       "khung_muc_tieu_bang_chung_buoc": {
         "1": [
-          2,
+          7,
           7
         ],
         "2": [
@@ -58,7 +58,7 @@
           7
         ],
         "3": [
-          5,
+          7,
           7
         ]
       },
@@ -160,13 +160,13 @@
       },
       "m2_dung_mot_dong_that": {
         "2": [
-          5,
+          4,
           7
         ]
       },
       "m2_dong_dung_cho_loi": {
         "2": [
-          5,
+          4,
           7
         ]
       },
@@ -243,7 +243,7 @@
     },
     "all_pass_content_by_level": {
       "1": [
-        2,
+        4,
         7
       ],
       "2": [
@@ -251,7 +251,7 @@
         7
       ],
       "3": [
-        1,
+        2,
         7
       ]
     },
@@ -378,7 +378,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -398,7 +398,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "H01",
@@ -1037,7 +1037,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -1058,7 +1058,7 @@
       },
       "overlap_prev": 0.08,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "H03",
@@ -1576,7 +1576,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -1596,7 +1596,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "H04",
@@ -1860,7 +1860,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": false,
@@ -1996,7 +1996,7 @@
       "checks": {
         "do_dai": false,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -2396,7 +2396,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -2796,7 +2796,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -2935,8 +2935,8 @@
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
-        "m2_dung_mot_dong_that": true,
-        "m2_dong_dung_cho_loi": true,
+        "m2_dung_mot_dong_that": false,
+        "m2_dong_dung_cho_loi": false,
         "m2_co_bang_chung_thuc_thi": false,
         "m2_khong_khoi_code_3_dong": true,
         "khong_lap_voi_luot_truoc": true,
@@ -2946,6 +2946,7 @@
         "words": 182,
         "leaks": [],
         "quoted_lines": [
+          "i = 1",
           "while i < n:"
         ]
       },
@@ -3081,7 +3082,7 @@
         "words": 334,
         "leaks": [],
         "co_bang_chay_tay": false,
-        "giu_dong_cua_nguoi_hoc": false
+        "giu_dong_cua_nguoi_hoc": true
       },
       "overlap_prev": 0.035,
       "all_pass": false,

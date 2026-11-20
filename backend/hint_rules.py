@@ -11,6 +11,7 @@ Mọi câu chỉ nêu điều quan sát được từ kiểm thử, AST, traceba
 """
 from __future__ import annotations
 
+import ast
 import re
 from typing import Optional
 
@@ -213,8 +214,7 @@ def _level2(ev: dict, adaptive_strategy: Optional[dict], repeats: int, extra: st
         "timeout": "dùng **Chạy từng bước** với đúng đầu vào trên và ghi lại giá trị của các biến điều khiển vòng lặp qua ba lần lặp đầu.",
     }.get(kind, "dùng **Chạy từng bước** với đúng đầu vào này và dừng ở dòng đầu tiên mà giá trị biến khác với điều bạn dự tính.")
     parts.append(next_step_line(step, adaptive_strategy))
-    footer = ("*(Gợi ý tự động từ kết quả chấm và cấu trúc mã khi không có mô hình AI: chỉ nêu điều quan sát được, "
-              "chưa chỉ ra cách sửa.)*")
+    footer = "*(Gợi ý tự động khi không có mô hình AI: chỉ nêu điều quan sát được, chưa chỉ ra cách sửa.)*"
     return "\n\n".join(parts) + extra + "\n\n" + footer
 
 
@@ -245,11 +245,28 @@ def _skeleton(code: str, starter: str) -> str:
         return lines[:40]
 
     from backend.adaptive_policy import is_blank_attempt
-    base = clean(code) if not is_blank_attempt(code, starter) else clean(starter)
-    text = "\n".join(base)
-    masked_text, _ = enforce_level3_skeleton("```python\n" + text + "\n```") if text else ("```python\n```", 0)
-    body = re.search(r"```python\n(.*?)\n?```", masked_text, flags=re.DOTALL)
-    lines = body.group(1).splitlines() if body and body.group(1).strip() else []
+
+    def masked_lines(src_lines: list[str]) -> list[str]:
+        text = "\n".join(src_lines)
+        if not text:
+            return []
+        masked_text, _ = enforce_level3_skeleton("```python\n" + text + "\n```")
+        body = re.search(r"```python\n(.*?)\n?```", masked_text, flags=re.DOTALL)
+        return body.group(1).splitlines() if body and body.group(1).strip() else []
+
+    def parses(lines_: list[str]) -> bool:
+        try:
+            ast.parse("\n".join(lines_))
+            return True
+        except SyntaxError:
+            return False
+
+    lines = masked_lines(clean(code) if not is_blank_attempt(code, starter) else clean(starter))
+    if lines and not parses(lines):
+        # mã người học có lỗi cú pháp (hoặc thụt lề lệch) nên khung che xong vẫn không chạy được: dùng khung mẫu của bài
+        lines = masked_lines(clean(starter))
+        if lines and not parses(lines):
+            lines = []
     joined = "\n".join(lines)
     has_input = "input(" in joined
     has_flow = any(re.match(r"\s*(if|for|while)\b", ln) for ln in lines)
@@ -279,15 +296,28 @@ def _level3(ev: dict, exercise: dict, code: str, adaptive_strategy: Optional[dic
                      f"chương trình cần in `{he.inline_value(failure.get('expected_output', ''))}`.")
     outline = "\n".join(f"- **Bước {i}:** {s}" for i, s in enumerate(steps, 1))
     skeleton = _skeleton(code, exercise.get("starter_code", "") or "")
-    sample = he.inline_value((failure or {}).get("input", "")) if failure else ""
-    table = he.trace_table(code, (failure or {}).get("input", "") if failure else "", exercise.get("starter_code", "") or "")
+    first_test = next((r for r in ev.get("all_results", []) if (r.get("input") or "").strip()), None)
+    sample_input = (failure or first_test or {}).get("input", "")
+    table = he.trace_table(code, sample_input, exercise.get("starter_code", "") or "")
     parts.append(f"### 1. Dàn ý các bước theo đề «{goal}»:\n{outline}")
     parts.append("### 2. Khung mã nguồn bám bài làm của bạn (các chỗ `...` hoặc `# TODO` là phần logic bạn tự viết):\n"
                  f"```python\n{skeleton}\n```")
     parts.append(f"### 3. Bảng chạy tay (để trống, bạn tự điền):\n{table}")
     parts.append(level3_progress_note(code, adaptive_strategy))
-    _ = sample
     return "\n\n".join(parts) + extra
+
+
+def _trace_note(code: str, trace: Optional[dict]) -> str:
+    """Một câu từ vết chạy: giá trị các biến của người học ngay trước lệnh cuối cùng được chạy với đầu vào lỗi."""
+    locals_ = (trace or {}).get("final_locals") or {}
+    if not locals_:
+        return ""
+    names = [n for n in CodeFacts(code).assigned_names if n in locals_ and not n.startswith("_")][:3]
+    if not names:
+        return ""
+    parts = ", ".join(f"`{n}` có giá trị `{str(locals_[n]).replace(chr(96), chr(39))}`" for n in names)
+    inp = he.inline_value((trace or {}).get("input", ""))
+    return f"với đầu vào `{inp}`, ngay trước lệnh cuối cùng được chạy, {parts}."
 
 
 # ----------------------------------------------------------------------------------------------
@@ -299,14 +329,17 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
     """Gợi ý theo luật cho bài CHƯA đạt hết kiểm thử (đã loại trừ nhánh đạt và nhánh chưa viết code ở llm_service)."""
     ast_analysis = ast_analysis or {}
     title = (exercise or {}).get("title", "Bài tập")
-    failure = he.pick_failure(test_results)
-    kind = classify(failure, ast_analysis, test_results)
+    no_code = bool(adaptation(adaptive_strategy, "no_code_yet"))
+    failure = None if no_code else he.pick_failure(test_results)
+    kind = None if no_code else classify(failure, ast_analysis, test_results)
     suspect = he.suspect_line(code, failure, kind, ast_analysis, trace) if kind else None
     goal = he.exercise_goal(exercise)
     concept = he.concept_for(kind or "wrong_output", failure, suspect, goal, has_loops=bool(ast_analysis.get("has_loops", True)))
     ev = {"kind": kind, "failure": failure, "suspect": suspect, "concept": concept, "ast": ast_analysis,
-          "syntax_error": ast_analysis.get("syntax_error"), "progress": _progress_line(title, test_results, kind),
-          "trace_note": (trace or {}).get("note")}
+          "syntax_error": ast_analysis.get("syntax_error"),
+          "progress": (f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào; đây là khung để bắt đầu." if no_code
+                       else _progress_line(title, test_results, kind)),
+          "trace_note": _trace_note(code, trace), "all_results": (test_results or {}).get("results", [])}
     repeats = repeat_count(attempt_history, hint_level)
 
     extra = ""
@@ -317,8 +350,11 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
         extra += (f"\n\n🔁 Nhóm kiến thức **{ctx.get('kc_label', '')}** từng gây vướng ở bài **{ctx.get('exercise_title', '')}**. "
                   "Lần này hãy dùng **Chạy từng bước** với đúng đầu vào của kiểm thử chưa đạt và ghi lại giá trị biến ở từng dòng.")
     elif strategy == "recurring_difficulty" and not repeats:
-        extra += ("\n\n🔁 Bạn đã thử bài này vài lần. Thay vì sửa tiếp theo cảm tính, lần này hãy dùng "
-                  "**Chạy từng bước** với đúng đầu vào của kiểm thử chưa đạt và ghi lại giá trị biến ở từng dòng.")
+        if hint_level == 2:  # bước kế tiếp của Mức 2 đã nói tới Chạy từng bước nên chỉ nhắc ngắn
+            extra += "\n\n🔁 Bạn đã thử bài này vài lần: lần này hãy ghi lại giá trị biến ở từng dòng thay vì sửa tiếp theo cảm tính."
+        else:
+            extra += ("\n\n🔁 Bạn đã thử bài này vài lần. Thay vì sửa tiếp theo cảm tính, lần này hãy dùng "
+                      "**Chạy từng bước** với đúng đầu vào của kiểm thử chưa đạt và ghi lại giá trị biến ở từng dòng.")
     notes = model_notes(adaptive_strategy)
     if notes:
         extra += "\n\n" + notes

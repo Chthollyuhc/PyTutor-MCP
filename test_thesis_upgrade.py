@@ -174,7 +174,9 @@ class FormativeFeedbackTests(unittest.TestCase):
     def test_level1_fallback_does_not_reveal_expected_output(self):
         text = generate_rule_based_fallback(EXERCISE, "x", FAIL_NO_LOOP, AST_NO_LOOP, 1)
         self.assertIn("1/3", text)
-        self.assertIn("Số lẻ", text)
+        # v5.10: Mức 1 không nêu test nào lỗi (mô tả test có thể lộ dạng đầu vào); chỉ gọi tên khái niệm và dạng lỗi tổng quát.
+        self.assertNotIn("Số lẻ", text)
+        self.assertIn("Khái niệm cần xem lại", text)
         self.assertNotIn("`Le`", text)
         self.assertNotIn("Vòng lặp của bạn", text)  # AST không có vòng lặp thì không hỏi về vòng lặp
         self.assertTrue(check_student_output(text)[0])

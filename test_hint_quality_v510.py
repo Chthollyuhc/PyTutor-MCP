@@ -41,8 +41,10 @@ class CheckFunctionTests(unittest.TestCase):
 
     def test_l2_evidence_timeout_syntax_runtime(self):
         tmo = {"results": [{"status": "TIMEOUT", "input": "1", "expected_output": "1", "actual_output": "", "error_message": "Time Limit Exceeded"}]}
-        self.assertTrue(hq.check_l2_evidence("Chương trình chạy quá thời gian, không dừng.", tmo, {}, "TIMEOUT"))
+        self.assertTrue(hq.check_l2_evidence("Với đầu vào `1` chương trình chạy quá thời gian, không dừng.", tmo, {}, "TIMEOUT"))
         self.assertFalse(hq.check_l2_evidence("Có lỗi ở vòng lặp.", tmo, {}, "TIMEOUT"))
+        # chỉ nói chung chung "quá thời gian" (như Mức 1) chưa phải bằng chứng của Mức 2: thiếu đầu vào cụ thể
+        self.assertFalse(hq.check_l2_evidence("Chương trình chạy quá thời gian cho phép.", tmo, {}, "TIMEOUT"))
         ast_err = {"syntax_error": {"lineno": 3, "message": "expected ':'"}}
         self.assertTrue(hq.check_l2_evidence("Thông báo `expected ':'` tại dòng 3.", {}, ast_err, "SYNTAX_ERROR"))
         self.assertFalse(hq.check_l2_evidence("Có lỗi cú pháp.", {}, ast_err, "SYNTAX_ERROR"))
@@ -78,6 +80,16 @@ class CheckFunctionTests(unittest.TestCase):
         self.assertTrue(hq.check_grounded_names("Xem biến `tong` và hàm `range()`.", CODE, EX))
         self.assertFalse(hq.check_grounded_names("Xem biến `ket_qua_cuoi` và hàm `tinh_tong()`.", CODE, EX))
         self.assertTrue(hq.check_grounded_names("Gợi ý `range(start, stop)` hoạt động ra sao.", CODE, EX))
+
+    def test_short_but_real_lines_count_and_trivial_ones_do_not(self):
+        code = 's = input()\ndem = 0\nfor ch in s:\n    if ch in "ae":\n        dem = 1\n        break\nprint(dem)\n'
+        self.assertEqual(hq.quoted_student_lines("Xem dòng `dem = 1` nhé.", code, ""), ["dem = 1"])
+        self.assertEqual(hq.quoted_student_lines("Sau đó `break` thì dừng.", code, ""), [])
+
+    def test_error_message_words_are_allowed_in_spans(self):
+        reply = "Thông báo `TypeError: can only concatenate str (not \"int\") to str` cho biết kiểu."
+        self.assertFalse(hq.check_grounded_names(reply, CODE, EX))
+        self.assertTrue(hq.check_grounded_names(reply, CODE, EX, 'TypeError: can only concatenate str (not "int") to str'))
 
     def test_ability_remarks(self):
         self.assertFalse(hq.check_no_ability_remark("Bạn rất giỏi nhưng hãy chú ý biên."))

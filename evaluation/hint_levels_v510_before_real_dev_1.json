@@ -16,13 +16,13 @@
     "pytutor_db_unchanged": true,
     "note": "Gemini thật, mốc trước cải tiến, lần 1",
     "command": "py evaluate_hint_levels.py --real --quiet --tag before_real_dev_1 --note Gemini thật, mốc trước cải tiến, lần 1",
-    "rescored": "2026-11-21T04:35:31"
+    "rescored": "2026-11-21T04:47:32"
   },
   "summary": {
     "checks": {
       "do_dai": {
         "1": [
-          12,
+          13,
           15
         ],
         "2": [
@@ -50,7 +50,7 @@
       },
       "khung_muc_tieu_bang_chung_buoc": {
         "1": [
-          11,
+          15,
           15
         ],
         "2": [
@@ -58,7 +58,7 @@
           14
         ],
         "3": [
-          12,
+          14,
           15
         ]
       },
@@ -78,15 +78,15 @@
       },
       "ten_co_that": {
         "1": [
-          14,
+          15,
           15
         ],
         "2": [
-          13,
+          14,
           14
         ],
         "3": [
-          14,
+          15,
           15
         ]
       },
@@ -202,7 +202,7 @@
           14
         ],
         "2": [
-          7,
+          8,
           12
         ]
       },
@@ -214,13 +214,13 @@
       },
       "m2_dung_mot_dong_that": {
         "2": [
-          10,
+          11,
           13
         ]
       },
       "m2_dong_dung_cho_loi": {
         "2": [
-          10,
+          11,
           13
         ]
       },
@@ -247,15 +247,15 @@
     },
     "all_pass_content_by_level": {
       "1": [
-        5,
+        9,
         15
       ],
       "2": [
-        5,
+        8,
         14
       ],
       "3": [
-        3,
+        5,
         15
       ]
     },
@@ -1157,7 +1157,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -1177,7 +1177,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D03",
@@ -1555,7 +1555,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -1576,7 +1576,7 @@
       },
       "overlap_prev": 0.043,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D04",
@@ -2096,7 +2096,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -2658,7 +2658,7 @@
         "m2_co_bang_chung_thuc_thi": true,
         "m2_khong_khoi_code_3_dong": true,
         "khong_lap_voi_luot_truoc": true,
-        "tang_tien_so_voi_luot_truoc": false
+        "tang_tien_so_voi_luot_truoc": true
       },
       "info": {
         "words": 170,
@@ -2669,7 +2669,7 @@
       },
       "overlap_prev": 0.067,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D06",
@@ -2798,7 +2798,7 @@
         "words": 295,
         "leaks": [],
         "co_bang_chay_tay": false,
-        "giu_dong_cua_nguoi_hoc": false
+        "giu_dong_cua_nguoi_hoc": true
       },
       "overlap_prev": 0.032,
       "all_pass": false,
@@ -3342,7 +3342,7 @@
         "khong_nhan_xet_nang_luc": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3360,7 +3360,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D08",
@@ -3474,7 +3474,7 @@
         "khong_nhan_xet_nang_luc": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
@@ -3494,7 +3494,7 @@
       },
       "overlap_prev": 0.089,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D08",
@@ -3608,7 +3608,7 @@
         "khong_nhan_xet_nang_luc": true,
         "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
-        "ten_co_that": false,
+        "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": null,
         "khong_cum_chi_cach_sua": true,
@@ -3627,7 +3627,7 @@
       },
       "overlap_prev": 0.036,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D09",
@@ -4024,9 +4024,9 @@
       ],
       "prompt": "Bạn là PyTutor - một Gia sư Trí tuệ Nhân tạo dạy lập trình Python thân thiện, thấu cảm và tuân thủ phương pháp sư phạm giàn giáo (Scaffolding Pedagogy).\n\n[BỐI CẢNH BÀI TẬP]:\nTên bài: Bài 01: Tính tổng từ 1 đến n\n### Mô tả bài toán\nViết chương trình đọc vào một số nguyên dương $n$ từ bàn phím (sử dụng hàm `input()`).\nTính và in ra màn hình tổng các số từ $1$ đến $n$:\n$$S = 1 + 2 + 3 + \\dots + n$$\n\n### Đầu vào (Input):\n- Một dòng duy nhất chứa số nguyên dương $n$ ($1 \\le n \\le 10^4$).\n\n### Đầu ra (Output):\n- Một số nguyên duy nhất là kết quả tổng $S$.\n\n### Ví dụ:\n| Input | Output | Giải thích |\n| :--- | :--- | :--- |\n| `3` | `6` | 1 + 2 + 3 = 6 |\n| `5` | `15` | 1 + 2 + 3 + 4 + 5 = 15 |\n\n### Mục tiêu học tập:\n- Biết cách sử dụng `int(input())` để nhận dữ liệu.\n- Sử dụng vòng lặp `for` với hàm `range()` và biến tích lũy cộng dồn (`+=`).\n\n\n[MÃ NGUỒN CỦA SINH VIÊN]:\n```python\nn = int(input())\ntong = 0\nfor i in range(1, n + 1):\n    tong += i\nprint(tong)\n\n```\n\n[KẾT QUẢ THỰC THI THỰC TẾ TỪ MCP SANDBOX (GROUND TRUTH)]:\n- Trạng thái kiểm thử: Đạt 5/5 test cases\n- Tóm tắt: Tuyệt vời! Đã vượt qua toàn bộ 5/5 test cases.\n- Các test case lỗi mẫu:\n(Không có test case nào bị lỗi)\n\n[KẾT QUẢ PHÂN TÍCH CẤU TRÚC CÚ PHÁP TỪ MCP AST]:\n- Sử dụng 1 vòng lặp for; Có biến tích lũy (tong (Add)); Mã nguồn dạng script tuần tự (không định nghĩa hàm riêng) (Tổng 5 dòng code thực tế).\n\n[CHIẾN LƯỢC PHẢN HỒI]\n- Mã lý do: solution_review\n- Căn cứ: Chưa đủ dữ liệu lịch sử\n- Trạng thái dữ liệu: insufficient\n- Hướng dẫn: Sinh viên đã vượt qua bài; tập trung phản hồi và củng cố.\n- Giữ nguyên cấp độ người học yêu cầu: Level 1; không tự tăng mức tiết lộ.\n\n[MÔ HÌNH NGƯỜI HỌC - heuristic chưa hiệu chuẩn, chỉ dùng để điều chỉnh cách diễn đạt]\n- Nhóm kiến thức liên quan tới bài này:\n  + Nhập/xuất và định dạng: Chưa có bằng chứng (dựa trên 0 bài khác đã nộp)\n  + Vòng lặp: Chưa có bằng chứng (dựa trên 0 bài khác đã nộp)\n  + Biến tích lũy: Chưa có bằng chứng (dựa trên 0 bài khác đã nộp)\n- Không nhận xét năng lực của sinh viên, không nêu các nhãn trên cho sinh viên như một đánh giá; giữ nguyên Level 1.\n\n[KHUNG PHẢN HỒI HÌNH THÀNH - ÁP DỤNG CHO MỌI CẤP ĐỘ]\nMỗi phản hồi phải trả lời đủ ba ý, theo đúng thứ tự, trong giới hạn tiết lộ của cấp độ được yêu cầu:\n1. Mục tiêu / đang ở đâu: bài yêu cầu gì và bài làm hiện đạt đến đâu (dùng số kiểm thử đạt thực tế).\n2. Bằng chứng: chỉ nêu điều quan sát được từ kết quả kiểm thử, phân tích AST hoặc lịch sử ở trên. Không suy đoán nguyên nhân không có trong dữ liệu; nếu dữ liệu chưa đủ thì nói rõ là chưa đủ.\n3. Bước kế tiếp vừa sức: đúng MỘT việc cụ thể sinh viên có thể tự làm ngay (một câu hỏi tự kiểm hoặc một phép thử), không liệt kê nhiều hướng.\nKhông lặp lại nguyên văn gợi ý của các lần trước. Không nhận xét về năng lực của sinh viên; chỉ nhận xét về bài làm.\n\n\n[TÌNH HUỐNG: SINH VIÊN ĐÃ ĐẠT 100% TEST CASES - RÚT GIÀN GIÁO]\n- Ghi nhận ngắn gọn cách làm đã hiệu quả (nêu cụ thể dựa trên AST, không khen chung chung).\n- KHÔNG đưa thêm gợi ý sửa lỗi. Đặt đúng 1 câu hỏi tự kiểm để sinh viên tự giải thích vì sao lời giải đúng (ví dụ: trường hợp biên nào đã được xử lý và ở dòng nào).\n- Nêu 1 hướng mở rộng TÙY CHỌN (ví dụ: viết lại gọn hơn, thử đầu vào lớn hơn); nói rõ đây là tùy chọn.\n\n\n[QUY TẮC BẮT BUỘC]:\n1. Trả lời hoàn toàn bằng tiếng Việt tự nhiên, ấm áp, khuyến khích sinh viên.\n2. TUYỆT ĐỐI KHÔNG cung cấp code Python giải hoàn chỉnh bài toán trong bất kỳ trường hợp nào.\n3. Giữ dung lượng phản hồi cô đọng, súc tích (khoảng 100 - 200 từ).\n",
       "checks": {
-        "do_dai": false,
+        "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -4046,7 +4046,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D10",
@@ -5076,7 +5076,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,
@@ -5096,7 +5096,7 @@
       },
       "overlap_prev": null,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D13",
@@ -6004,8 +6004,8 @@
         "khong_lo_bieu_thuc_loi_giai": true,
         "khong_chuong_trinh_hoan_chinh": true,
         "khong_cum_chi_cach_sua": true,
-        "m2_dung_mot_dong_that": false,
-        "m2_dong_dung_cho_loi": false,
+        "m2_dung_mot_dong_that": true,
+        "m2_dong_dung_cho_loi": true,
         "m2_co_bang_chung_thuc_thi": true,
         "m2_khong_khoi_code_3_dong": true,
         "khong_lap_voi_luot_truoc": true,
@@ -6014,11 +6014,13 @@
       "info": {
         "words": 194,
         "leaks": [],
-        "quoted_lines": []
+        "quoted_lines": [
+          "dem = 1"
+        ]
       },
       "overlap_prev": 0.082,
       "all_pass": false,
-      "all_pass_content": false
+      "all_pass_content": true
     },
     {
       "scenario": "D15",
@@ -6128,7 +6130,7 @@
       "checks": {
         "do_dai": true,
         "khong_nhan_xet_nang_luc": true,
-        "khung_muc_tieu_bang_chung_buoc": false,
+        "khung_muc_tieu_bang_chung_buoc": true,
         "dung_mot_buoc_ke_tiep": false,
         "ten_co_that": true,
         "khong_lo_bieu_thuc_loi_giai": true,

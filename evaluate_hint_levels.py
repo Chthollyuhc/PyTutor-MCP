@@ -95,11 +95,12 @@ def score_reply(rec: dict, sc: dict, profile: dict, exercise: dict) -> dict:
     tr, ast_a = rec.get("test_results") or {}, rec.get("ast_analysis") or {}
     applicable_failing = expect not in ("PASS",)
     c: dict = {}
-    c["do_dai"] = hq.check_length(reply, level)
+    c["do_dai"] = hq.check_length(reply, level, passed=(expect == "PASS"))
     c["khong_nhan_xet_nang_luc"] = hq.check_no_ability_remark(reply)
     c["khung_muc_tieu_bang_chung_buoc"] = hq.check_frame(reply)
     c["dung_mot_buoc_ke_tiep"] = hq.check_single_next_step(reply)
-    c["ten_co_that"] = hq.check_grounded_names(reply, code, exercise)
+    err_text = " ".join(f"{t.get('error_message') or ''} {t.get('stderr') or ''}" for t in hq.first_failures(tr))
+    c["ten_co_that"] = hq.check_grounded_names(reply, code, exercise, err_text)
     leaks = hq.leaked_core(reply, code, profile.get("core", []) + sc.get("extra_core", [])) if applicable_failing else []
     c["khong_lo_bieu_thuc_loi_giai"] = not leaks
     c["khong_chuong_trinh_hoan_chinh"] = hq.check_no_full_program(reply, code, level) if applicable_failing else None

@@ -73,6 +73,20 @@ def error_type(error_message: str) -> str:
 # ----------------------------------------------------------------------------------------------
 # Phân tích tĩnh mã người học
 # ----------------------------------------------------------------------------------------------
+def strip_comment(line: str) -> str:
+    """Bỏ chú thích `# ...` cuối dòng, tôn trọng dấu nháy."""
+    quote = ""
+    for i, ch in enumerate(line):
+        if quote:
+            if ch == quote:
+                quote = ""
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#":
+            return line[:i].rstrip()
+    return line
+
+
 @dataclass
 class _Block:
     kind: str                    # "for" | "while" | "if"
@@ -100,7 +114,8 @@ class CodeFacts:
         self._walk(tree.body, 0, False)
 
     def text(self, lineno: int) -> str:
-        return self.lines[lineno - 1].strip() if 1 <= lineno <= len(self.lines) else ""
+        """Dòng mã đã bỏ chú thích: chú thích của người học là dữ liệu không tin cậy, không bao giờ được chép lại vào gợi ý."""
+        return strip_comment(self.lines[lineno - 1]).strip() if 1 <= lineno <= len(self.lines) else ""
 
     @staticmethod
     def _names(node: ast.AST) -> set[str]:
@@ -215,7 +230,9 @@ def suspect_line(code: str, failure: Optional[dict], expect_kind: str, ast_analy
                        f"chương trình in {act_lines} dòng trong khi kỳ vọng {exp_lines} dòng; lệnh in ở dòng {p[0]} nằm trong khối được lặp"
                        if p[2] else f"chương trình in {act_lines} dòng trong khi kỳ vọng {exp_lines} dòng")
     inp = " ".join((failure.get("input") or "").split())
-    if act and inp and " ".join(act.split()) == inp and last_print:
+    printed_has_compute = bool(last_print) and any(
+        any("input(" not in facts.text(w[0]) for w in facts.assigns.get(name, [])) for name in last_print[3])
+    if act and inp and " ".join(act.split()) == inp and last_print and not printed_has_compute:
         return Suspect(last_print[0], facts.text(last_print[0]), "echo_output",
                        "kết quả in ra y hệt dữ liệu đã đọc vào, nghĩa là chưa có bước biến đổi nào trước lệnh in này")
     if last_print:
