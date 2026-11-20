@@ -1,0 +1,80 @@
+﻿py : 2026-11-21 05:45:11,299 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:38 char:46
++ ... solated "backend_test_backend_e2e" { py -m backend.test_backend_e2e }
++                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 05:45:12,162 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:45:13,441 [INFO] httpx: HTTP Request: GET http://test/api/health "HTTP/1.1 200 OK"
+2026-11-21 05:45:14,705 [INFO] httpx: HTTP Request: GET http://test/api/exercises "HTTP/1.1 200 OK"
+2026-11-21 05:45:16,047 [INFO] httpx: HTTP Request: GET http://test/api/exercises/ex_01_sum_1_to_n "HTTP/1.1 200 OK"
+2026-11-21 05:45:18,932 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:45:21,668 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:45:24,385 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:45:27,392 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+2026-11-21 05:45:29,976 [INFO] httpx: HTTP Request: POST http://test/api/submit "HTTP/1.1 200 OK"
+======================================================================
+🧪 [PHASE 2] BẮT ĐẦU KIỂM THỬ TÍCH HỢP TOÀN DIỆN BACKEND E2E
+======================================================================
+
+[1] Kiểm thử GET /api/health (Xác nhận True MCP Discovery)...
+    HTTP Status: 200
+    Trạng thái: ok
+    MCP Server Connected: True
+    Discovered Tools: ['run_test_cases', 'analyze_code_ast', 'get_exercise_list', 'get_exercise_details', 'save_learning_event', 'get_attempt_history', 'get_student_model', 'trace_code_execution']
+    ✅ Health check & True MCP Discovery: PASS!
+
+[2] Kiểm thử GET /api/exercises (Lấy danh mục bài tập từ MCP)...
+    Số lượng bài tập: 5
+    • [Dễ] Bài 01: Tính tổng từ 1 đến n (Vòng lặp & Biến tích lũy)
+    • [Trung bình] Bài 02: Kiểm tra số nguyên tố (Cấu trúc rẽ nhánh & Vòng lặp)
+    • [Dễ] Bài 03: Tính giai thừa n! (Vòng lặp / Đệ quy)
+    • [Dễ] Bài 04: Đảo ngược chuỗi ký tự (Chuỗi & Chỉ mục (String Indexing))
+    • [Dễ] Bài 05: Đếm số lượng nguyên âm (Chuỗi & Điều kiện)
+    ✅ Danh mục bài tập: PASS!
+
+[3] Kiểm thử GET /api/exercises/ex_01_sum_1_to_n...
+    Tiêu đề: Bài 01: Tính tổng từ 1 đến n
+    Số test cases: 5
+    ✅ Chi tiết bài tập: PASS!
+
+[4.1] Kiểm thử POST /api/submit (Code sai logic, Hint Level 1)...
+    Kết quả Test: 1/5 pass (All passed: False)
+    Nguồn sinh gợi ý: Pedagogical-Rule-Engine (Offline Fallback)
+    Nội dung gợi ý AI (trích đoạn 150 ký tự đầu):
+    "💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**  🎯 **Đang ở đâu:** bài **Bài 01: Tính tổng từ 1 đến n** đang đạt **1/5** kiểm thử.  🔎 **Bằng chứng (tổng quát..."
+    ✅ Hint Level 1: PASS!
+
+[4.2] Kiểm thử POST /api/submit (Code sai logic, Hint Level 2)...
+    Kết quả Test: 1/5 pass (All passed: False)
+    Nguồn sinh gợi ý: Pedagogical-Rule-Engine (Offline Fallback)
+    Nội dung gợi ý AI (trích đoạn 150 ký tự đầu):
+    "🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**  🎯 **Đang ở đâu:** bài **Bài 01: Tính tổng từ 1 đến n** đang đạt **1/5** kiểm thử.  📍 **Dòng cần x..."
+    ✅ Hint Level 2: PASS!
+
+[4.3] Kiểm thử POST /api/submit (Code sai logic, Hint Level 3)...
+    Kết quả Test: 1/5 pass (All passed: False)
+    Nguồn sinh gợi ý: Pedagogical-Rule-Engine (Offline Fallback)
+    Nội dung gợi ý AI (trích đoạn 150 ký tự đầu):
+    "📘 **[MỨC 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**  🎯 **Đang ở đâu:** bài **Bài 01: Tính tổng từ 1 đến n** đang đạt **1/5** kiểm thử.  🔎 **Dùng..."
+    ✅ Hint Level 3: PASS!
+
+[5] Kiểm thử POST /api/submit (Code đúng 100%)...
+    Kết quả Test: 5/5 pass (All passed: True)
+    Tóm tắt: Tuyệt vời! Đã vượt qua toàn bộ 5/5 test cases.
+    Phản hồi AI Tutor chúc mừng/tối ưu:
+    "🎉 **Chúc mừng!** Bài làm của bạn đã vượt qua 5/5 kiểm thử của Bài 01: Tính tổng từ 1 đến n.  🔎 **Bằng chứng:** Sử dụng 1 vòng lặp for; Có biến tích lũy (tong (Add)); Mã nguồn dạng ..."
+    ✅ Kịch bản Code đúng 100%: PASS!
+
+[6] Kiểm thử POST /api/submit (Code lỗi cú pháp)...
+    AST Valid: False
+    Tóm tắt AST: Mã nguồn có lỗi cú pháp tại dòng 3: expected ':'
+    Gợi ý AI cho lỗi cú pháp:
+    "🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**  🎯 **Đang ở đâu:** chương trình chưa chạy được nên chưa kiểm thử nào được chấm.  📍 **Dòng cần xem ..."
+    ✅ Kịch bản lỗi cú pháp: PASS!
+
+======================================================================
+🎉 TẤT CẢ 6 BÀI KIỂM THỬ BACKEND E2E ĐỀU ĐẠT CHUẨN 100%!
+======================================================================

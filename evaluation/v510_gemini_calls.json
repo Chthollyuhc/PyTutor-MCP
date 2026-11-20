@@ -1,6 +1,6 @@
 {
   "limit": 300,
-  "total": 275,
+  "total": 297,
   "runs": [
     {
       "tag": "before_real_dev_1",
@@ -64,6 +64,12 @@
       "finished": "2026-11-21T05:41:06",
       "gemini_success_replies": 21,
       "stopped": ""
+    },
+    {
+      "tag": "evaluate_real_llm_regression_22",
+      "calls": 22,
+      "note": "đếm tay: evaluate_real_llm.py không dùng bộ đếm (20 lượt gọi LLM + 2 ca không gọi)",
+      "finished": "2026-11-21"
     }
   ]
 }

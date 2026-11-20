@@ -1,0 +1,15 @@
+﻿py : test_fixture_covers_every_level_and_special_cases 
+(test_prompt_golden_v510.PromptGoldenTests.test_fixture_covers_every_level_and_special_cases) ... ok
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
++   else { Invoke-Isolated $m { py -m unittest $m -v } }
++                               ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_fixture_co...l_cases) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_prompts_rebuild_character_for_character 
+(test_prompt_golden_v510.PromptGoldenTests.test_prompts_rebuild_character_for_character) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.012s
+
+OK

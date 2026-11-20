@@ -1,0 +1,56 @@
+﻿py : 2026-11-21 05:44:48,339 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
++ ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 05:4...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 05:44:49,248 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 05:44:49,276 [INFO] httpx2: HTTP Request: GET http://testserver/api/auth/me "HTTP/1.1 200 OK"
+2026-11-21 05:44:49,288 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
+OK"
+2026-11-21 05:44:49,298 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/classes/cls_neu_cntt1117_02/leave 
+"HTTP/1.1 200 OK"
+2026-11-21 05:44:49,308 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
+OK"
+2026-11-21 05:44:49,316 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1117_02/leave 
+"HTTP/1.1 200 OK"
+2026-11-21 05:44:49,328 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
+"HTTP/1.1 200 OK"
+2026-11-21 05:44:49,343 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/skill-roadmap?class_id=cls_neu_cntt1128_02 "HTTP/1.1 200 OK"
+2026-11-21 05:44:49,355 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/cls_neu_cntt1128_02/enroll 
+"HTTP/1.1 200 OK"
+2026-11-21 05:44:49,363 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
+"HTTP/1.1 200 OK"
+2026-11-21 05:44:50,639 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/profile?session_id=student 
+"HTTP/1.1 200 OK"
+================================================================================
+🧪 [PHASE 15.3] BẮT ĐẦU KIỂM THỬ QA AUDIT HOTFIX & DATA INTEGRITY
+================================================================================
+
+[1] Kiểm tra Endpoint GET /api/auth/me (Sửa lỗi NameError: get_db_connection)...
+    ✅ PASS: GET /api/auth/me trả về HTTP 200: Trần Minh Khánh - SV K65 CNTT (MSV: 11236131) (Role: student)
+
+[2] Kiểm tra HTTP Methods cho Route Rời Lớp (/api/classes/{id}/leave)...
+    ✅ PASS: Tuyệt đối tương thích cả DELETE và POST /api/classes/{class_id}/leave.
+
+[3] Kiểm tra tiến trình Curriculum theo trạng thái hoàn thành...
+    ✅ PASS: ex_01 đã pass (3 ⭐ tự lực) -> Trạng thái: MASTERED
+    ✅ PASS: ex_03 (tiên quyết ex_01) -> Trạng thái: AVAILABLE (Sẵn sàng làm bài)
+    ✅ PASS: ex_04 (tiên quyết ex_03) -> Trạng thái: LOCKED (Khóa - Cần hoàn thành bài tiên quyết (ex_03_factorial))
+
+[4] Kiểm tra tương thích endpoint roadmap cũ...
+    ✅ PASS: Endpoint cũ phản ánh nhất quán trạng thái curriculum.
+
+[5] Kiểm thử bỏ ngưỡng sao khỏi điều kiện hoàn thành...
+    ✅ PASS: Đạt 1 ⭐ nhưng đã pass -> Trạng thái: MASTERED
+    ✅ PASS: Bài tiếp theo được mở khóa theo bài tiên quyết đã hoàn thành.
+
+[6] Kiểm tra Điểm Tự lực trong GET /api/student/profile...
+    ✅ PASS: Autonomy Score tồn tại chuẩn xác: 100/100
+
+================================================================================
+🎉 TẤT CẢ 6 HẠNG MỤC KIỂM THỬ QA AUDIT HOTFIX ĐỀU ĐẠT CHUẨN 100%!
+================================================================================
