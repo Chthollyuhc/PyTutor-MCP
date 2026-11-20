@@ -37,3 +37,11 @@ Thumbs.db
 scratch*.txt
 user_prompt*.txt
 QA_AUDIT*.md
+
+# Tài liệu tham khảo của sinh viên khác (khóa luận đã bảo vệ): KHÔNG commit/đẩy lên remote công khai
+# Thư mục/tệp bắt đầu bằng mã sinh viên 8 chữ số, ví dụ 11218407_...
+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_*
+
+# File báo cáo Word & file khóa tạm của Microsoft Word
+~$*.docx
+bao_cao_final.docx

@@ -112,6 +112,18 @@ def test_phase13_14_comprehensive():
 
     # Giảng viên thêm bài tập mới vào lớp
     test_ex_id = "ex_test_curriculum"
+    # Kịch bản trước đây dựa vào việc bài này đã có sẵn trong DB demo; trên DB cô lập nó chưa tồn tại và
+    # API đúng khi từ chối gán bài không có. Tạo bài bằng chính giảng viên đang gán (đúng quyền sở hữu).
+    res_create_ex = client.post(
+        "/api/instructor/exercises",
+        json={
+            "id": test_ex_id, "title": "Bài thử lộ trình (Phase 13/14)", "difficulty": "Dễ",
+            "category": "Đệ quy", "description": "In n.", "starter_code": "n = int(input())\n",
+            "test_cases": [{"input": "1\n", "expected_output": "1", "description": "n = 1"}],
+        },
+        headers=gv_headers,
+    )
+    assert res_create_ex.status_code in (200, 409), f"Create test exercise failed: {res_create_ex.text}"
     res_add_ex = client.post(
         "/api/instructor/classes/cls_neu_cntt1128_02/exercises",
         json={

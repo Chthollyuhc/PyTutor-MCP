@@ -12,6 +12,7 @@ Cung cấp 8 Tool phục vụ Hệ thống Gia sư Thông minh theo chuẩn Mode
 """
 import sys
 import os
+from typing import Optional
 
 # Cấu hình UTF-8 bắt buộc trên Windows để tránh lỗi encoding qua stdio
 if sys.platform == "win32":
@@ -99,7 +100,8 @@ def save_learning_event(
     all_passed: bool,
     llm_source: str,
     tutor_hint: str,
-    action_type: str = "submit"
+    action_type: str = "submit",
+    attempt_features: Optional[dict] = None
 ) -> dict:
     """
     [MCP Tool] Lưu sự kiện học tập và kết quả nộp bài vào cơ sở dữ liệu SQLite.
@@ -115,7 +117,8 @@ def save_learning_event(
             all_passed=all_passed,
             llm_source=llm_source,
             tutor_hint=tutor_hint,
-            action_type=action_type
+            action_type=action_type,
+            attempt_features=attempt_features
         )
         return {"status": "saved", "submission_id": submission_id}
     except Exception as e:

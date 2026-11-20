@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, Code2, BookOpen, CheckCircle } from 'lucide-react';
 import Header from '../components/Header';
 import { Input } from '../components/ui';
-import { checkHealth, fetchExerciseDetail, createInstructorExercise, updateInstructorExercise } from '../services/api';
+import { fetchExerciseDetail, createInstructorExercise, updateInstructorExercise } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function ExerciseFormPage() {
@@ -12,7 +12,6 @@ export default function ExerciseFormPage() {
   const navigate = useNavigate();
   const { isInstructor, user } = useAuth();
 
-  const [health, setHealth] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -38,8 +37,6 @@ export default function ExerciseFormPage() {
 
   useEffect(() => {
     const initPage = async () => {
-      const hData = await checkHealth();
-      setHealth(hData);
 
       if (isEditMode) {
         setIsLoading(true);
@@ -138,9 +135,8 @@ export default function ExerciseFormPage() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-950 font-sans text-slate-100 overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-canvas font-sans text-foreground overflow-hidden">
       <Header
-        health={health}
       />
 
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 max-w-5xl w-full mx-auto space-y-6">
@@ -148,28 +144,28 @@ export default function ExerciseFormPage() {
         <div className="flex items-center justify-between">
           <Link
             to="/instructor"
-            className="flex items-center space-x-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            className="flex items-center space-x-1.5 text-xs text-muted hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Quay lại Dashboard Giảng viên</span>
           </Link>
 
-          <h2 className="text-base sm:text-lg font-bold text-white">
+          <h2 className="text-base sm:text-lg font-bold text-foreground">
             {isEditMode ? `Chỉnh sửa: ${title}` : 'Thêm bài tập lập trình mới'}
           </h2>
         </div>
 
         {error && (
-          <div role="alert" className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-400/30 text-rose-200 text-sm">
+          <div role="alert" className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Section 1: Thông tin cơ bản */}
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
-              <BookOpen className="w-4 h-4 text-emerald-400" />
+          <div className="bg-surface border border-border p-5 rounded-2xl space-y-4 shadow-soft">
+            <h3 className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center space-x-2">
+              <BookOpen className="w-4 h-4 text-emerald-500" />
               <span>1. THÔNG TIN BÀI TẬP</span>
             </h3>
 
@@ -197,13 +193,13 @@ export default function ExerciseFormPage() {
               />
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1">
                   Độ khó
                 </label>
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full min-h-11 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25"
+                  className="w-full min-h-11 bg-surface border border-border rounded-xl px-3 py-2 text-sm text-foreground outline-none transition-colors duration-200 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25"
                 >
                   <option value="Dễ">Dễ</option>
                   <option value="Trung bình">Trung bình</option>
@@ -221,7 +217,7 @@ export default function ExerciseFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2" htmlFor="exercise-description">
+              <label className="block text-sm font-medium text-foreground mb-2" htmlFor="exercise-description">
                 Mô tả đề bài & Ví dụ (Hỗ trợ Markdown) *
               </label>
               <textarea
@@ -233,16 +229,16 @@ export default function ExerciseFormPage() {
                 aria-invalid={fieldErrors.description ? 'true' : undefined}
                 aria-describedby={fieldErrors.description ? 'exercise-description-error' : undefined}
                 aria-required="true"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-slate-100 placeholder:text-slate-400 outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25 font-mono leading-relaxed"
+                className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-foreground placeholder:text-muted outline-none transition-colors duration-200 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25 font-mono leading-relaxed"
               />
-              {fieldErrors.description && <p id="exercise-description-error" role="alert" className="mt-2 text-sm text-rose-200">{fieldErrors.description}</p>}
+              {fieldErrors.description && <p id="exercise-description-error" role="alert" className="mt-2 text-sm text-rose-500">{fieldErrors.description}</p>}
             </div>
           </div>
 
           {/* Section 2: Code mẫu ban đầu */}
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl space-y-4">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
-              <Code2 className="w-4 h-4 text-cyan-400" />
+          <div className="bg-surface border border-border p-5 rounded-2xl space-y-4 shadow-soft">
+            <h3 className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center space-x-2">
+              <Code2 className="w-4 h-4 text-sky-500" />
               <span>2. CODE MẪU KHỞI TẠO CHO HỌC VIÊN (STARTER CODE)</span>
             </h3>
 
@@ -250,21 +246,21 @@ export default function ExerciseFormPage() {
               value={starterCode}
               onChange={(e) => setStarterCode(e.target.value)}
               rows={4}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-emerald-200 font-mono leading-relaxed outline-none transition-colors duration-200 focus-visible:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400/25"
+              className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-emerald-700 dark:text-emerald-300 font-mono leading-relaxed outline-none transition-colors duration-200 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25"
             />
           </div>
 
           {/* Section 3: Bộ kiểm thử (Test Cases) */}
-          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl space-y-4">
+          <div className="bg-surface border border-border p-5 rounded-2xl space-y-4 shadow-soft">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-amber-400" />
-                <span>3. BỘ TEST CASES CHUẨN (GROUND TRUTH CHO MCP SANDBOX)</span>
+              <h3 className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-amber-500" />
+                <span>3. BỘ TEST CASES CHUẨN (BỘ KIỂM THỬ DÙNG ĐỂ CHẤM)</span>
               </h3>
               <button
                 type="button"
                 onClick={handleAddTestCase}
-                className="flex items-center space-x-1 py-1 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-emerald-200 border border-slate-700 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="flex items-center space-x-1.5 py-1.5 px-3 rounded-xl bg-surface-raised hover:bg-surface text-xs text-foreground border border-border transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shadow-soft"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Thêm Test Case</span>
@@ -273,13 +269,13 @@ export default function ExerciseFormPage() {
 
             <div className="space-y-3">
               {testCases.map((tc, idx) => (
-                <div key={idx} className="bg-slate-950/80 border border-slate-800/80 p-3.5 rounded-xl space-y-2.5">
+                <div key={idx} className="bg-surface-raised border border-border p-4 rounded-xl space-y-3 shadow-soft">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-300">Test Case #{idx + 1}</span>
+                    <span className="font-semibold text-foreground">Test Case #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTestCase(idx)}
-                      className="text-slate-300 hover:text-rose-300 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 rounded"
+                      className="text-muted hover:text-rose-500 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 rounded"
                       title="Xóa test case này"
                       aria-label={`Xóa test case ${idx + 1}`}
                     >
@@ -296,7 +292,7 @@ export default function ExerciseFormPage() {
                         onChange={(e) => handleTestCaseChange(idx, 'input', e.target.value)}
                         placeholder="ví dụ: 5"
                         required
-                        className="font-mono text-xs text-emerald-200 placeholder:text-slate-400"
+                        className="font-mono text-xs text-emerald-700 dark:text-emerald-300 placeholder:text-muted"
                       />
                     </div>
                     <div className="sm:col-span-4">
@@ -307,7 +303,7 @@ export default function ExerciseFormPage() {
                         onChange={(e) => handleTestCaseChange(idx, 'expected_output', e.target.value)}
                         placeholder="ví dụ: 15"
                         required
-                        className="font-mono text-xs text-cyan-200 placeholder:text-slate-400"
+                        className="font-mono text-xs text-sky-700 dark:text-sky-300 placeholder:text-muted"
                       />
                     </div>
                     <div className="sm:col-span-3">
@@ -317,7 +313,7 @@ export default function ExerciseFormPage() {
                         value={tc.description}
                         onChange={(e) => handleTestCaseChange(idx, 'description', e.target.value)}
                         placeholder="ví dụ: n = 5 thông thường"
-                        className="text-xs placeholder:text-slate-400"
+                        className="text-xs placeholder:text-muted"
                       />
                     </div>
                   </div>
@@ -327,22 +323,22 @@ export default function ExerciseFormPage() {
           </div>
 
           {/* Sticky Action Buttons Bar */}
-          <div className="sticky bottom-0 bg-slate-950/95 backdrop-blur-md py-3.5 px-4 rounded-xl border border-slate-800 flex items-center justify-between shadow-2xl mt-6 z-10">
-            <div className="text-xs text-slate-400 flex items-center space-x-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="sticky bottom-0 bg-surface/95 backdrop-blur-md py-3.5 px-4 rounded-2xl border border-border flex items-center justify-between shadow-bento mt-6 z-10">
+            <div className="text-xs text-muted flex items-center space-x-1.5">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
               <span>Đã cấu hình <b>{testCases.length}</b> trường hợp kiểm thử</span>
             </div>
             <div className="flex items-center space-x-3">
               <Link
                 to="/instructor"
-                className="py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="py-2.5 px-4 rounded-xl bg-surface-raised hover:bg-surface text-foreground border border-border text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shadow-soft"
               >
                 Hủy bỏ
               </Link>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex items-center space-x-2 py-2.5 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="flex items-center space-x-2 py-2.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-soft transition-all cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
               >
                 <Save className="w-4 h-4" />
                 <span>{isLoading ? 'Đang lưu...' : 'Lưu bài tập vào hệ thống'}</span>

@@ -1,0 +1,38 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile", "-Command",
+        "$env:PYTHONIOENCODING='utf-8'; py -m uvicorn backend.main:app --host 127.0.0.1 --port 8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "qa-backend",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile", "-Command",
+        "$env:PYTHONIOENCODING='utf-8'; $env:PYTUTOR_DISABLE_LLM='1'; $env:PYTUTOR_DB_PATH=(Join-Path $env:TEMP 'pytutor_qa.db'); $env:PYTUTOR_KNOWLEDGE_DB_PATH=(Join-Path $env:TEMP 'pytutor_qa_kb.sqlite3'); py -m uvicorn backend.main:app --host 127.0.0.1 --port 8001"
+      ],
+      "port": 8001
+    },
+    {
+      "name": "qa-frontend",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile", "-Command",
+        "$env:PYTUTOR_VITE_PORT='5174'; $env:PYTUTOR_API_TARGET='http://127.0.0.1:8001'; npm.cmd --prefix frontend run dev -- --strictPort"
+      ],
+      "port": 5174
+    }
+  ]
+}

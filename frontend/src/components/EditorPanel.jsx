@@ -14,6 +14,54 @@ export function parseErrorLine(errorMessage) {
   return null;
 }
 
+// Giao diện code riêng: nền và màu cú pháp cùng họ màu với giao diện (tím = từ khóa, xanh ngọc = chuỗi, cam = số).
+function defineEditorThemes(monaco) {
+  monaco.editor.defineTheme('pytutor-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: 'C4B5FD', fontStyle: 'bold' },
+      { token: 'string', foreground: '6EE7B7' },
+      { token: 'number', foreground: 'FDBA74' },
+      { token: 'comment', foreground: '7F9CC4', fontStyle: 'italic' },
+      { token: 'type', foreground: '67E8F9' },
+      { token: 'identifier', foreground: 'E6EEF8' },
+      { token: 'delimiter', foreground: '93C5FD' },
+    ],
+    colors: {
+      'editor.background': '#071328',
+      'editor.foreground': '#E6EEF8',
+      'editorGutter.background': '#071328',
+      'editorLineNumber.foreground': '#5B7BA6',
+      'editorLineNumber.activeForeground': '#93C5FD',
+      'editor.lineHighlightBackground': '#0F2547',
+      'editorCursor.foreground': '#34D399',
+      'editor.selectionBackground': '#1D4ED866',
+      'editorIndentGuide.background1': '#16315A',
+    },
+  });
+  monaco.editor.defineTheme('pytutor-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: '6D28D9', fontStyle: 'bold' },
+      { token: 'string', foreground: '047857' },
+      { token: 'number', foreground: 'C2410C' },
+      { token: 'comment', foreground: '4E7A65', fontStyle: 'italic' },
+      { token: 'type', foreground: '0E7490' },
+    ],
+    colors: {
+      'editor.background': '#FFFFFF',
+      'editorGutter.background': '#F3FAF6',
+      'editorLineNumber.foreground': '#5E8A75',
+      'editorLineNumber.activeForeground': '#047857',
+      'editor.lineHighlightBackground': '#ECF7F1',
+      'editorCursor.foreground': '#047857',
+      'editor.selectionBackground': '#A7F3D0AA',
+    },
+  });
+}
+
 export default function EditorPanel({
   code,
   setCode,
@@ -22,6 +70,7 @@ export default function EditorPanel({
   onRunTest,
   isRunningTest,
   onAskAI,
+  askAiLabel = 'Hỏi gia sư AI',
   isAskingAI,
   onSubmit,
   isSubmitting,
@@ -37,6 +86,8 @@ export default function EditorPanel({
   const [isRunningCustom, setIsRunningCustom] = useState(false);
 
   const isBusy = isSubmitting || isRunningTest || isAskingAI || isRunningCustom;
+  const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const onRunTestRef = useRef(onRunTest);
   const onSubmitRef = useRef(onSubmit);
   const isBusyRef = useRef(isBusy);
@@ -177,186 +228,134 @@ export default function EditorPanel({
     }
   };
 
+  // Trạng thái kiểm thử: luôn có biểu tượng + chữ (không chỉ dựa vào màu).
+  const STATUS = {
+    PASS: { Icon: CheckCircle2, text: 'Đạt', tone: 'border-success-line bg-success-soft text-success-strong' },
+    SUCCESS: { Icon: CheckCircle2, text: 'Đạt', tone: 'border-success-line bg-success-soft text-success-strong' },
+    FAIL: { Icon: XCircle, text: 'Chưa đạt', tone: 'border-destructive-line bg-destructive-soft text-destructive-strong' },
+    TIMEOUT: { Icon: Clock, text: 'Quá thời gian', tone: 'border-warning-line bg-warning-soft text-warning-strong' },
+    SYNTAX_ERROR: { Icon: AlertTriangle, text: 'Lỗi cú pháp', tone: 'border-ai-line bg-ai-soft text-ai-strong' },
+    RUNTIME_ERROR: { Icon: AlertTriangle, text: 'Lỗi khi chạy', tone: 'border-ai-line bg-ai-soft text-ai-strong' },
+    ERROR: { Icon: AlertTriangle, text: 'Lỗi khi chạy', tone: 'border-ai-line bg-ai-soft text-ai-strong' },
+    SKIPPED: { Icon: null, text: 'Bỏ qua', tone: 'border-border bg-surface-raised text-muted' },
+  };
   const getStatusBadge = (status) => {
-    switch (status) {
-      case 'PASS':
-      case 'SUCCESS':
-        return (
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>ĐẠT (PASS)</span>
-          </span>
-        );
-      case 'FAIL':
-        return (
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <XCircle className="w-3 h-3" />
-            <span>CHƯA ĐẠT (FAIL)</span>
-          </span>
-        );
-      case 'TIMEOUT':
-        return (
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-            <Clock className="w-3 h-3" />
-            <span>QUÁ THỜI GIAN (TIMEOUT)</span>
-          </span>
-        );
-      case 'SYNTAX_ERROR':
-        return (
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-            <AlertTriangle className="w-3 h-3" />
-            <span>LỖI CÚ PHÁP</span>
-          </span>
-        );
-      case 'RUNTIME_ERROR':
-      case 'ERROR':
-        return (
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-            <AlertTriangle className="w-3 h-3" />
-            <span>LỖI CHẠY (RUNTIME)</span>
-          </span>
-        );
-      case 'SKIPPED':
-        return (
-          <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
-            BỎ QUA (SKIPPED)
-          </span>
-        );
-      default:
-        return <span className="text-[11px] text-slate-400">{status}</span>;
-    }
+    const s = STATUS[status];
+    if (!s) return <span className="text-xs text-muted">{status}</span>;
+    return (
+      <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${s.tone}`}>
+        {s.Icon && <s.Icon aria-hidden="true" className="size-3.5" />}
+        {s.text}
+      </span>
+    );
   };
 
-  return (
-    <div className="h-full flex flex-col bg-slate-950 border-r border-slate-800 overflow-hidden">
-      {/* Editor Toolbar */}
-      <div className="min-h-11 bg-slate-900 border-b border-slate-800 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 select-none">
-        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300 shrink-0">
-          <Terminal className="w-4 h-4 text-emerald-400" />
-          <span>TRÌNH SOẠN THẢO PYTHON 3</span>
-        </div>
+  const Spinner = () => (
+    <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+  );
+  const toolBtn = 'inline-flex min-h-8 items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-soft';
+  const secondaryBtn = `${toolBtn} border border-border/80 bg-surface text-foreground hover:bg-surface-raised`;
+  const runBtn = `${toolBtn} bg-slate-950 text-white hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700`;
+  const aiBtn = `${toolBtn} bg-purple-600 text-white hover:bg-purple-700`;
+  const stepBtn = `${toolBtn} border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20`;
+  const kbd = 'hidden rounded-full border border-white/20 px-1.5 py-0.2 font-mono text-[10px] font-normal opacity-80 2xl:inline';
+  const tabBtn = (active) => `inline-flex min-h-8 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition-all ${
+    active ? 'bg-surface text-foreground shadow-sm' : 'text-muted hover:text-foreground'
+  }`;
 
-        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2" aria-label="Thao tác bài tập">
-          {/* Nút Khôi phục code gốc */}
+  return (
+    <div className="flex h-full flex-col overflow-hidden border-r border-border bg-canvas">
+      {/* Thanh công cụ trình soạn thảo */}
+      <div className="flex min-h-12 shrink-0 select-none flex-wrap items-center justify-between gap-2 border-b border-border bg-surface-raised/60 px-3 py-1.5">
+        <p className="flex shrink-0 items-center gap-2 text-sm font-bold text-foreground">
+          <Terminal aria-hidden="true" className="size-4 text-emerald-600 dark:text-emerald-400" />
+          Python 3
+        </p>
+
+        <div role="toolbar" aria-label="Thao tác bài tập" className="flex flex-wrap items-center justify-end gap-2">
           <button
             onClick={onResetCode}
             disabled={isBusy}
-            aria-label="Khôi phục code gốc"
             type="button"
-            className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer"
+            aria-label="Khôi phục code gốc"
             title="Khôi phục lại code ban đầu của bài tập"
+            className={`${toolBtn} text-muted hover:bg-surface-raised hover:text-foreground`}
           >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">Khôi phục code gốc</span>
-            <span className="sm:hidden">Gốc</span>
+            <RotateCcw aria-hidden="true" className="size-4" />
+            <span className="hidden 2xl:inline">Khôi phục</span>
           </button>
 
-          {/* Nút Chạy từng bước (Visualizer) */}
           {onOpenVisualizer && (
             <button
               onClick={onOpenVisualizer}
               disabled={isBusy}
-              aria-label="Chạy từng bước để xem biến đổi khi thực thi"
               type="button"
-              className="flex items-center space-x-1.5 px-2.5 py-1 text-xs font-medium text-amber-200 hover:text-amber-100 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
-              title="Trực quan hóa từng bước thực thi code và xem biến thiên giá trị biến số (Visualizer)"
+              aria-label="Chạy từng bước để xem biến đổi khi thực thi"
+              title="Trực quan hóa từng bước thực thi code và xem giá trị biến"
+              className={stepBtn}
             >
-              <Eye className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+              <Eye aria-hidden="true" className="size-4" />
               <span className="hidden sm:inline">Chạy từng bước</span>
-              <span className="sm:hidden">Từng bước</span>
             </button>
           )}
 
-          {/* Nút 1: Chạy thử (Ctrl + Enter) */}
           <button
             onClick={onRunTest}
             disabled={isBusy}
+            type="button"
             aria-label={isRunningTest ? 'Đang chạy kiểm thử' : 'Chạy thử code (Ctrl + Enter)'}
             aria-busy={isRunningTest}
-            type="button"
-            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:text-white bg-slate-800 hover:bg-slate-700 border border-cyan-400/50 hover:border-cyan-300/70 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
-            title="Chạy thử code nhanh với các bộ test cases mẫu trong sandbox (Phím tắt: Ctrl + Enter)"
+            title="Chạy thử với các bộ kiểm thử mẫu (Ctrl + Enter)"
+            className={runBtn}
           >
-            {isRunningTest ? (
-              <svg className="animate-spin h-3.5 w-3.5 text-cyan-300" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-            ) : (
-              <Play className="w-3.5 h-3.5 fill-current text-cyan-400 group-hover:scale-110 transition-transform" />
-            )}
-            <span>Chạy thử</span>
-            <span className="text-[10px] text-slate-500 font-mono hidden md:inline">(Ctrl+↵)</span>
+            {isRunningTest ? <Spinner /> : <Play aria-hidden="true" className="size-4" />}
+            <span>{isRunningTest ? 'Đang chạy…' : 'Chạy thử'}</span>
+            <kbd aria-hidden="true" className={kbd}>Ctrl ↵</kbd>
           </button>
 
-          {/* Nút 2: Hỏi Gia sư AI (ẩn khi isExamMode) */}
           {!isExamMode && onAskAI && (
             <button
               onClick={onAskAI}
               disabled={isBusy}
-              aria-label={isAskingAI ? 'Đang nhận gợi ý từ gia sư AI' : 'Hỏi gia sư AI'}
-              aria-busy={isAskingAI}
               type="button"
-              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-amber-100 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/50 hover:border-amber-300/70 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer shadow-sm group"
-              title="Phân tích code và nhận gợi ý sư phạm ở Cột 3 từ Gia sư AI"
+              aria-label={isAskingAI ? 'Đang nhận gợi ý từ gia sư AI' : askAiLabel}
+              aria-busy={isAskingAI}
+              title="Phân tích code và nhận gợi ý ở cột Gia sư AI"
+              className={aiBtn}
             >
-              {isAskingAI ? (
-                <>
-                  <svg className="animate-spin h-3.5 w-3.5 text-amber-300" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                  <span>Đang hỏi AI...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span>Hỏi gia sư AI</span>
-                </>
-              )}
+              {isAskingAI ? <Spinner /> : <Sparkles aria-hidden="true" className="size-4" />}
+              <span>{isAskingAI ? 'Đang hỏi…' : askAiLabel}</span>
             </button>
           )}
 
-          {/* Nút 3: Nộp bài & Đánh giá (Ctrl + Shift + Enter) */}
           <button
             onClick={onSubmit}
             disabled={isBusy}
+            type="button"
             aria-label={isSubmitting ? 'Đang chấm và ghi nhận bài nộp' : 'Nộp bài chính thức (Ctrl + Shift + Enter)'}
             aria-busy={isSubmitting}
-            type="button"
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-sm shadow-emerald-950/40 border border-emerald-300/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 cursor-pointer group"
-            title="Chính thức nộp bài, chấm điểm, ghi nhận số sao năng lực và mở khóa bài tiếp theo (Phím tắt: Ctrl + Shift + Enter)"
+            title="Nộp bài chính thức: chấm điểm, ghi nhận sao tự lực và mở khóa bài tiếp theo (Ctrl + Shift + Enter)"
+            className={`${toolBtn} bg-emerald-500 hover:bg-emerald-600 text-white shadow-soft`}
           >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                <span>Đang chấm bài...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform text-emerald-200" />
-                <span>Nộp bài</span>
-                <span className="text-[10px] text-emerald-200/80 font-mono hidden md:inline">(Ctrl+Shift+↵)</span>
-              </>
-            )}
+            {isSubmitting ? <Spinner /> : <Send aria-hidden="true" className="size-4" />}
+            <span>{isSubmitting ? 'Đang chấm…' : 'Nộp bài'}</span>
+            <kbd aria-hidden="true" className={kbd}>Ctrl ⇧ ↵</kbd>
           </button>
         </div>
       </div>
 
-      {/* Upper Half: Monaco Code Editor */}
-      <div className="flex-1 min-h-[220px] relative bg-slate-950">
+      {/* Trình soạn thảo Monaco */}
+      <div className="relative min-h-[220px] flex-1 bg-canvas">
         <Editor
           height="100%"
           language="python"
-          theme={isDarkTheme ? 'vs-dark' : 'light'}
+          theme={isDarkTheme ? 'pytutor-dark' : 'pytutor-light'}
+          beforeMount={defineEditorThemes}
           value={code}
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
-            fontSize: 13.5,
+            fontSize: 14,
             lineNumbers: 'on',
             minimap: { enabled: false },
             automaticLayout: true,
@@ -364,247 +363,192 @@ export default function EditorPanel({
             insertSpaces: true,
             scrollBeyondLastLine: false,
             fontFamily: 'Consolas, "Fira Code", monospace',
-            cursorBlinking: 'smooth',
+            cursorBlinking: prefersReducedMotion ? 'solid' : 'smooth',
+            smoothScrolling: !prefersReducedMotion,
             roundedSelection: true,
             padding: { top: 8, bottom: 8 },
+            ariaLabel: 'Trình soạn thảo code Python. Ctrl+Enter để chạy thử, Ctrl+Shift+Enter để nộp bài. Nhấn Ctrl+M rồi Tab để rời khỏi trình soạn thảo.',
             acceptSuggestionOnCommitCharacter: false,
             quickSuggestions: { other: true, comments: false, strings: false },
           }}
         />
       </div>
 
-      {/* Lower Half: Tabbed Execution Results Panel */}
-      <div className="h-64 border-t border-slate-800 bg-slate-900/95 flex flex-col shrink-0 select-text">
-        {/* Tab Navigation Header */}
-        <div className="h-9 px-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-1 text-xs">
-            {/* Tab 1: Bộ test chuẩn */}
+      {/* Kết quả chạy */}
+      <div className="flex h-64 shrink-0 select-text flex-col border-t border-border bg-surface">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 px-3 py-2">
+          <div role="tablist" aria-label="Kết quả chạy" className="inline-flex p-1 bg-surface-raised rounded-full border border-border/80 gap-1">
             <button
               type="button"
+              role="tab"
+              id="result-tab-tests"
+              aria-selected={activeBottomTab === 'tests'}
+              aria-controls="result-panel-tests"
               onClick={() => setActiveBottomTab('tests')}
-              className={`px-3 py-1.5 font-semibold rounded-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                activeBottomTab === 'tests'
-                  ? 'text-emerald-100 bg-slate-800'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
+              className={tabBtn(activeBottomTab === 'tests')}
             >
-              <span>Bộ kiểm thử chuẩn</span>
+              Bộ kiểm thử chuẩn
               {testResults && (
-                <span className="ml-1.5 text-[10.5px] px-1.5 py-0.2 rounded-full bg-slate-800 font-mono">
+                <span className="rounded bg-surface-raised px-1.5 text-[0.8125rem] tabular-nums">
                   {testResults.passed_tests}/{testResults.total_tests}
                 </span>
               )}
             </button>
-
-            {/* Tab 2: Tự nhập dữ liệu (Custom Stdin) */}
             <button
               type="button"
+              role="tab"
+              id="result-tab-custom"
+              aria-selected={activeBottomTab === 'custom'}
+              aria-controls="result-panel-custom"
               onClick={() => setActiveBottomTab('custom')}
-              className={`px-3 py-1.5 font-semibold rounded-md transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                activeBottomTab === 'custom'
-                  ? 'text-cyan-100 bg-slate-800'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
+              className={tabBtn(activeBottomTab === 'custom')}
             >
-              <span>Tự nhập dữ liệu</span>
+              Tự nhập dữ liệu
             </button>
           </div>
-
           {activeBottomTab === 'tests' && testResults && (
-            <span className="text-[11px] text-slate-400 hidden sm:inline">
-              {testResults.summary}
-            </span>
+            <span className="hidden truncate text-[0.8125rem] text-muted sm:inline">{testResults.summary}</span>
           )}
         </div>
 
-        {/* Tab 1 Body: Standard Test Cases */}
         {activeBottomTab === 'tests' && (
-          <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+          <div id="result-panel-tests" role="tabpanel" aria-labelledby="result-tab-tests" aria-live="polite" className="flex-1 space-y-2 overflow-y-auto p-3">
             {!testResults ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-500 text-xs text-center space-y-1">
-                <Terminal className="w-6 h-6 opacity-40 mb-1" />
-                <span className="font-medium text-slate-400">Chưa có kết quả kiểm thử.</span>
-                <span className="text-[11px] text-slate-500">
-                  Nhấn <span className="text-cyan-300">"Chạy thử"</span> để kiểm tra hoặc <span className="text-emerald-300">"Nộp bài"</span> để chấm điểm chính thức.
-                </span>
+              <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
+                <p className="text-sm font-medium">Chưa có kết quả kiểm thử.</p>
+                <p className="text-[0.8125rem] text-muted">Bấm “Chạy thử” để kiểm tra, hoặc “Nộp bài” để chấm chính thức.</p>
               </div>
             ) : (
               <>
-                {/* Banner chúc mừng & nhắc nộp bài chính thức khi pass toàn bộ test cases */}
                 {testResults.all_passed && (
-                  <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-slate-900 border border-emerald-500/40 text-xs flex items-center justify-between shadow-lg mb-2">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
+                  <div className="mb-2 flex flex-col gap-3 rounded-lg border border-success-line bg-success-soft p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-2.5">
+                      <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-success-strong" />
                       <div>
-                        <div className="font-bold text-emerald-300">
-                          Chương trình đã vượt qua toàn bộ {testResults.passed_tests}/{testResults.total_tests} kiểm thử.
-                        </div>
-                        <div className="text-[11px] text-emerald-400/80">
-                          Hãy bấm nút <strong className="text-white">"Nộp bài"</strong> để hệ thống chính thức ghi nhận kết quả và mở khóa bài tiếp theo.
-                        </div>
+                        <p className="text-sm font-semibold">
+                          Đã vượt qua toàn bộ {testResults.passed_tests}/{testResults.total_tests} kiểm thử.
+                        </p>
+                        <p className="text-[0.8125rem] text-muted">Bấm “Nộp bài” để hệ thống ghi nhận kết quả và mở khóa bài tiếp theo.</p>
                       </div>
                     </div>
                     <button
                       onClick={onSubmit}
                       disabled={isBusy}
                       type="button"
-                      className="ml-3 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-md flex items-center space-x-1.5 shrink-0 cursor-pointer transition-all hover:scale-105"
+                      className={`${toolBtn} shrink-0 bg-primary text-on-solid hover:bg-primary-hover`}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Nộp bài ngay</span>
+                      <Send aria-hidden="true" className="size-4" />
+                      Nộp bài ngay
                     </button>
                   </div>
                 )}
                 {testResults.results.map((r, idx) => {
-                const isSelected = selectedTestCaseIdx === idx;
-                return (
-                  <div
-                    key={idx}
-                    className={`border rounded-lg transition-all text-xs overflow-hidden ${
-                      r.status === 'PASS'
-                        ? 'border-emerald-500/30 bg-emerald-950/20'
-                        : r.status === 'FAIL'
-                        ? 'border-rose-500/30 bg-rose-950/20'
-                        : r.status === 'TIMEOUT'
-                        ? 'border-amber-500/30 bg-amber-950/20'
-                        : 'border-slate-800 bg-slate-950/50'
-                    }`}
-                  >
-                    {/* Summary Row */}
-                    <div
-                      onClick={() => setSelectedTestCaseIdx(isSelected ? null : idx)}
-                      className="p-2 flex items-center justify-between cursor-pointer hover:bg-white/5 select-none"
-                    >
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(r.status)}
-                        <span className="font-semibold text-slate-200">
-                          Test #{r.test_idx}: {r.description || `Test case ${r.test_idx}`}
+                  const isSelected = selectedTestCaseIdx === idx;
+                  const tone = r.status === 'PASS'
+                    ? 'border-success-line bg-success-soft/40'
+                    : r.status === 'FAIL'
+                      ? 'border-destructive-line bg-destructive-soft/40'
+                      : r.status === 'TIMEOUT'
+                        ? 'border-warning-line bg-warning-soft/40'
+                        : 'border-ai-line bg-ai-soft/40';
+                  return (
+                    <div key={idx} className={`overflow-hidden rounded-lg border text-sm ${tone}`}>
+                      <button
+                        type="button"
+                        aria-expanded={isSelected}
+                        aria-controls={`test-detail-${idx}`}
+                        onClick={() => setSelectedTestCaseIdx(isSelected ? null : idx)}
+                        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-surface-raised"
+                      >
+                        <span className="flex min-w-0 flex-wrap items-center gap-2">
+                          {getStatusBadge(r.status)}
+                          <span className="font-medium">Test #{r.test_idx}: {r.description || `Test case ${r.test_idx}`}</span>
                         </span>
-                      </div>
+                        <span className="flex shrink-0 items-center gap-2 text-[0.8125rem] tabular-nums text-muted">
+                          {r.execution_time_ms > 0 && <span>{r.execution_time_ms} ms</span>}
+                          {isSelected ? <ChevronUp aria-hidden="true" className="size-4" /> : <ChevronDown aria-hidden="true" className="size-4" />}
+                        </span>
+                      </button>
 
-                      <div className="flex items-center space-x-2 text-slate-400 font-mono text-[11px]">
-                        {r.execution_time_ms > 0 && <span>{r.execution_time_ms} ms</span>}
-                        {isSelected ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </div>
+                      {isSelected && (
+                        <div id={`test-detail-${idx}`} className="space-y-3 border-t border-border p-3">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                              <p className="mb-1 text-[0.8125rem] font-medium text-muted">Đầu vào</p>
+                              <pre className="whitespace-pre-wrap rounded bg-surface-raised p-2 font-mono text-[0.8125rem]">{r.input || '(trống)'}</pre>
+                            </div>
+                            <div>
+                              <p className="mb-1 text-[0.8125rem] font-medium text-muted">Kết quả mong đợi</p>
+                              <pre className="whitespace-pre-wrap rounded bg-surface-raised p-2 font-mono text-[0.8125rem]">{r.expected_output || '(trống)'}</pre>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-[0.8125rem] font-medium text-muted">Kết quả của bạn</p>
+                            <pre className={`whitespace-pre-wrap rounded p-2 font-mono text-[0.8125rem] ${r.status === 'PASS' ? 'bg-success-soft text-success-strong' : 'border border-destructive-line bg-destructive-soft text-destructive-strong'}`}>
+                              {r.actual_output || (r.status === 'PASS' ? '(trống)' : '(không in ra dữ liệu)')}
+                            </pre>
+                          </div>
+                          {r.error_message && (
+                            <div>
+                              <p className="mb-1 text-[0.8125rem] font-medium text-danger">Thông báo lỗi</p>
+                              <pre className="whitespace-pre-wrap rounded border border-destructive-line bg-destructive-soft p-2 font-mono text-[0.8125rem] text-destructive-strong">{r.error_message}</pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-
-                    {/* Expanded Detail */}
-                    {isSelected && (
-                      <div className="p-2.5 pt-1 border-t border-slate-800/80 bg-slate-950/70 font-mono space-y-2 text-[11.5px]">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <span className="text-slate-500 font-sans text-[10px] uppercase block mb-0.5">Đầu vào (Input):</span>
-                            <div className="bg-slate-900 p-1.5 rounded text-emerald-400 whitespace-pre-wrap">
-                              {r.input || '(trống)'}
-                            </div>
-                          </div>
-                          <div>
-                            <span className="text-slate-500 font-sans text-[10px] uppercase block mb-0.5">Kết quả mong đợi (Expected):</span>
-                            <div className="bg-slate-900 p-1.5 rounded text-cyan-400 whitespace-pre-wrap">
-                              {r.expected_output || '(trống)'}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <span className="text-slate-500 font-sans text-[10px] uppercase block mb-0.5">Kết quả của bạn (Actual Output):</span>
-                          <div
-                            className={`p-1.5 rounded whitespace-pre-wrap ${
-                              r.status === 'PASS'
-                                ? 'bg-slate-900 text-emerald-300'
-                                : 'bg-rose-950/40 text-rose-300 border border-rose-900/50'
-                            }`}
-                          >
-                            {r.actual_output || (r.status === 'PASS' ? '(trống)' : '(không in ra dữ liệu)')}
-                          </div>
-                        </div>
-
-                        {r.error_message && (
-                          <div>
-                            <span className="text-rose-400 font-sans text-[10px] uppercase block mb-0.5">Thông báo lỗi:</span>
-                            <div className="bg-rose-950/60 p-1.5 rounded text-rose-300 text-[11px]">
-                              {r.error_message}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
               </>
             )}
           </div>
         )}
 
-        {/* Tab 2 Body: Custom Input Playground */}
         {activeBottomTab === 'custom' && (
-          <div className="flex-1 p-3 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-            {/* Left: Input Textarea */}
-            <div className="flex flex-col space-y-1.5">
-              <label className="text-slate-400 font-medium text-[11px] flex items-center justify-between">
-                <span>Nhập dữ liệu vào (Standard Input / stdin):</span>
-                <span className="text-slate-500 text-[10px] italic">Ví dụ: số, chuỗi theo dòng</span>
-              </label>
+          <div id="result-panel-custom" role="tabpanel" aria-labelledby="result-tab-custom" className="grid flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="custom-stdin" className="text-sm font-medium">Dữ liệu vào (stdin)</label>
+              <p id="custom-stdin-hint" className="-mt-1 text-[0.8125rem] text-muted">Mỗi dòng tương ứng một lệnh input().</p>
               <textarea
+                id="custom-stdin"
+                aria-describedby="custom-stdin-hint"
                 value={customInput}
                 onChange={(e) => setCustomInput(e.target.value)}
-                placeholder="Nhập dữ liệu đầu vào tại đây (mỗi dòng tương ứng một lệnh input())..."
-                className="flex-1 min-h-[90px] bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-emerald-400 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none"
+                placeholder="Ví dụ: 5"
+                className="min-h-[90px] flex-1 resize-none rounded-md border border-field bg-surface p-2.5 font-mono text-sm text-foreground placeholder:text-muted outline-none focus:border-primary focus:ring-2 focus:ring-primary/25"
               />
               <button
                 type="button"
                 onClick={handleRunCustom}
                 disabled={isRunningCustom || !code.trim()}
-                className="py-1.5 px-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors cursor-pointer flex items-center justify-center space-x-1.5 disabled:opacity-50 text-xs shadow-sm shadow-cyan-900/30"
+                aria-busy={isRunningCustom}
+                className={`${runBtn} justify-center`}
               >
-                {isRunningCustom ? (
-                  <>
-                    <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span>Đang thực thi...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Chạy với dữ liệu này</span>
-                  </>
-                )}
+                {isRunningCustom ? <Spinner /> : <Play aria-hidden="true" className="size-4" />}
+                {isRunningCustom ? 'Đang chạy…' : 'Chạy với dữ liệu này'}
               </button>
             </div>
 
-            {/* Right: Output Window */}
-            <div className="flex flex-col space-y-1.5 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800 overflow-hidden">
-              <div className="flex items-center justify-between text-[11px] pb-1 border-b border-slate-800">
-                <span className="font-semibold text-slate-300">Kết quả in ra (Standard Output):</span>
+            <div className="flex flex-col gap-2 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Kết quả in ra (stdout)</p>
                 {customResult && (
-                  <div className="flex items-center space-x-2">
+                  <span className="flex items-center gap-2">
                     {getStatusBadge(customResult.status)}
-                    <span className="text-slate-500 font-mono text-[10px]">
-                      {customResult.execution_time_ms} ms
-                    </span>
-                  </div>
+                    <span className="text-[0.8125rem] tabular-nums text-muted">{customResult.execution_time_ms} ms</span>
+                  </span>
                 )}
               </div>
-
-              <div className="flex-1 overflow-y-auto font-mono text-[11px] p-2 bg-slate-900/90 rounded border border-slate-800/80 min-h-[90px]">
+              <div aria-live="polite" className="min-h-[90px] flex-1 overflow-y-auto rounded-md border border-border bg-canvas p-2.5 font-mono text-[0.8125rem]">
                 {!customResult ? (
-                  <span className="text-slate-600 italic">Nhập dữ liệu và bấm "Chạy với dữ liệu này" để xem output...</span>
+                  <span className="font-sans text-muted">Nhập dữ liệu rồi bấm “Chạy với dữ liệu này” để xem kết quả.</span>
                 ) : customResult.error_message ? (
-                  <div className="space-y-1">
-                    <div className="text-rose-400 font-bold">⚠️ {customResult.error_message}</div>
-                    {customResult.stderr && (
-                      <pre className="text-rose-300 text-[10px] whitespace-pre-wrap">{customResult.stderr}</pre>
-                    )}
+                  <div className="space-y-1 text-danger">
+                    <p className="flex items-start gap-1.5 font-sans font-semibold"><AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{customResult.error_message}</p>
+                    {customResult.stderr && <pre className="whitespace-pre-wrap">{customResult.stderr}</pre>}
                   </div>
                 ) : (
-                  <pre className="text-emerald-300 whitespace-pre-wrap">
-                    {customResult.stdout || '(Chương trình chạy xong mà không in ra dữ liệu nào)'}
-                  </pre>
+                  <pre className="whitespace-pre-wrap">{customResult.stdout || '(Chương trình chạy xong mà không in ra dữ liệu nào)'}</pre>
                 )}
               </div>
             </div>

@@ -1,0 +1,738 @@
+{
+  "summary": {
+    "scope": "real-LLM smoke check of learner model v3 prompt section on synthetic profiles; NOT quality scoring, NOT learning outcome",
+    "calls": 48,
+    "llm_success": 48,
+    "fallback_or_error": 0,
+    "sources": [
+      "Google gemini-3.1-flash-lite",
+      "Google gemini-3.5-flash-lite"
+    ],
+    "internal_code_leak": 0,
+    "level3_rows": 16,
+    "level3_with_code_fence": 10,
+    "level3_fenced_blocks_with_solution_like_lines": 0
+  },
+  "rows": [
+    {
+      "profile": "no_data",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 9568,
+      "chars": 551,
+      "hint": "Chào bạn! Chúc mừng bạn đã hoàn thành phần logic chính để kiểm tra tính chẵn lẻ của số nguyên rất tốt rồi. Hiện tại, bài làm của bạn đã vượt qua 1/3 các kiểm thử của hệ thống.\n\nKhi hệ thống chấm điểm với một số trường hợp cụ thể, kết quả trả về cho thấy có sự khác biệt nhỏ về định dạng chữ hoa và chữ thường giữa yêu cầu của đề bài (`'Le'`) và kết quả mà chương trình của bạn in ra. \n\nBạn hãy thử rà soát lại phần chuỗi kí tự được in ra trong câu lệnh điều kiện của mình xem đã khớp hoàn toàn với quy định về chữ hoa/chữ thường trong đề bài chưa nhé!"
+    },
+    {
+      "profile": "no_data",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 9249,
+      "chars": 877,
+      "hint": "Chào bạn! Bài tập \"Chẵn hay lẻ\" của bạn đã vượt qua được 1/3 test cases kiểm thử. \n\nDưới đây là phần chẩn đoán chi tiết cho bài làm của bạn:\n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** \n`⚠️ Lỗi ở dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:** \nHãy nhìn vào kết quả từ test case bị lỗi:\n- Với đầu vào: `Input = '7'`\n- Dòng code trên của bạn cho ra: `Actual Output = 'le'` (chữ 'l' viết thường).\n- Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (chữ 'L' viết hoa). \nMáy tính thực hiện chính xác những gì bạn viết: khi số lẻ, bạn yêu cầu in ra chữ 'le' thường, trong khi hệ thống chấm bài đang đối chiếu với kết quả viết hoa đúng theo định dạng yêu cầu của đề bài.\n\n3. 🧭 **Hướng cần xem lại:** \nBạn hãy xem lại yêu cầu định dạng kết quả in ra cho trường hợp số lẻ ở đề bài và đối chiếu với chuỗi ký tự mà bạn đang truyền vào hàm `print()` trong chương trình của mình."
+    },
+    {
+      "profile": "no_data",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 10242,
+      "chars": 1261,
+      "hint": "Chào bạn! Chào mừng bạn đến với buổi học lập trình Python hôm nay. Chúng ta cùng xem xét bài toán \"Chẵn hay lẻ\" nhé!\n\n1. 📝 **Các bước thực hiện thuật toán (Dàn ý 4 bước):**\n   - **Bước 1:** Nhập dữ liệu đầu vào và chuyển đổi kiểu thích hợp (như bạn đã làm rất tốt với `int(input())`).\n   - **Bước 2:** Tổ chức cấu trúc điều kiện `if-else` để kiểm tra tính chẵn lẻ của số.\n   - **Bước 3:** Xử lý logic vòng lặp nếu có (mặc dù bài này kiểm tra số đơn lẻ, bạn có thể xem lại cấu trúc điều kiện).\n   - **Bước 4:** In kết quả ra màn hình với định dạng chuỗi chính xác theo yêu cầu đề bài.\n\n2. 💻 **Khung mã nguồn gợi ý (Scaffolded Code Skeleton):**\n   ```python\n   n = int(input())\n   if ...:  # TODO: tự viết điều kiện\n       print('Chan')\n   else:\n       # TODO: Kiểm tra lại chính tả và chữ hoa/thường của chuỗi kết quả theo yêu cầu đề bài\n       print(...) \n   \n```\n\n3. 🔍 **Bước kế tiếp vừa sức:**\n   Bạn hãy quan sát lại kết quả của Test #2 khi nhập `'7'`, đề bài kỳ vọng nhận được `'Le'` (chữ L viết hoa), nhưng chương trình của bạn đang in ra cái gì nhỉ? Hãy thử điều chỉnh lại ký tự đó cho khớp với yêu cầu đề bài nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "no_data",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 10391,
+      "chars": 757,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé.\n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn đã vượt qua 1/3 kiểm thử và tư duy chia nhánh điều kiện để phân biệt chẵn/lẻ là hoàn toàn đúng hướng. \n\n2. ❓ **Câu hỏi Socratic gợi mở:** Khi hệ thống tự động kiểm tra kết quả (đặc biệt là với từ khóa in ra màn hình), điều gì sẽ xảy ra nếu có một sự khác biệt nhỏ về chữ hoa hay chữ thường giữa kết quả bạn in ra và kết quả mà hệ thống đang mong đợi?\n\n3. 📖 **Khái niệm trọng tâm:** Bạn hãy xem lại các khái niệm về **chuỗi ký tự (string)**, định dạng chuỗi và tính phân biệt chữ hoa/chữ thường (case sensitivity) trong hàm `print()`. \n\nHãy thử kiểm tra lại yêu cầu chính xác về từ khóa in ra trong đề bài nhé! Mình luôn ở đây sẵn sàng hỗ trợ bạn."
+    },
+    {
+      "profile": "no_data",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 33352,
+      "chars": 892,
+      "hint": "Chào bạn! Chúc bạn tiếp tục kiên trì với bài tập này nhé, chúng ta đang tiến rất gần đến kết quả hoàn chỉnh rồi. Hiện tại, bài làm của bạn đã vượt qua được 1/3 test case.\n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:**\n   `⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:**\n   Hãy nhìn vào test case bị lỗi thực tế:\n   - Với đầu vào: `Input = '7'`\n   - Dòng code trên của bạn cho ra kết quả: `Actual Output = 'le'` (với chữ 'l' viết thường) vì máy tính đã in chính xác chuỗi ký tự mà bạn đã viết trong hàm `print`.\n   - Nhưng hệ thống chấm bài (đề bài) lại kỳ vọng: `Expected Output = 'Le'` (với chữ 'L' viết hoa).\n\n3. 🧭 **Hướng cần xem lại:**\n   Bạn hãy kiểm tra lại quy định về định dạng chữ hoa/chữ thường cho từ chỉ số lẻ theo đúng yêu cầu đề bài. Theo bạn, ký tự đầu tiên của từ thông báo khi số lẻ nên được viết hoa hay viết thường để khớp hoàn toàn với hệ thống kiểm thử?"
+    },
+    {
+      "profile": "no_data",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 10306,
+      "chars": 1193,
+      "hint": "Chào bạn! Chúc mừng bạn đã làm rất tốt phần xử lý điều kiện chẵn lẻ. \n\nHiện tại, bài làm của bạn đã vượt qua được 1/3 test cases kiểm thử. Theo kết quả kiểm thử, khi nhập số `7` (số lẻ), chương trình của bạn đã in ra `le` (viết thường), trong khi yêu cầu của đề bài là in chính xác chuỗi `'Le'` (viết hoa chữ cái đầu).\n\nĐể khắc phục lỗi định dạng này, chúng ta hãy cùng xem lại dàn ý thuật toán và khung code mẫu dưới đây:\n\n### 1. Dàn ý thuật toán:\n* **Bước 1:** Nhập dữ liệu đầu vào và chuyển đổi thành số nguyên `n`.\n* **Bước 2:** Sử dụng cấu trúc điều kiện `if-else` để kiểm tra số chẵn hay số lẻ.\n* **Bước 3:** In kết quả `'Chan'` nếu là số chẵn.\n* **Bước 4:** In kết quả `'Le'` (chú ý viết hoa chữ cái đầu) nếu là số lẻ.\n\n### 2. Khung mã nguồn gợi ý:\n```python\nn = int(input())\n\nif ...:  # TODO: tự viết điều kiện\n    print('Chan')\nelse:\n    # TODO: Sửa lại chuỗi in ra ở đây để khớp chính xác với yêu cầu đề bài ('Le')\n    print(...)\n```\n\nBạn hãy thử chỉnh sửa lại câu lệnh `print` trong phần `else` cho đúng yêu cầu viết hoa rồi nộp lại bài nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 9314,
+      "chars": 687,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. \n\n1. **Mục tiêu / đang ở đâu:** Bài toán yêu cầu chúng ta nhập một số nguyên và in ra `'Chan'` nếu là số chẵn, hoặc `'Le'` nếu là số lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1/3 các trường hợp kiểm thử tự động.\n\n2. **Bằng chứng:** Kết quả thực thi ghi nhận rằng với một số trường hợp đầu vào, chương trình đã trả về kết quả chưa khớp chính xác với định dạng chữ hoa/chữ thường mà hệ thống yêu cầu ở kết quả mong đợi.\n\n3. **Bước kế tiếp vừa sức:** Bạn hãy thử rà soát lại các chuỗi ký tự được in ra trong câu lệnh `print()` của mình xem đã khớp hoàn toàn từng ký tự chữ cái hoa và thường với yêu cầu đề bài chưa nhé?"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 3971,
+      "chars": 827,
+      "hint": "Chào bạn! Chúc mừng bạn đã hoàn thành bài tập \"Chẵn hay lẻ\" với kết quả đạt 1/3 test cases. \n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:**\n`⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:**\nHãy nhìn vào kết quả kiểm thử thực tế khi hệ thống chạy với test case thứ 2:\n- Với đầu vào: `Input = '7'` (số lẻ)\n- Dòng code trên của bạn cho ra: `Actual Output = 'le'` (chữ 'l' viết thường).\n- Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (chữ 'L' viết hoa). Máy tính là công cụ xử lý rất nghiêm ngặt, nên 'le' và 'Le' được xem là hai kết quả khác nhau.\n\n3. 🧭 **Hướng cần xem lại:**\nBạn hãy xem lại cách định dạng chuỗi ký tự cần in ra khi số nhập vào không thỏa mãn điều kiện chẵn. \n\n👉 Theo bạn, để khớp chính xác với yêu cầu định dạng `Le` của đề bài, ký tự đầu tiên trong chuỗi in ra cần được viết hoa như thế nào?"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 3286,
+      "chars": 904,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. Hãy cùng xem xét bài làm của bạn qua các bước sau đây:\n\n1. **Mục tiêu và hiện trạng:** \nBài toán yêu cầu bạn nhập vào số nguyên $n$ và in ra màn hình chuỗi `'Chan'` nếu là số chẵn, hoặc `'Le'` nếu là số lẻ. Bài làm của bạn hiện tại đã vượt qua được **1/3 test cases** kiểm thử tự động.\n\n2. **Bằng chứng từ kết quả kiểm thử:** \nKết quả chạy thử ghi nhận với test case nhập vào là `'7'`, chương trình của hệ thống kỳ vọng nhận được `'Le'` (chữ L viết hoa theo đề bài), nhưng kết quả thực tế từ mã nguồn của bạn lại in ra `'le'` (chữ l viết thường).\n\n3. **Bước kế tiếp vừa sức:** \nBạn hãy kiểm tra lại yêu cầu về định dạng kết quả trong đề bài cho trường hợp số lẻ, cụ thể là cách viết hoa chữ cái đầu tiên trong hàm `print()`. Bây giờ, bạn hãy thử điều chỉnh lại giá trị chuỗi in ra trong nhánh `else` sao cho khớp hoàn toàn với đề bài nhé!"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 31391,
+      "chars": 654,
+      "hint": "Chào bạn! PyTutor đây, chúng ta cùng nhìn lại bài làm của bạn nhé:\n\n1. **Mục tiêu / đang ở đâu:** Bài toán yêu cầu nhập một số nguyên và in ra `'Chan'` nếu số đó chẵn, hoặc `'Le'` nếu số đó lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1/3 kiểm thử.\n\n2. **Bằng chứng:** Kết quả kiểm thử thực tế cho thấy chương trình chưa vượt qua toàn bộ các trường hợp, cụ thể có sự khác biệt nhỏ về định dạng chữ hoa/chữ thường trong chuỗi được in ra ở một số tình huống.\n\n3. **Bước kế tiếp vừa sức:** Bạn hãy thử rà soát lại thật kỹ các chuỗi ký tự mà hàm `print()` đang xuất ra trong từng nhánh điều kiện đã khớp hoàn toàn với yêu cầu định dạng của đề bài chưa nhé?"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 8851,
+      "chars": 447,
+      "hint": "Chào bạn! Ở bài tập này, chương trình của bạn đã vượt qua được 1/3 test cases kiểm thử.\n\nDữ liệu kiểm thử cho thấy với đầu vào `Input='7'`, chương trình kỳ vọng nhận được kết quả `'Le'`, nhưng thực tế dòng code `print('le')` của bạn lại in ra chữ `'le'`.\n\nBạn hãy thử nhìn lại cách viết chữ cái đầu tiên trong chuỗi kết quả khi số là lẻ so với yêu cầu của đề bài nhé: đề bài yêu cầu in `'Le'` (viết hoa chữ cái đầu), nhưng kết quả nhận được là gì?"
+    },
+    {
+      "profile": "limited_single_struggle",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 9372,
+      "chars": 632,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả nhé. Chúng ta cùng xem lại bài làm của bạn nhé:\n\n1. **Mục tiêu / đang ở đâu:** Bài yêu cầu nhập số nguyên $n$, nếu chẵn in `'Chan'`, nếu lẻ in `'Le'`. Hiện tại, bài làm của bạn đã vượt qua được 1/3 test cases kiểm thử.\n2. **Bằng chứng:** Kết quả thực thi ghi nhận rằng với đầu vào là `7`, kỳ vọng hệ thống mong đợi là `'Le'` (chữ L viết hoa), nhưng kết quả chương trình của bạn lại trả về `'le'` (chữ l viết thường).\n3. **Bước kế tiếp vừa sức:** Bạn hãy kiểm tra lại chuỗi định dạng trong hàm `print()` ở nhánh `else` để khớp chính xác về chữ hoa/thường theo yêu cầu của đề bài nhé!"
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 25120,
+      "chars": 745,
+      "hint": "Chào bạn! Mình là PyTutor đây. Chúng ta cùng xem xét bài làm của bạn nhé!\n\n1. 💡 **Đánh giá hướng đi:** Bài toán yêu cầu nhập số nguyên $n$, in ra `'Chan'` nếu chẵn và `'Le'` nếu lẻ. Hiện tại, giải thuật dùng cấu trúc điều kiện của bạn đã đi đúng hướng cơ bản, giúp bài làm vượt qua 1 trên tổng số 3 kiểm thử.\n\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử kiểm tra lại kỹ lưỡng các ký tự chữ cái (viết hoa hay viết thường) trong chuỗi kết quả được in ra so với yêu cầu đề bài xem có điểm nào chưa khớp không nhé?\n\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại phần định dạng chuỗi và các quy tắc xuất dữ liệu (`print`) chính xác theo từng ký tự mà đề bài đã chỉ định.\n\nBạn thử chỉnh sửa lại điểm này và chạy lại chương trình xem kết quả thế nào nhé!"
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 14941,
+      "chars": 468,
+      "hint": "Chào bạn! Bài làm của bạn hiện tại đã vượt qua 1/3 test cases kiểm thử. \n\nKhi hệ thống kiểm thử với trường hợp `Input = '7'`, chương trình của bạn nhận được kết quả thực tế là `'le'`, nhưng đề bài đang kỳ vọng nhận được chữ `'Le'` (viết hoa chữ cái đầu). \n\nBạn hãy kiểm tra lại dòng lệnh in kết quả trong nhánh `else` của mình:\n```python\nelse:\n    print('le')\n```\nVới `Input = '7'`, giá trị in ra khớp hay khác biệt thế nào so với yêu cầu định dạng chữ cái của đề bài?"
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 4292,
+      "chars": 1120,
+      "hint": "Chào bạn! Chúc mừng bạn đã hoàn thành xong phần cốt lõi của bài toán kiểm tra số chẵn hay lẻ rất tốt rồi. \n\nCùng nhìn lại bài làm của chúng ta nhé:\n1. **Mục tiêu và trạng thái:** Bài yêu cầu nhập số nguyên $n$ và in ra `'Chan'` nếu chẵn, ngược lại in `'Le'`. Hiện tại, bài làm của bạn đã vượt qua **1/3** test case.\n2. **Bằng chứng từ kết quả:** Khi kiểm thử với số `7`, hệ thống kỳ vọng nhận được `'Le'`, nhưng kết quả thực tế trả về là `'le'` (chữ \"l\" viết thường). \n3. **Bước kế tiếp vừa sức:** Để bài kiểm thử chấm đúng, bạn hãy kiểm tra lại chuỗi ký tự trong hàm `print()` ở nhánh `else` để đảm bảo khớp chính xác từng chữ cái in hoa/in thường so với yêu cầu đề bài nhé!\n\nDưới đây là khung code gợi ý cấu trúc để bạn dễ dàng hoàn thiện:\n\n```python\nn = int(input())\nif ...:  # TODO: tự viết điều kiện\n    print('Chan')\nelse:\n    print(...)  # TODO: Sửa lại chuỗi in ra cho khớp chính xác với yêu cầu của đề bài\n```\n\nBạn hãy thử sửa lại và nộp lại bài xem kết quả thế nào nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2231,
+      "chars": 632,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. 😊\n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn hiện tại đã vượt qua 1 trên tổng số 3 kiểm thử của đề bài, cấu trúc điều kiện rẽ nhánh để kiểm tra số chẵn hay lẻ đang đi đúng hướng cơ bản rồi đấy.\n\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử đọc lại thật kỹ yêu cầu về chuỗi kết quả khi số không chia hết cho 2 (số lẻ) và so sánh với giá trị mà chương trình của bạn đang in ra xem có điểm gì cần khớp chính xác không nhé?\n\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại các khái niệm về **chuỗi ký tự (string)** và tính phân biệt chữ hoa, chữ thường trong hàm `print()`."
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2333,
+      "chars": 626,
+      "hint": "Chào bạn! Bài tập này yêu cầu bạn nhập vào một số nguyên $n$ và in ra chữ `Chan` nếu $n$ là số chẵn, hoặc `Le` nếu $n$ là số lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1/3 test cases.\n\nCụ thể, kết quả kiểm thử cho thấy với đầu vào `Input = '7'`, chương trình của bạn nhận được `Actual Output = 'le'` do câu lệnh `print('le')` in ra chữ \"l\" viết thường, trong khi đề bài kỳ vọng `Expected Output = 'Le'` với chữ \"L\" viết hoa.\n\nBạn hãy thử nhìn lại cách hiển thị chuỗi kết quả trong câu lệnh in của mình. Theo bạn, ký tự đầu tiên trong từ thông báo cần phải viết hoa hay viết thường để khớp hoàn toàn với yêu cầu của đề bài?"
+    },
+    {
+      "profile": "struggling_loop",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 31835,
+      "chars": 1211,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả nhé. 😊\n\n1. 📝 **Mục tiêu và trạng thái hiện tại:**\nBài toán yêu cầu bạn nhập vào một số nguyên $n$ và in ra màn hình chuỗi `'Chan'` nếu $n$ là số chẵn, hoặc `'Le'` nếu $n$ là số lẻ (chú ý viết hoa đúng chuẩn ký tự). Bài làm của bạn hiện tại đã vượt qua được **1/3** số test case.\n\n2. 🔍 **Bằng chứng từ kết quả kiểm thử:**\nKết quả chạy thực tế cho thấy với Test #2 (nhập vào `'7'`, kỳ vọng là `'Le'`), chương trình của bạn lại in ra là `'le'` (chữ 'l' viết thường). \n\n3. 💻 **Bước kế tiếp vừa sức & Khung mã nguồn gợi ý:**\nĐể khắc phục lỗi trên và tuân thủ đúng yêu cầu định dạng đầu ra của đề bài, bạn hãy kiểm tra lại chữ cái đầu tiên trong chuỗi kết quả khi $n$ là số lẻ nhé. \n\nDưới đây là khung code cấu trúc giúp bạn hoàn thiện phần này:\n\n```python\nn = int(input())\n\nif ...:  # TODO: tự viết điều kiện\n    print('Chan')\nelse:\n    # TODO: Sửa lại chuỗi in ra cho đúng yêu cầu định dạng 'Le'\n    print(...) \n```\n\nBạn hãy thử tinh chỉnh lại đoạn code trên và nộp lại xem kết quả thế nào nhé! Mình luôn ở đây hỗ trợ bạn. 🚀\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2340,
+      "chars": 734,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả nhé. Mình cùng nhìn lại bài làm \"Chẵn hay lẻ\" này nha:\n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn đã vượt qua được một phần kiểm thử và có tư duy chia nhánh rất tốt rồi đấy, chỉ còn một chi tiết nhỏ cần tinh chỉnh lại thôi.\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử kiểm tra lại kỹ xem đề bài yêu cầu in ra chuỗi kết quả cho trường hợp số lẻ chính xác là gì, và so sánh lại với từ khóa bạn đang dùng trong câu lệnh `print` xem đã khớp hoàn toàn chưa nhé?\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại phần định dạng chuỗi và cách phân biệt chữ hoa/chữ thường trong các câu lệnh `print` của Python nha. \n\nBạn thử sửa lại chi tiết đó rồi chạy lại chương trình xem kết quả thế nào nhé!"
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7705,
+      "chars": 781,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập hiệu quả nhé. \n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** \nChú ý dòng lệnh xuất kết quả thứ hai của bạn:\n`⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:** \nChúng ta hãy nhìn vào kết quả từ test case thực tế:\n- Với đầu vào: `Input = '7'` (một số lẻ)\n- Dòng code trên của bạn cho ra: `Actual Output = 'le'` vì máy tính đã thực hiện đúng câu lệnh in ra chữ 'le' viết thường mà bạn đã viết.\n- Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (chữ 'L' phải viết hoa theo đúng định dạng mẫu của đề).\n\n3. 🧭 **Hướng cần xem lại:** \nBạn hãy kiểm tra lại yêu cầu về định dạng chuỗi kết quả khi số không chia hết cho 2. Theo bạn, ký tự đầu tiên của từ thông báo cần được viết hoa hay viết thường để khớp hoàn toàn với hệ thống chấm điểm?"
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7478,
+      "chars": 1518,
+      "hint": "Chào bạn! Chúc bạn một buổi học lập trình thật hiệu quả nhé. \n\nBài toán yêu cầu chúng ta nhập vào một số nguyên $n$, sau đó in ra chữ `'Chan'` nếu $n$ là số chẵn, hoặc `'Le'` nếu $n$ là số lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1/3 test case. \n\nCụ thể theo kết quả kiểm thử, khi hệ thống truyền vào số `7` (số lẻ), đề bài kỳ vọng nhận được chuỗi `'Le'` (viết hoa chữ cái đầu), nhưng kết quả chương trình của bạn lại in ra là `'le'` (viết thường).\n\nĐể giúp bạn hoàn thiện bài toán này, chúng ta cùng nhìn lại cấu trúc thuật toán chi tiết và khung mã nguồn dưới đây nhé:\n\n1. 📝 **Các bước thực hiện thuật toán:**\n   - **Bước 1:** Nhập dữ liệu đầu vào $n$ và chuyển đổi sang kiểu số nguyên.\n   - **Bước 2:** Sử dụng cấu trúc điều kiện `if-else` để kiểm tra tính chẵn lẻ của $n$ dựa vào phép chia lấy dư (`% 2`).\n   - **Bước 3:** Tổ chức nhánh rẽ nhánh tương ứng với kết quả chẵn hoặc lẻ.\n   - **Bước 4:** In kết quả ra màn hình bằng hàm `print()` với định dạng chuỗi chính xác theo yêu cầu.\n\n2. 💻 **Khung mã nguồn gợi ý:**\n   ```python\n   n = int(input())\n   if ...:  # TODO: tự viết điều kiện\n       print('Chan')\n   else:\n       print(...)  # TODO: Điều chỉnh lại chuỗi in ra cho khớp chính xác với yêu cầu định dạng\n   \n```\n\nBạn hãy thử điều chỉnh lại ký tự in ở nhánh `else` cho đúng với định dạng đề bài rồi nộp lại xem kết quả thế nào nhé! Mình luôn ở đây hỗ trợ bạn.\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 5793,
+      "chars": 765,
+      "hint": "Chào bạn! Chúc mừng bạn đã vượt qua 1/3 kiểm thử của bài tập \"Chẵn hay lẻ\". \n\n1. 💡 **Đánh giá hướng đi:** Giải thuật dùng toán tử chia lấy dư (`%`) để kiểm tra tính chẵn lẻ của bạn đang đi đúng hướng, nhưng kết quả đầu ra thực tế tại một số trường hợp vẫn chưa khớp hoàn toàn với yêu cầu định dạng của đề bài.\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử quan sát kỹ lại chuỗi ký tự được in ra khi số nhập vào là một số lẻ trong câu lệnh điều kiện của mình xem nó đã khớp chính xác từng chữ cái so với yêu cầu đề bài chưa?\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại các khái niệm về **chuỗi ký tự (string literals)** và tính phân biệt chữ hoa, chữ thường (`case-sensitivity`) trong Python nhé.\n\nCố lên bạn nhé, bạn sắp hoàn thành rồi! Hãy thử chỉnh sửa lại xem sao."
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 5664,
+      "chars": 620,
+      "hint": "Chào bạn! Bài tập này yêu cầu chúng ta nhập một số nguyên $n$ và in ra chữ `Chan` nếu số đó chẵn, hoặc `Le` nếu số đó lẻ. Hiện tại, bài làm của bạn đã vượt qua 1/3 test case.\n\nTheo kết quả kiểm thử, khi chúng ta nhập `Input = '7'` (một số lẻ), chương trình của bạn nhận được `Actual Output = 'le'` trong khi hệ thống kỳ vọng `Expected Output = 'Le'`. Máy tính đã chạy và in ra chuỗi có chữ 'l' viết thường do đoạn code in kết quả ở trường hợp ngược lại.\n\nBây giờ, bạn hãy thử nhìn lại vị trí quy định cách hiển thị chữ cái hoa/thường cho kết quả số lẻ trong chương trình của mình xem ký tự đó đang được viết thế nào nhé?"
+    },
+    {
+      "profile": "secure_loop_bridge",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2603,
+      "chars": 870,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. Hãy cùng PyTutor xem xét bài làm của bạn qua các phần sau đây:\n\n1. **Mục tiêu và trạng thái hiện tại:** Bài tập yêu cầu bạn nhập một số nguyên $n$ và in ra `'Chan'` nếu $n$ chẵn, ngược lại in `'Le'` nếu $n$ lẻ. Hiện tại, bài làm của bạn đã vượt qua được **1/3** test case.\n\n2. **Bằng chứng từ kết quả thực thi:** Khi hệ thống kiểm thử với Test #2 (`Input='7'`, kỳ vọng là `'Le'`), chương trình của bạn lại trả về kết quả là `'le'` (chữ \"l\" thường). Điều này cho thấy định dạng chữ cái hoa/thường trong kết quả in ra chưa khớp chính xác với yêu cầu của đề bài.\n\n3. **Bước kế tiếp vừa sức:** Để bài làm hoàn thiện, bạn hãy xem lại cách viết hoa chữ cái đầu trong hàm `print()` của nhánh `else` sao cho trùng khớp hoàn toàn với chuỗi kỳ vọng `'Le'`. \n\nBạn hãy thử chỉnh sửa lại điểm này rồi nộp lại bài nhé!"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 4792,
+      "chars": 742,
+      "hint": "Chào bạn! PyTutor đây, rất vui được đồng hành cùng bạn trong bài tập này.\n\n1. **Mục tiêu và trạng thái hiện tại:** Bài tập yêu cầu bạn nhập vào một số nguyên $n$ và in ra `'Chan'` nếu là số chẵn, ngược lại in `'Le'` nếu là số lẻ. Hiện tại, đoạn code của bạn đã vượt qua được **1/3** số test case kiểm thử.\n\n2. **Bằng chứng:** Kết quả kiểm thử cho thấy khi đầu vào là `'7'`, hệ thống kỳ vọng nhận được `'Le'`, nhưng chương trình của bạn lại trả về `'le'` (chữ cái đầu viết thường). \n\n3. **Bước kế tiếp vừa sức:** Bạn hãy xem lại yêu cầu định dạng kết quả in ra trong đề bài và so sánh với chuỗi trong hàm `print` của mình nhé. Theo bạn, chúng ta cần điều chỉnh chi tiết nhỏ nào ở phần hiển thị chuỗi để khớp hoàn toàn với kỳ vọng của hệ thống?"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 10318,
+      "chars": 599,
+      "hint": "Chào bạn! Bài làm của bạn hiện tại đã vượt qua 1/3 test cases kiểm thử.\n\nCụ thể, khi hệ thống chạy thử với test case:\n- `Input = '7'`\n- Dòng code `print('le')` của bạn cho ra: `Actual Output = 'le'` bởi vì máy tính đã in chính xác chuỗi ký tự chứa chữ 'l' thường mà bạn đã viết.\n- Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (với chữ 'L' viết hoa).\n\n⚠️ **Vị trí lỗi cụ thể trong bài của bạn:**\n```python\n    print('le')\n```\n\nBạn hãy thử nhìn lại yêu cầu định dạng kết quả của đề bài cho trường hợp số lẻ, và tự kiểm tra xem ký tự đầu tiên trong chuỗi cần in ra phải là chữ hoa hay chữ thường nhé?"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 4047,
+      "chars": 1325,
+      "hint": "Chào bạn! Chúc mừng bạn đã hoàn thành rất tốt các bài tập vừa qua. Với bài \"Chẵn hay lẻ\" này, mã nguồn của bạn hiện đã vượt qua **1/3 test cases**. \n\nKhi kiểm tra bằng kết quả thực tế, với đầu vào là `7`, hệ thống kỳ vọng nhận được `'Le'`, nhưng chương trình của bạn lại in ra `'le'` (chữ l thường).\n\nĐể giúp bạn hình dung rõ hơn cấu trúc thuật toán chuẩn cho bài này, chúng ta cùng nhìn vào dàn ý và khung code sau nhé:\n\n1. 📝 **Các bước thực hiện thuật toán:**\n   - **Bước 1:** Nhập dữ liệu đầu vào $n$ và chuyển đổi sang kiểu số nguyên.\n   - **Bước 2:** (Không bắt buộc) Khởi tạo hoặc chuẩn bị cấu trúc rẽ nhánh.\n   - **Bước 3:** Sử dụng câu lệnh điều kiện `if` để kiểm tra tính chẵn lẻ của $n$ ($n \\% 2 == 0$).\n   - **Bước 4:** In kết quả ra màn hình với đúng định dạng `'Chan'` hoặc `'Le'` theo yêu cầu đề bài.\n\n2. 💻 **Khung mã nguồn gợi ý:**\n   ```python\n   n = int(input())\n   \n   if ...:  # TODO: tự viết điều kiện\n       print('Chan')\n   else:\n       print(...)  # TODO: Điều chỉnh lại chuỗi in ra cho khớp chính tả với đề bài\n   \n```\n\nBạn hãy thử tự sửa lại phần hiển thị kết quả ở câu lệnh `print` sao cho khớp chính tả với kỳ vọng của hệ thống rồi chạy thử lại xem sao nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 4558,
+      "chars": 544,
+      "hint": "Chào bạn! Chúng ta cùng xem lại bài làm của bạn nhé:\n\n1. **Mục tiêu / đang ở đâu:** Bài tập yêu cầu nhập số nguyên $n$ và in ra `'Chan'` nếu chẵn, ngược lại in `'Le'`. Hiện tại, chương trình của bạn đã vượt qua 1/3 test cases.\n2. **Bằng chứng:** Kết quả kiểm thử cho thấy khi đầu vào là `'7'`, đề bài kỳ vọng nhận được `'Le'`, nhưng chương trình của bạn lại in ra `'le'`.\n3. **Bước kế tiếp vừa sức:** Bạn hãy quan sát kỹ sự khác biệt giữa chuỗi kỳ vọng `'Le'` và chuỗi chương trình của bạn đang in ra `'le'`, đặc biệt là ở chữ cái đầu tiên nhé!"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 5184,
+      "chars": 351,
+      "hint": "Chào bạn! Bài làm của bạn hiện tại đã vượt qua 1/3 test case. \n\nCụ thể với Test #2:\n- **Input:** `'7'`\n- **Kỳ vọng:** `'Le'`\n- **Nhận được:** `'le'`\n\nBạn hãy thử nhìn lại dòng code in chuỗi trong nhánh `else` của mình và đối chiếu với yêu cầu định dạng chữ hoa/chữ thường ở đề bài nhé. Theo bạn, sự khác biệt giữa `'Le'` và `'le'` đang nằm ở điểm nào?"
+    },
+    {
+      "profile": "secure_all",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_coarse",
+        "self_check_first"
+      ],
+      "granularity": "coarse",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 6035,
+      "chars": 598,
+      "hint": "Chào bạn! Chúng ta cùng xem lại bài tập \"Chẵn hay lẻ\" nhé.\n\n1. **Mục tiêu / đang ở đâu:** Bài yêu cầu in `'Chan'` nếu $n$ chẵn và `'Le'` nếu $n$ lẻ. Hiện tại, bài làm của bạn đã vượt qua 1/3 test cases.\n2. **Bằng chứng:** Kết quả kiểm thử cho thấy với đầu vào `'7'`, hệ thống kỳ vọng nhận được `'Le'` nhưng kết quả thực tế lại nhận được `'le'` (chữ 'l' viết thường).\n3. **Bước kế tiếp vừa sức:** Bạn hãy kiểm tra lại yêu cầu định dạng chính tả của chuỗi kết quả khi $n$ lẻ (chữ cái đầu tiên cần viết hoa hay viết thường?) và thử sửa lại ký tự đó trong câu lệnh `print` nhé. Chúc bạn hoàn thành tốt!"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2564,
+      "chars": 616,
+      "hint": "Chào bạn! Chúc mừng bạn đã hoàn thành bài tập \"Chẵn hay lẻ\" với kết quả hiện tại là 1/3 kiểm thử đạt yêu cầu. \n\nKhi nhìn vào kết quả kiểm thử, hệ thống ghi nhận rằng với đầu vào là số lẻ, chương trình của bạn đã trả về kết quả chưa khớp chính xác với định dạng mà đề bài kỳ vọng ở phần chữ cái hiển thị. \n\nĐể khắc phục điều này, bạn hãy thử kiểm tra lại chuỗi ký tự được in ra trong câu lệnh xử lý trường hợp số lẻ của mình đã khớp hoàn toàn với yêu cầu đề bài chưa nhé. Bạn có thể xem lại khái niệm về cách in chuỗi ký tự (`print` string formatting) trong Python. \n\nBạn hãy thử tự rà soát lại đoạn code này xem sao!"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 6938,
+      "chars": 797,
+      "hint": "Chào bạn! Bài tập \"Chẵn hay lẻ\" của bạn đã vượt qua được 1/3 test case, một khởi đầu rất tốt rồi! \n\nChúng ta hãy cùng xem lại kết quả chạy thử nhé:\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:**\n   `print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:**\n   Hãy nhìn vào test case bị lỗi:\n   - Với đầu vào: `Input = '7'`\n   - Dòng code trên của bạn cho ra: `Actual Output = 'le'` vì khi số không chia hết cho 2, chương trình đã thực hiện lệnh `print('le')` với chữ \"l\" viết thường.\n   - Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` với chữ \"L\" viết hoa.\n\n3. 🧭 **Hướng cần xem lại:**\n   Bạn hãy xem lại yêu cầu định dạng kết quả in ra cho các số lẻ trong đề bài nhé. Theo bạn, chuỗi ký tự được in ra cần bắt đầu bằng chữ cái viết hoa hay viết thường để khớp hoàn toàn với yêu cầu của hệ thống chấm bài?"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 8036,
+      "chars": 1176,
+      "hint": "Chào bạn! Bài tập \"Chẵn hay lẻ\" của bạn đã vượt qua 1/3 test cases. \n\nKhi hệ thống kiểm thử với đầu vào là `7`, kỳ vọng nhận được kết quả là `'Le'`, nhưng chương trình của bạn lại in ra `'le'` (chữ \"l\" viết thường). \n\nĐể giúp bạn hoàn thiện bài làm, chúng ta cùng nhìn lại cấu trúc thuật toán qua các bước sau nhé:\n\n1. 📝 **Các bước thực hiện thuật toán:**\n   - **Bước 1:** Nhập dữ liệu đầu vào `n` và chuyển đổi thành số nguyên.\n   - **Bước 2:** Sử dụng cấu trúc điều kiện `if-else` để kiểm tra tính chẵn lẻ của `n`.\n   - **Bước 3:** In kết quả `'Chan'` nếu là số chẵn.\n   - **Bước 4:** In kết quả với đúng định dạng `'Le'` nếu là số lẻ.\n\n2. 💻 **Khung mã nguồn gợi ý:**\n   Bạn hãy quan sát phần in kết quả trong nhánh `else` của mình và điều chỉnh lại theo khung sau nhé:\n   ```python\n   n = int(input())\n   if ...:  # TODO: tự viết điều kiện\n       print('Chan')\n   else:\n       print(...)  # TODO: Sửa lại chuỗi in ra cho khớp chính xác với yêu cầu đề bài ('Le')\n   \n```\n\nBạn hãy thử sửa lại chỗ này và chạy lại kiểm thử xem sao nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2382,
+      "chars": 666,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. \n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn hiện tại đã vượt qua được 1 trong tổng số 3 kiểm thử, nghĩa là cấu trúc rẽ nhánh kiểm tra tính chẵn lẻ cơ bản của bạn đã đúng hướng.\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử tự kiểm tra lại các chuỗi ký tự được in ra trong từng trường hợp của câu lệnh rẽ nhánh xem chúng đã hoàn toàn trùng khớp với định dạng mà đề bài yêu cầu hay chưa?\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại khái niệm về chuỗi ký tự (string) trong Python và tính phân biệt chữ hoa, chữ thường của dữ liệu đầu ra.\n\nBạn hãy thử rà soát lại chi tiết này và nộp lại bài xem sao nhé!"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 6705,
+      "chars": 630,
+      "hint": "Chào bạn! Bài làm của bạn đã vượt qua 1/3 test cases và đang đi đúng hướng ở phần kiểm tra số chẵn. \n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:**\n   `⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:**\n   Hãy nhìn vào test case chưa đạt:\n   - Với đầu vào: `Input = '7'`\n   - Dòng code trên của bạn cho ra: `Actual Output = 'le'` (viết thường).\n   - Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (viết hoa chữ cái đầu theo đúng định dạng yêu cầu).\n\n3. 🧭 **Hướng cần xem lại:**\n   Bạn hãy xem lại chuỗi ký tự được in ra trong trường hợp số lẻ đã khớp hoàn toàn với quy cách viết hoa/viết thường của đề bài chưa nhé?"
+    },
+    {
+      "profile": "hint_reliant",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.1-flash-lite",
+      "error": null,
+      "ms": 42914,
+      "chars": 1270,
+      "hint": "Chào bạn! Rất vui được đồng hành cùng bạn trong bài tập này. Chúng ta cùng xem xét đoạn mã của bạn nhé:\n\n1. **Mục tiêu:** Bài toán yêu cầu in ra 'Chan' hoặc 'Le' tương ứng với số nhập vào. Hiện tại, chương trình của bạn đã vượt qua 1/3 các trường hợp kiểm thử (test cases).\n\n2. **Bằng chứng:** Hệ thống ghi nhận kết quả thực thi cho thấy với đầu vào là '7', chương trình của bạn in ra 'le', trong khi yêu cầu từ hệ thống là phải in đúng định dạng 'Le' (chữ cái đầu viết hoa). Các logic khác về kiểm tra chẵn lẻ của bạn đã thực hiện đúng.\n\n3. **Bước kế tiếp:** Bạn hãy kiểm tra kỹ lại chuỗi ký tự (string) nằm trong hàm `print()` ở nhánh `else`. Hãy đảm bảo rằng cách viết hoa/thường của từ 'Le' trùng khớp hoàn toàn với yêu cầu của đề bài.\n\nDưới đây là khung code để bạn đối chiếu và điều chỉnh phần hiển thị cho chính xác:\n\n```python\nn = int(input())\nif ...:  # TODO: tự viết điều kiện\n    print('Chan')\nelse:\n    # TODO: Kiểm tra lại chính tả và định dạng chữ hoa/thường \n    # của từ 'Le' để khớp với yêu cầu đề bài\n    print(...) \n```\n\nBạn hãy thử sửa lại một chút ở phần `print` rồi nộp lại xem sao nhé. Chúc bạn thành công!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "repeated_error_type"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 11791,
+      "chars": 755,
+      "hint": "Chào bạn! Mình là PyTutor đây. Chúc mừng bạn đã hoàn thành xong một phần của bài tập này!\n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn hiện tại đã vượt qua 1/3 các bài kiểm thử, cấu trúc điều kiện `if-else` để kiểm tra tính chẵn lẻ của bạn đã đi đúng hướng. \n\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử kiểm tra lại kỹ hơn các yêu cầu định dạng đầu ra của đề bài đối với trường hợp số lẻ xem chữ cái đầu tiên hoặc toàn bộ chuỗi cần được viết như thế nào để khớp hoàn toàn với hệ thống chấm điểm nhé?\n\n3. 📖 **Khái niệm trọng tâm:** Kiến thức trọng tâm cần lưu ý ở đây là sự chính xác trong chuỗi ký tự (`string formatting`) và tính phân biệt chữ hoa, chữ thường trong Python.\n\nCố lên bạn nhé, bạn đang làm rất tốt rồi! Hãy thử chỉnh sửa lại xem sao nha."
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "repeated_error_type"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 2529,
+      "chars": 719,
+      "hint": "Chào bạn! Bài làm của bạn hiện đã vượt qua 1/3 test cases của hệ thống. \n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:**\n   `⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:**\n   Hãy nhìn vào kết quả từ test case bị lỗi:\n   - Với đầu vào: `Input = '7'`\n   - Dòng code trên của bạn cho ra: `Actual Output = 'le'` vì chương trình đã thực hiện lệnh `print('le')` với chữ \"l\" viết thường.\n   - Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (chữ \"L\" viết hoa).\n\n3. 🧭 **Hướng cần xem lại:**\n   Bạn hãy kiểm tra lại yêu cầu định dạng kết quả khi số không chia hết cho 2 trong đề bài nhé. Theo bạn, ký tự đầu tiên của từ thông báo cần viết hoa hay viết thường để khớp hoàn toàn với yêu cầu của hệ thống kiểm thử?"
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "failed_case_diagnosis",
+      "adaptations": [
+        "repeated_error_type"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7736,
+      "chars": 678,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả với Python nhé. 😊\n\n1. 🎯 **Mục tiêu / đang ở đâu:** Bài tập yêu cầu bạn nhập vào một số nguyên $n$, sau đó in ra `'Chan'` nếu $n$ chẵn và `'Le'` nếu $n$ lẻ. Bài làm của bạn hiện tại đã vượt qua **1/3** số test case kiểm thử.\n\n2. 📋 **Bằng chứng:** Kết quả kiểm thử từ hệ thống cho thấy với Test #2 (nhập `'7'`), kỳ vọng của đề bài là in ra chuỗi `'Le'`, nhưng chương trình của bạn lại nhận được kết quả là `'le'` (chữ \"l\" viết thường).\n\n3. 🧭 **Bước kế tiếp vừa sức:** Bạn hãy kiểm tra lại yêu cầu in kết quả cho trường hợp số lẻ trong đoạn code của mình và điều chỉnh lại ký tự cho khớp chính xác với định dạng đề bài yêu cầu nhé!"
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 6599,
+      "chars": 694,
+      "hint": "Chào bạn! Chúc bạn một buổi học Python thật hiệu quả nhé. \n\n1. **Mục tiêu / đang ở đâu:** Bài tập yêu cầu chúng ta nhập một số nguyên và in ra `'Chan'` nếu là số chẵn, hoặc `'Le'` nếu là số lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1 trên tổng số 3 kiểm thử.\n\n2. **Bằng chứng:** Kết quả kiểm thử thực tế cho thấy chương trình của bạn đã nhận diện đúng tính chẵn/lẻ của số đầu vào, nhưng có sự khác biệt nhỏ về định dạng chữ hoa/chữ thường ở kết quả xuất ra so với yêu cầu của đề bài.\n\n3. **Bước kế tiếp vừa sức:** Bạn hãy thử kiểm tra lại chuỗi ký tự được in ra trong hàm `print` khi số là số lẻ, xem nó đã khớp hoàn toàn với định dạng chữ hoa và chữ thường mà đề bài yêu cầu hay chưa nhé!"
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7787,
+      "chars": 941,
+      "hint": "Chào bạn! Bài toán của chúng ta là nhập số nguyên $n$ và in ra `'Chan'` nếu $n$ chẵn, ngược lại in `'Le'`. Hiện tại, bài làm của bạn đã vượt qua được 1/3 test cases kiểm thử.\n\nCụ thể, khi chúng ta nhìn vào kết quả kiểm thử:\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** \n   `⚠️ Chú ý dòng: print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:** \n   Lấy test case `#2` làm ví dụ:\n   - Với đầu vào: `Input = '7'` (số lẻ).\n   - Dòng code trên của bạn cho ra: `Actual Output = 'le'` (chữ 'l' viết thường) vì máy tính đã thực hiện đúng câu lệnh `print` với chuỗi ký tự mà bạn đã viết.\n   - Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (chữ 'L' viết hoa).\n\n3. 🧭 **Hướng cần xem lại:** \n   Bạn hãy xem xét lại quy định về định dạng chuỗi kết quả mà đề bài yêu cầu ở các trường hợp khác nhau (cả chẵn và lẻ). Hãy tự hỏi: *Chuỗi ký tự in ra cho số lẻ cần phải tuân thủ chính xác từng ký tự (kể cả chữ hoa/thường) như thế nào so với yêu cầu của đề bài?*"
+    },
+    {
+      "profile": "repeated_logic_error",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat"
+      ],
+      "granularity": "standard",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 18936,
+      "chars": 884,
+      "hint": "Chào bạn! Chào mừng bạn quay lại với bài tập \"Chẵn hay lẻ\". Bài làm của bạn hiện tại đã vượt qua 1/3 test cases. \n\nCụ thể từ kết quả kiểm thử, khi hệ thống truyền vào số `'7'`, kỳ vọng nhận được `'Le'` nhưng chương trình của bạn lại in ra `'le'` (chữ 'l' viết thường). \n\nĐể khắc phục điều này, bạn hãy xem lại cách viết hoa chữ cái đầu của chuỗi kết quả trong câu lệnh in ra nhé. Dưới đây là khung mã nguồn gợi ý để bạn dễ dàng hoàn thiện bước tiếp theo:\n\n```python\nn = int(input())\nif ...:  # TODO: tự viết điều kiện\n    print('Chan')\nelse:\n    # TODO: Sửa lại chuỗi in ra cho khớp chính xác với yêu cầu đề bài ('Le')\n    print(...)\n```\n\nBạn hãy thử chỉnh sửa lại phần hiển thị này và nộp lại bài xem kết quả thế nào nhé! Chúc bạn thành công!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_first",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7032,
+      "chars": 773,
+      "hint": "Chào bạn! PyTutor đây, rất vui được đồng hành cùng bạn trong hành trình chinh phục Python nhé. \n\n1. 💡 **Đánh giá hướng đi:** Bài làm của bạn hiện tại đã vượt qua được 1/3 các kiểm thử của đề bài, cấu trúc phân nhánh kiểm tra số chẵn hay lẻ bước đầu đã có ý tưởng đúng.\n\n2. ❓ **Câu hỏi Socratic gợi mở:** Bạn hãy thử tự kiểm tra lại xem kết quả chữ cái in ra cho trường hợp số lẻ trong đoạn code của mình đã khớp hoàn toàn với định dạng chữ hoa hay chữ thường mà đề bài yêu cầu chưa nhé?\n\n3. 📖 **Khái niệm trọng tâm:** Hãy xem lại phần định dạng chuỗi ký tự xuất ra qua hàm `print()` và cách đối chiếu chính xác từng ký tự trong chuỗi kết quả (string literal) với đề bài. \n\nCố gắng lên nhé, bạn sắp tìm ra điểm mấu chốt rồi đấy! Hãy thử chỉnh sửa lại và nộp lại xem sao nha."
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_first",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 6420,
+      "chars": 788,
+      "hint": "Chào bạn! Chúc bạn một ngày học tập thật hiệu quả nhé. Chúng ta cùng xem lại bài làm của bạn nào:\n\n1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** \n`⚠️ Chú ý dòng:` `print('le')`\n\n2. 🔍 **Mổ xẻ nguyên nhân sai lệch:** \nHãy nhìn vào kết quả kiểm thử thực tế từ hệ thống:\n- Với đầu vào: `Input = '7'`\n- Dòng code trên của bạn cho ra: `Actual Output = 'le'` (viết thường chữ 'l').\n- Nhưng đề bài kỳ vọng: `Expected Output = 'Le'` (viết hoa chữ 'L').\n\n3. 🧭 **Hướng cần xem lại:** \nBạn đã xử lý rất tốt phần điều kiện chẵn lẻ và cấu trúc câu lệnh! Vấn đề hiện tại chỉ nằm ở định dạng ký tự đầu ra chữ cái so với yêu cầu chính xác của hệ thống chấm bài. \n\nBạn hãy kiểm tra lại yêu cầu về chuỗi kết quả khi số không chia hết cho 2 và xem lại cách viết hoa, viết thường ở dòng code xuất kết quả nhé!"
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_first",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "concept_recurring_difficulty",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 3516,
+      "chars": 808,
+      "hint": "Chào bạn! Mình là PyTutor đây. Chúng ta cùng xem lại bài tập \"Chẵn hay lẻ\" nhé!\n\n1. **Mục tiêu và trạng thái hiện tại:** \nBài toán yêu cầu nhập số nguyên $n$ và in ra `'Chan'` nếu $n$ chẵn, ngược lại in `'Le'` (chữ cái đầu viết hoa). Bài làm của bạn đã vượt qua 1/3 test case kiểm thử.\n\n2. **Bằng chứng từ kết quả:** \nKết quả thực thi ghi nhận với Test #2 (nhập `'7'`), hệ thống kỳ vọng nhận được chuỗi `'Le'` nhưng chương trình của bạn lại in ra `'le'` (chữ 'l' viết thường).\n\n3. **Bước kế tiếp vừa sức:** \nBây giờ, bạn hãy thực hiện hai việc nhỏ sau: chạy thử lại dòng lệnh kiểm tra với số lẻ trong đầu, và quan sát kỹ lại chuỗi kết quả ở phần `print` trong nhánh `else` của mình xem đã khớp chính xác với định dạng `'Le'` mà đề bài yêu cầu chưa nhé. Bạn hãy thử điều chỉnh lại ký tự đó và nộp lại bài nha!"
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_repeat",
+      "level": 1,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 7204,
+      "chars": 682,
+      "hint": "Chào bạn! Mình là PyTutor đây. Chúng ta cùng xem lại bài làm nhé!\n\n1. 🎯 **Mục tiêu / đang ở đâu:** Bài tập yêu cầu nhập một số nguyên $n$ và in ra `'Chan'` nếu $n$ chẵn, hoặc `'Le'` nếu $n$ lẻ. Hiện tại, bài làm của bạn đã vượt qua được 1/3 kiểm thử.\n\n2. 📋 **Bằng chứng:** Kết quả kiểm thử thực tế cho thấy chương trình đang gặp lỗi ở các trường hợp mà đề bài kỳ vọng chuỗi kết quả có chữ cái viết hoa hoàn toàn (ví dụ như `'Le'`), nhưng kết quả nhận được lại là chữ thường (`'le'`).\n\n3. 🧭 **Bước kế tiếp vừa sức:** Bạn hãy thử kiểm tra lại giá trị chuỗi văn bản được in ra trong nhánh `else` của mình đã khớp hoàn toàn với quy định định dạng chữ hoa/chữ thường của đề bài chưa nhé?"
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_repeat",
+      "level": 2,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 3131,
+      "chars": 784,
+      "hint": "Chào bạn! Chúc bạn một buổi học lập trình thật hiệu quả nhé. \n\n1. **Vị trí lỗi cụ thể trong bài của bạn:** \n`⚠️ Chú ý dòng: print('le')` (dòng số 5 trong mã nguồn).\n\n2. **Mổ xẻ nguyên nhân sai lệch:** \nKhi hệ thống chạy kiểm thử với `Input = '7'`, mã nguồn của bạn đã đi vào nhánh `else` và thực thi dòng lệnh trên, dẫn đến `Actual Output = le`. Tuy nhiên, đề bài yêu cầu với trường hợp số lẻ, kết quả in ra phải là chữ cái viết hoa hoàn toàn theo đúng định dạng. Do đó, kết quả nhận được bị lệch so với kỳ vọng là `Expected Output = Le`.\n\n3. **Hướng cần xem lại:** \nBạn hãy xem lại quy định về định dạng chuỗi ký tự đầu ra cho các trường hợp trong đề bài. Theo bạn, từ khóa in ra khi số không chia hết cho 2 cần được viết hoa ký tự đầu tiên như thế nào để khớp hoàn toàn với yêu cầu?"
+    },
+    {
+      "profile": "syntax_struggler",
+      "state": "fail_repeat",
+      "level": 3,
+      "strategy": "recurring_difficulty",
+      "adaptations": [
+        "same_exercise_repeat",
+        "granularity_fine"
+      ],
+      "granularity": "fine",
+      "source": "Google gemini-3.5-flash-lite",
+      "error": null,
+      "ms": 11034,
+      "chars": 1361,
+      "hint": "Chào bạn! Chúc mừng bạn đã vượt qua 1/3 test case của bài \"Chẵn hay lẻ\". \n\nDựa trên kết quả thực thi, hệ thống ghi nhận rằng với đầu vào là `'7'`, chương trình của bạn kỳ vọng in ra `'Le'` nhưng kết quả thực tế lại nhận được chữ `'le'` viết thường. \n\nĐể giúp bạn hoàn thiện bài làm theo đúng yêu cầu định dạng, dưới đây là dàn ý thuật toán và khung code mẫu để bạn kiểm tra lại phần xuất kết quả:\n\n1. 📝 **Các bước thực hiện thuật toán:**\n   - **Bước 1:** Nhập số nguyên $n$ từ bàn phím.\n   - **Bước 2:** Sử dụng cấu trúc điều kiện `if-else` để kiểm tra tính chẵn lẻ của $n$ (dựa vào số dư khi chia cho 2).\n   - **Bước 3:** Tổ chức vòng lặp duyệt (nếu cần thiết theo cấu trúc bài của bạn).\n   - **Bước 4:** In ra chuỗi kết quả (`'Chan'` hoặc `'Le'`) với đúng định dạng chữ hoa ở chữ cái đầu tiên theo đề bài.\n\n2. 💻 **Khung mã nguồn gợi ý:**\n   ```python\n   n = int(input())\n   for i in range(...):  # TODO: Kiểm tra lại số vòng lặp phù hợp\n       if ...:  # TODO: tự viết điều kiện\n           print('Chan')\n       else:\n           print(...)    # TODO: Điền chuỗi kết quả chính xác theo yêu cầu đề bài\n   \n```\n\nBạn hãy thử điều chỉnh lại chuỗi in ra trong điều kiện `else` cho khớp với kỳ vọng của đề bài rồi nộp lại nhé!\n\n🔒 *PyTutor đã thay 1 biểu thức trong khung mã bằng `...` để phần lập luận vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*"
+    }
+  ]
+}

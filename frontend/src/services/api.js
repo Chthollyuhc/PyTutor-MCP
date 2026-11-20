@@ -55,8 +55,9 @@ export const fetchExercises = async () => {
   return response.data;
 };
 
-export const fetchExerciseDetail = async (exerciseId) => {
-  const response = await apiClient.get(`/exercises/${exerciseId}`);
+export const fetchExerciseDetail = async (exerciseId, classId = null) => {
+  const params = classId ? { class_id: classId } : {};
+  const response = await apiClient.get(`/exercises/${exerciseId}`, { params });
   return response.data;
 };
 
@@ -72,7 +73,7 @@ export const runTestOnly = async ({ exercise_id, code }) => {
   return response.data;
 };
 
-export const submitCode = async ({ exercise_id, code, hint_level = 1, session_id = 'default_session', exam_session_id = null, action_type = 'submit' }) => {
+export const submitCode = async ({ exercise_id, code, hint_level = 1, session_id = 'default_session', exam_session_id = null, action_type = 'submit', class_id = null }) => {
   const payload = {
     exercise_id,
     code,
@@ -80,6 +81,9 @@ export const submitCode = async ({ exercise_id, code, hint_level = 1, session_id
     session_id,
     action_type,
   };
+  if (class_id) {
+    payload.class_id = class_id;
+  }
   if (exam_session_id) {
     payload.exam_session_id = exam_session_id;
   }
@@ -126,6 +130,27 @@ export const submitTutorFeedback = async ({ interaction_id, rating }) => {
 
 export const askInstructorClassAI = async ({ class_id, user_message, days = 7 }) => {
   const response = await apiClient.post('/instructor/ai/class-chat', { class_id, user_message, days });
+  return response.data;
+};
+
+// v5.3 — Không gian sư phạm cho giảng viên (S3; UI giảng viên sẽ dùng các hàm này)
+export const fetchClassInsights = async (classId, days = 7) => {
+  const response = await apiClient.get(`/instructor/classes/${classId}/insights`, { params: { days } });
+  return response.data;
+};
+
+export const fetchStudentLearnerModel = async (classId, username) => {
+  const response = await apiClient.get(`/instructor/classes/${classId}/students/${encodeURIComponent(username)}/learner-model`);
+  return response.data;
+};
+
+export const fetchKnowledgeBaseCatalogue = async () => {
+  const response = await apiClient.get('/instructor/knowledge-base');
+  return response.data;
+};
+
+export const fetchTutorFeedbackSummary = async (days = 30) => {
+  const response = await apiClient.get('/instructor/ai/feedback-summary', { params: { days } });
   return response.data;
 };
 
@@ -311,5 +336,66 @@ export const deleteInstructorExamSession = async (sessionId) => {
   return response.data;
 };
 
+// v5.4 (C): tài liệu giảng viên tải lên cho Gia sư AI, gắn theo lớp
+export const fetchClassKnowledge = async (classId) => {
+  const response = await apiClient.get(`/instructor/classes/${classId}/knowledge`);
+  return response.data;
+};
 
+export const uploadClassKnowledge = async (classId, formData) => {
+  const response = await apiClient.post(`/instructor/classes/${classId}/knowledge`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  });
+  return response.data;
+};
 
+export const toggleClassKnowledge = async (classId, docId, isActive) => {
+  const response = await apiClient.patch(`/instructor/classes/${classId}/knowledge/${docId}`, { is_active: isActive });
+  return response.data;
+};
+
+export const deleteClassKnowledge = async (classId, docId) => {
+  const response = await apiClient.delete(`/instructor/classes/${classId}/knowledge/${docId}`);
+  return response.data;
+};
+
+// Quản lý Đơn vị kiến thức (Knowledge Components - KCs)
+export const fetchKnowledgeComponents = async () => {
+  const response = await apiClient.get('/instructor/knowledge-components');
+  return response.data;
+};
+
+export const createKnowledgeComponent = async (kcData) => {
+  const response = await apiClient.post('/instructor/knowledge-components', kcData);
+  return response.data;
+};
+
+export const deleteKnowledgeComponent = async (kc) => {
+  const response = await apiClient.delete(`/instructor/knowledge-components/${kc}`);
+  return response.data;
+};
+
+// v5.8 — Hành trình học (sinh viên) và dấu chân từng bài (giảng viên). Chỉ đọc.
+export const fetchStudentJourney = async (classId = null, exerciseId = '') => {
+  const params = {};
+  if (classId) params.class_id = classId;
+  if (exerciseId) params.exercise_id = exerciseId;
+  const response = await apiClient.get('/student/journey', { params });
+  return response.data;
+};
+
+export const fetchStudentExerciseJourney = async (classId, username, exerciseId, days = null) => {
+  const params = days ? { days } : {};
+  const response = await apiClient.get(
+    `/instructor/classes/${classId}/students/${encodeURIComponent(username)}/exercises/${encodeURIComponent(exerciseId)}/journey`,
+    { params },
+  );
+  return response.data;
+};
+
+// v5.8 — tổng hợp lớp cần chú ý trong một lần gọi
+export const fetchClassesAttention = async () => {
+  const response = await apiClient.get('/instructor/classes-attention');
+  return response.data;
+};

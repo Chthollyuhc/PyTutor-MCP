@@ -248,7 +248,7 @@ async def run_benchmark():
     
     report_content = f"""# 📊 BÁO CÁO ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG GIA SƯ THÔNG MINH PYTUTOR-MCP (v3.0)
 
-> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
+> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng dựa trên mô hình người học
 > **Sinh viên thực hiện:** Trần Minh Khánh - SV K65 CNTT (MSV: 11236131)  
 > **Thời điểm xuất báo cáo:** {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}  
 > **Môi trường thực nghiệm:** Windows 11, Python 3.14, Node.js v24.15.0, MCP SDK 2.2.0, Gemini 3.5 Flash Lite

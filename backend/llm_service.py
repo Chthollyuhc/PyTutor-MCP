@@ -14,9 +14,13 @@ import asyncio
 from typing import Optional
 from pathlib import Path
 import httpx
-from backend.prompt_templates import render_socratic_prompt, render_instructor_prompt, render_reviewer_prompt
+from backend.prompt_templates import (
+    SYSTEM_RULES_TEXT, render_socratic_prompt, render_instructor_prompt, render_reviewer_prompt,
+)
 from backend.rag.retriever import retrieve_knowledge
-from backend.guardrails import check_student_output
+from backend.guardrails import check_student_output, enforce_level3_skeleton
+from backend.adaptive_policy import ADAPTATION_INSTRUCTIONS
+from pytutor_shared.learner_model import STATE_LABELS
 
 logger = logging.getLogger("pytutor.llm")
 
@@ -119,14 +123,43 @@ def build_scaffolding_prompt(
 - Hướng dẫn: {strategy_names.get(strategy.get('strategy'), strategy_names['conceptual_start'])}
 - Giữ nguyên cấp độ người học yêu cầu: Level {hint_level}; không tự tăng mức tiết lộ.
 """
+    if any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])):
+        strategy_section += f"- LƯU Ý QUAN TRỌNG: {ADAPTATION_INSTRUCTIONS['no_code_yet']}\n"
+
+    # Mô hình người học v3: chỉ điều chỉnh cách diễn đạt/độ chia bước, không đổi mức tiết lộ.
+    learner_section = ""
+    signals = strategy.get("learner_signals") or {}
+    if signals:
+        kc_lines = [f"  + {v.get('label_vi')}: {STATE_LABELS.get(v.get('state'), v.get('state'))} "
+                    f"(dựa trên {v.get('others_attempted', 0)} bài khác đã nộp)" for v in signals.get("exercise_kcs", [])]
+        adapt_lines = [f"  + [{a.get('code')}] {ADAPTATION_INSTRUCTIONS.get(a.get('code'), '')}"
+                       for a in strategy.get("adaptations", []) if a.get("code") in ADAPTATION_INSTRUCTIONS]
+        learner_section = "\n[MÔ HÌNH NGƯỜI HỌC - heuristic chưa hiệu chuẩn, chỉ dùng để điều chỉnh cách diễn đạt]\n"
+        learner_section += "- Nhóm kiến thức liên quan tới bài này:\n" + ("\n".join(kc_lines) if kc_lines else "  + (chưa xác định)") + "\n"
+        if strategy.get("diagnosis_focus"):
+            learner_section += f"- Dạng lỗi quan sát ở lượt này: {strategy['diagnosis_focus']}\n"
+        if adapt_lines:
+            learner_section += "- Điều chỉnh cần áp dụng:\n" + "\n".join(adapt_lines) + "\n"
+        learner_section += ("- Không nhận xét năng lực của sinh viên, không nêu các nhãn trên cho sinh viên như một đánh giá; "
+                            f"giữ nguyên Level {hint_level}.\n")
+
+    # Khung phản hồi hình thành (formative feedback): mục tiêu → bằng chứng → bước kế tiếp.
+    formative_section = """
+[KHUNG PHẢN HỒI HÌNH THÀNH - ÁP DỤNG CHO MỌI CẤP ĐỘ]
+Mỗi phản hồi phải trả lời đủ ba ý, theo đúng thứ tự, trong giới hạn tiết lộ của cấp độ được yêu cầu:
+1. Mục tiêu / đang ở đâu: bài yêu cầu gì và bài làm hiện đạt đến đâu (dùng số kiểm thử đạt thực tế).
+2. Bằng chứng: chỉ nêu điều quan sát được từ kết quả kiểm thử, phân tích AST hoặc lịch sử ở trên. Không suy đoán nguyên nhân không có trong dữ liệu; nếu dữ liệu chưa đủ thì nói rõ là chưa đủ.
+3. Bước kế tiếp vừa sức: đúng MỘT việc cụ thể sinh viên có thể tự làm ngay (một câu hỏi tự kiểm hoặc một phép thử), không liệt kê nhiều hướng.
+Không lặp lại nguyên văn gợi ý của các lần trước. Không nhận xét về năng lực của sinh viên; chỉ nhận xét về bài làm.
+"""
 
     # Chỉ dẫn sư phạm theo Level
     if all_passed:
         level_instruction = """
-[TÌNH HUỐNG: SINH VIÊN ĐÃ ĐẠT 100% TEST CASES]
-- Hãy nhiệt liệt chúc mừng thành tích của sinh viên!
-- Dựa trên kết quả phân tích AST, hãy nhận xét về phong cách lập trình (code style) và độ tối ưu.
-- Gợi ý 1 mẹo nhỏ để viết code Pythonic hơn hoặc tối ưu hơn (ví dụ: dùng hàm có sẵn, list comprehension, tối ưu vòng lặp).
+[TÌNH HUỐNG: SINH VIÊN ĐÃ ĐẠT 100% TEST CASES - RÚT GIÀN GIÁO]
+- Ghi nhận ngắn gọn cách làm đã hiệu quả (nêu cụ thể dựa trên AST, không khen chung chung).
+- KHÔNG đưa thêm gợi ý sửa lỗi. Đặt đúng 1 câu hỏi tự kiểm để sinh viên tự giải thích vì sao lời giải đúng (ví dụ: trường hợp biên nào đã được xử lý và ở dòng nào).
+- Nêu 1 hướng mở rộng TÙY CHỌN (ví dụ: viết lại gọn hơn, thử đầu vào lớn hơn); nói rõ đây là tùy chọn.
 """
     elif hint_level == 1:
         level_instruction = """
@@ -137,19 +170,20 @@ def build_scaffolding_prompt(
 2. ❓ **Câu hỏi Socratic gợi mở (1-2 câu):** Đặt câu hỏi kích thích sinh viên tự suy ngẫm (về điều kiện biên, giá trị khởi tạo, hoặc cách hoạt động của vòng lặp/hàm).
 3. 📖 **Khái niệm trọng tâm:** Nhắc tên các kiến thức/từ khóa Python cốt lõi cần xem lại (ví dụ: `range(start, stop)`, cách chuyển kiểu số nguyên, toán tử tích lũy).
 🚫 Ràng buộc: KHÔNG trích dòng code lỗi cụ thể, KHÔNG đưa code sửa, KHÔNG tiết lộ thuật toán hoàn chỉnh.
+🚫 Ranh giới với Mức 2: KHÔNG nêu đầu vào, đầu ra thực tế hay đầu ra kỳ vọng cụ thể của kiểm thử nào (đó là bằng chứng của Mức 2); chỉ nói tổng quát bài đang đạt bao nhiêu kiểm thử. Câu hỏi gợi mở phải nói về KHÁI NIỆM chung, không chỉ ra tham số hay biểu thức nào trong bài làm là sai.
 """
     elif hint_level == 2:
         level_instruction = """
 [CẤP ĐỘ GỢI Ý 2: CHẨN ĐOÁN TRỰC DIỆN & KHOANH VÙNG DÒNG LỖI (DIAGNOSTIC & LOCALIZATION HINT)]
 🎯 Mục tiêu: Chỉ rõ chính xác dòng code hoặc khối lệnh nào đang gây ra sai số và mổ xẻ nguyên nhân kỹ thuật vì sao kết quả thực tế bị lệch.
 📋 Quy chuẩn cấu trúc phản hồi bắt buộc:
-1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** Trích dẫn chính xác dòng code của sinh viên bị sai hoặc có vấn đề (ví dụ: `⚠️ Chú ý dòng: for i in range(1, n):` hoặc `⚠️ Lỗi ở biểu thức: tong = n * 2`).
+1. 📍 **Vị trí lỗi cụ thể trong bài của bạn:** Trích dẫn chính xác MỘT dòng code của sinh viên bị sai hoặc có vấn đề (ví dụ: `⚠️ Chú ý dòng: for i in range(1, n):` hoặc `⚠️ Lỗi ở biểu thức: tong = n * 2`). Chỉ trích MỘT dòng trong cả câu trả lời; nếu có nhiều dòng liên quan, chọn dòng đầu tiên gây sai và mô tả các dòng còn lại bằng lời, không chép lại.
 2. 🔍 **Mổ xẻ nguyên nhân sai lệch:** Lấy test case bị FAIL làm ví dụ trực quan:
    - Với đầu vào: `Input = ...`
    - Dòng code trên của bạn cho ra: `Actual Output = ...` vì sao (giải thích máy tính đã chạy như thế nào).
    - Nhưng đề bài kỳ vọng: `Expected Output = ...`.
-3. 🛠️ **Chỉ dẫn kỹ thuật để sửa:** Nêu rõ cần sửa điều kiện/biểu thức đó như thế nào bằng lời giải thích kỹ thuật (ví dụ: *"Bạn cần cho vòng lặp chạy đến `n + 1` thay vì `n` để không bỏ sót phần tử cuối cùng"*).
-🚫 Ràng buộc: Không đưa code giải hoàn chỉnh cả bài, chỉ tập trung giải phẫu dòng lỗi để sinh viên tự sửa.
+3. 🧭 **Hướng cần xem lại (KHÔNG nêu cách sửa):** Chỉ ra PHẦN nào của chương trình và KHÁI NIỆM nào cần nghĩ lại, rồi kết thúc bằng đúng MỘT câu hỏi để sinh viên tự đưa ra cách sửa (ví dụ: *"Với `Input = 3`, vòng lặp của bạn chạy qua những giá trị `i` nào, và có giá trị nào đề bài cần mà vòng lặp bỏ qua không?"*).
+🚫 Ràng buộc: Không đưa code giải hoàn chỉnh cả bài. Không viết ra điều kiện, biểu thức, giá trị cận hay thuật toán thay thế (đó là việc của Mức 3); không nói "bạn cần đổi X thành Y", "nên dùng điều kiện ...", "hãy in ... khi ...". Chỉ giải phẫu nguyên nhân và hướng suy nghĩ để sinh viên tự sửa.
 """
     else:  # Level 3
         level_instruction = """
@@ -194,7 +228,7 @@ Tên bài: {title}
 
 [KẾT QUẢ PHÂN TÍCH CẤU TRÚC CÚ PHÁP TỪ MCP AST]:
 - {ast_summary}
-{history_section}{student_model_section}{strategy_section}
+{history_section}{student_model_section}{strategy_section}{learner_section}{formative_section}
 {level_instruction}
 
 [QUY TẮC BẮT BUỘC]:
@@ -205,113 +239,319 @@ Tên bài: {title}
     return prompt
 
 
+def _first_failed_test(test_results: dict) -> Optional[dict]:
+    return next((r for r in (test_results or {}).get("results", [])
+                 if r.get("status") not in ("PASS", "SKIPPED")), None)
+
+
+def _observed_difference(expected: str, actual: str) -> str:
+    """Mô tả khác biệt QUAN SÁT ĐƯỢC giữa đầu ra kỳ vọng và thực tế; không suy đoán nguyên nhân."""
+    exp, act = (expected or "").strip(), (actual or "").strip()
+    if not act:
+        return "chương trình không in ra gì cho đầu vào này"
+    if exp.lower() == act.lower():
+        return "nội dung trùng nhau nhưng khác chữ hoa/chữ thường"
+    if "".join(exp.split()) == "".join(act.split()):
+        return "nội dung trùng nhau nhưng khác khoảng trắng hoặc xuống dòng"
+    try:
+        diff = float(act) - float(exp)
+        return f"kết quả là số và lệch {diff:+g} so với kỳ vọng"
+    except ValueError:
+        pass
+    if len(act.splitlines()) != len(exp.splitlines()):
+        return f"số dòng in ra khác nhau ({len(act.splitlines())} so với {len(exp.splitlines())} dòng kỳ vọng)"
+    return "nội dung in ra khác với kỳ vọng"
+
+
+def _self_check_questions(failed_tc: Optional[dict], ast_analysis: dict) -> list[str]:
+    """Chọn câu hỏi tự kiểm theo bằng chứng có thật (loại lỗi của test, cấu trúc AST)."""
+    status = (failed_tc or {}).get("status", "")
+    questions: list[str] = []
+    if status == "RUNTIME_ERROR":
+        questions.append("Thông báo lỗi thuộc loại nào, và giá trị nào trong chương trình đã dẫn tới lỗi đó?")
+    elif failed_tc and not (failed_tc.get("actual_output") or "").strip():
+        questions.append("Chương trình đã gọi `print()` để in kết quả cuối cùng chưa, và lệnh đó có được chạy tới không?")
+    else:
+        questions.append("Với một đầu vào nhỏ, bạn tự tính tay ra kết quả nào và chương trình in ra kết quả nào?")
+    if ast_analysis.get("has_loops"):
+        questions.append("Vòng lặp của bạn đi qua giá trị đầu tiên và giá trị cuối cùng nào? Có khớp với yêu cầu đề bài không?")
+    if ast_analysis.get("has_accumulator"):
+        questions.append("Biến tích lũy được khởi tạo bằng giá trị nào, ở trước hay trong vòng lặp?")
+    if len(questions) < 2:
+        questions.append("Đề bài có nêu trường hợp đặc biệt nào (giá trị nhỏ nhất, bằng 0, chuỗi rỗng) mà bài làm chưa xét không?")
+    return questions[:2]
+
+
+def build_pass_feedback(exercise: dict, test_results: dict, ast_analysis: Optional[dict] = None,
+                        adaptive_strategy: Optional[dict] = None) -> str:
+    """Phản hồi tất định khi đã đạt 100% kiểm thử: rút giàn giáo, không gọi LLM.
+
+    Ghi nhận bằng chứng → một câu tự kiểm → một hướng mở rộng tùy chọn.
+    """
+    total = (test_results or {}).get("total_tests", 0)
+    title = (exercise or {}).get("title", "bài tập")
+    summary = (ast_analysis or {}).get("structural_summary", "")
+    lines = [
+        f"🎉 **Chúc mừng!** Bài làm của bạn đã vượt qua {total}/{total} kiểm thử của {title}.",
+    ]
+    if summary:
+        lines.append(f"🔎 **Bằng chứng:** {summary}")
+    lines.append("❓ **Tự kiểm lại:** Trường hợp biên nào của đề đã được bài làm xử lý, và ở dòng nào? "
+                 "Hãy thử tự giải thích bằng một câu trước khi sang bài mới.")
+    lines.append("➡️ **Mở rộng (tùy chọn):** thử viết lại lời giải gọn hơn hoặc mở Thử thách tối ưu code Pythonic.")
+    if any(a.get("code") == "independence_check" for a in (adaptive_strategy or {}).get("adaptations", [])):
+        lines.append("🧭 **Gợi ý cho bài sau (tùy chọn):** trước khi xin Gia sư AI, thử Chạy thử và tự nêu giả thuyết của bạn; "
+                     "cần hỗ trợ thì vẫn xin bình thường.")
+    return "\n\n".join(lines)
+
+
+def _level3_progress_note(code: str, adaptive_strategy: Optional[dict] = None) -> str:
+    """Đối chiếu bài làm hiện tại với dàn ý 4 bước và chọn MỘT bước kế tiếp còn thiếu.
+
+    Chỉ dựa vào dấu hiệu quan sát được trong mã (có `input(`, có `print(`, có rẽ nhánh/vòng lặp);
+    không đánh giá các bước đó đúng hay sai. Mục đích: rút giàn giáo cho phần người học đã tự viết.
+    """
+    lines = [ln for ln in (code or "").splitlines() if ln.strip() and not ln.strip().startswith("#")]
+    has_input = any("input(" in ln for ln in lines)
+    has_print = any("print(" in ln for ln in lines)
+    has_flow = any(re.match(r"\s*(if|for|while)\b", ln) for ln in lines)
+    seen = [name for name, ok in (("Bước 1 (đọc dữ liệu)", has_input), ("Bước 3 (rẽ nhánh/vòng lặp)", has_flow),
+                                  ("Bước 4 (in kết quả)", has_print)) if ok]
+    observed = (f"👀 **Đã thấy trong bài làm:** {', '.join(seen)}. Hệ thống chỉ thấy các phần này *có mặt*, "
+                f"chưa biết chúng đã đúng hay chưa.\n\n") if seen else ""
+    if not has_input:
+        step = "viết Bước 1 trước, rồi in thử giá trị vừa đọc và bấm Chạy thử để chắc phần nhập đúng."
+    elif not has_print:
+        step = ("bạn đã có Bước 1. Hãy viết Bước 4 trước (in tạm một giá trị), Chạy thử để chắc phần nhập/xuất "
+                "đúng định dạng, rồi mới viết Bước 3.")
+    elif not has_flow:
+        step = ("phần nhập và in đã có. Giờ tập trung vào Bước 3: tự tính tay với một đầu vào nhỏ, "
+                "viết lại các thao tác bạn vừa làm thành lệnh.")
+    else:
+        step = ("bài làm đã có đủ bốn phần của dàn ý, nên chỗ cần xem lại là Bước 2 và Bước 3. Dùng **Chạy từng bước** "
+                "với một đầu vào chưa đạt và tìm dòng đầu tiên mà giá trị biến khác điều bạn dự tính.")
+    return f"{observed}{_next_step_line(step, adaptive_strategy)}"
+
+
+def _adaptation(adaptive_strategy: Optional[dict], code: str) -> Optional[dict]:
+    return next((a for a in (adaptive_strategy or {}).get("adaptations", []) if a.get("code") == code), None)
+
+
+def _next_step_line(step: str, adaptive_strategy: Optional[dict]) -> str:
+    """Dòng 'Bước kế tiếp' theo độ chi tiết đã chọn. Mẫu cố định, chỉ nói về quy trình, không nêu lời giải."""
+    gran = (adaptive_strategy or {}).get("granularity")
+    if gran == "fine":
+        return ("➡️ **Bước kế tiếp (chia nhỏ thành 2 bước):**\n"
+                f"1. {step[:1].upper() + step[1:]}\n"
+                "2. Sau đó bấm Chạy thử và ghi lại một điều bạn quan sát được (kết quả in ra hoặc thông báo lỗi) trước khi sửa tiếp.")
+    if gran == "coarse":
+        return ("➡️ **Bước kế tiếp (tự kiểm trước):** hãy tự nêu một câu giả thuyết: *chỗ nào trong chương trình có thể làm kết quả lệch?* "
+                "Rồi bấm Chạy thử để tự kiểm giả thuyết đó trước khi đọc thêm.")
+    return f"➡️ **Bước kế tiếp:** {step}"
+
+
+def _model_notes(adaptive_strategy: Optional[dict]) -> str:
+    """Các câu ghi chú cố định theo mã điều chỉnh của mô hình người học (ngoài khối mã)."""
+    notes = []
+    bridge = _adaptation(adaptive_strategy, "bridge_from_mastered")
+    if bridge:
+        ctx = bridge.get("context", {})
+        notes.append(f"🌉 **Nối với điều bạn đã làm:** nhóm **{ctx.get('kc_label', '')}** bạn đã nộp đạt ở bài "
+                     f"**{ctx.get('exercise_title', '')}**. Hãy nhớ lại bạn đã tách phần việc ở bài đó thành những bước nào.")
+    rep = _adaptation(adaptive_strategy, "repeated_error_type")
+    if rep:
+        ctx = rep.get("context", {})
+        notes.append(f"🔎 **Dạng lỗi lặp lại:** loại lỗi lần này (`{ctx.get('error_class', '')}`) giống loại lỗi bạn từng gặp ở nhóm "
+                     f"**{ctx.get('kc_label', '')}**; hãy so sánh với cách bạn đã sửa trước đó.")
+    return "\n\n".join(notes)
+
+
+def _no_code_reply(exercise: dict, test_results: dict, hint_level: int, adaptive_strategy: Optional[dict]) -> str:
+    """Gợi ý Mức 1/2 khi sinh viên chưa viết code: giúp hiểu đề, không nói về test thất bại."""
+    title = exercise.get("title", "Bài tập")
+    example = next((r for r in test_results.get("results", []) if (r.get("expected_output") or "").strip()), None)
+    sample = ""
+    if hint_level == 2 and example:
+        sample = (f"\n\n🔎 **Một ví dụ từ đề:** với đầu vào `{(example.get('input') or '').strip() or '(không có)'}` "
+                  f"chương trình cần in `{(example.get('expected_output') or '').strip()}`.")
+    head = ("💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**" if hint_level == 1
+            else "🔍 **[MỨC 2: HIỂU ĐỀ & XÁC ĐỊNH ĐẦU VÀO/ĐẦU RA]**")
+    questions = ["Đề bài cho bạn dữ liệu gì, và dữ liệu đó nhập vào theo định dạng nào?",
+                 "Chương trình cần in ra điều gì? Thử nói bằng lời với một ví dụ nhỏ.",
+                 "Nếu tự tính bằng tay với ví dụ đó, bạn sẽ làm những thao tác nào, theo thứ tự nào?"]
+    if hint_level == 2:
+        questions = questions[:2]
+    step = ("chọn một câu hỏi ở trên, trả lời bằng lời hoặc ghi chú, rồi viết một dòng đầu tiên (ví dụ dòng đọc dữ liệu "
+            "bằng `input()`) và bấm Chạy thử. Cần dàn ý chi tiết hơn thì xin gợi ý Mức 3.")
+    return (f"{head}\n\n🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào, bắt đầu từ việc hiểu đề là hợp lý.{sample}\n\n"
+            "❓ **Câu hỏi để bắt đầu:**\n" + "\n".join(f"- {q}" for q in questions) + "\n\n"
+            f"{_next_step_line(step, adaptive_strategy)}")
+
+
 def generate_rule_based_fallback(
     exercise: dict,
     code: str,
     test_results: dict,
     ast_analysis: dict,
-    hint_level: int
+    hint_level: int,
+    adaptive_strategy: Optional[dict] = None,
 ) -> str:
     """
-    Bộ sinh gợi ý sư phạm dự phòng (Rule-based Fallback).
-    Đảm bảo hệ thống luôn trả về gợi ý chất lượng ngay cả khi server LLM ngoại tuyến.
+    Bộ sinh gợi ý sư phạm dự phòng (Rule-based Fallback), chạy khi không có LLM.
+
+    Tuân theo khung phản hồi hình thành: (1) đang ở đâu → (2) bằng chứng quan sát được
+    → (3) một bước kế tiếp. Chỉ nêu điều có trong kết quả kiểm thử/AST; không khẳng định
+    nguyên nhân mà dữ liệu không cho thấy.
     """
     title = exercise.get("title", "Bài tập")
     all_passed = test_results.get("all_passed", False)
     passed_count = test_results.get("passed_tests", 0)
     total_count = test_results.get("total_tests", 0)
-    
-    if all_passed:
-        return (
-            f"🎉 **Chúc mừng bạn đã vượt qua toàn bộ {total_count}/{total_count} test cases của {title}!**\n\n"
-            f"Đánh giá cấu trúc code: {ast_analysis.get('structural_summary', 'Cấu trúc rõ ràng, logic hợp lý.')}\n\n"
-            "💡 *Gợi ý nâng cao:* Bạn hãy thử xem lại xem có thể rút gọn code hoặc sử dụng các hàm có sẵn của Python để code ngắn gọn và 'Pythonic' hơn nhé!"
-        )
+    ast_analysis = ast_analysis or {}
+    strategy = (adaptive_strategy or {}).get("strategy", "")
 
-    # Kiểm tra lỗi cú pháp
-    if not ast_analysis.get("valid", True):
+    if all_passed:
+        return build_pass_feedback(exercise, test_results, ast_analysis)
+
+    # Chưa có code: AST coi code rỗng là lỗi cú pháp, nên phải xử lý trước các nhánh lỗi bên dưới.
+    no_code = bool(_adaptation(adaptive_strategy, "no_code_yet"))
+    if no_code and hint_level in (1, 2):
+        return _no_code_reply(exercise, test_results, hint_level, adaptive_strategy)
+
+    # Lỗi cú pháp: bằng chứng là thông báo của trình phân tích cú pháp.
+    if not no_code and not ast_analysis.get("valid", True):
         err = ast_analysis.get("syntax_error", {})
         err_msg = err.get("message", "Lỗi cú pháp") if isinstance(err, dict) else str(err)
         err_line = err.get("lineno", "?") if isinstance(err, dict) else "?"
         return (
             f"⚠️ **Mã nguồn đang gặp lỗi cú pháp (SyntaxError)!**\n\n"
-            f"- Chi tiết: `{err_msg}` tại dòng **{err_line}**.\n"
-            f"- *Hướng dẫn:* Bạn hãy kiểm tra lại các ký tự như dấu hai chấm `:`, dấu ngoặc `()`, hoặc khoảng cách thụt lề (indentation) ở dòng trên nhé!"
+            f"🎯 **Đang ở đâu:** chương trình chưa chạy được nên chưa kiểm thử nào được chấm.\n\n"
+            f"🔎 **Bằng chứng:** `{err_msg}` tại dòng **{err_line}**.\n\n"
+            f"➡️ **Bước kế tiếp:** đọc lại dòng {err_line} và dòng ngay phía trên; kiểm tra dấu hai chấm `:`, "
+            f"cặp ngoặc và khoảng thụt lề rồi bấm Chạy thử lại."
         )
 
-    # Kiểm tra lỗi Timeout
-    if any(r.get("status") == "TIMEOUT" for r in test_results.get("results", [])):
+    # Quá thời gian: bằng chứng là trạng thái TIMEOUT của sandbox.
+    if not no_code and any(r.get("status") == "TIMEOUT" for r in test_results.get("results", [])):
+        loop_note = ("Bài làm có dùng vòng lặp." if ast_analysis.get("has_loops")
+                     else "Phân tích cấu trúc chưa thấy vòng lặp; hãy xem chương trình có đang chờ thêm dữ liệu nhập không.")
         return (
             "⏳ **Chương trình chạy quá thời gian tối đa (Time Limit Exceeded - 5.0s)!**\n\n"
-            "- Nguyên nhân: Chương trình có thể chứa vòng lặp vô hạn (vòng lặp không có điều kiện dừng hoặc biến đếm không thay đổi).\n"
-            "- *Gợi ý:* Hãy kiểm tra kỹ điều kiện dừng của vòng lặp `while` hoặc bước tăng của biến điều khiển."
+            f"🎯 **Đang ở đâu:** đạt {passed_count}/{total_count} kiểm thử.\n\n"
+            f"🔎 **Bằng chứng:** có kiểm thử bị dừng vì quá 5 giây. {loop_note}\n\n"
+            "➡️ **Bước kế tiếp:** với mỗi vòng lặp, tự trả lời: biến nào thay đổi sau mỗi lượt và điều kiện dừng trở thành sai khi nào?"
         )
 
-    # Tìm test case đầu tiên bị fail
-    failed_tc = next((r for r in test_results.get("results", []) if r.get("status") != "PASS"), None)
-    
+    failed_tc = _first_failed_test(test_results)
+    questions = _self_check_questions(failed_tc, ast_analysis)
+    progress = f"🎯 **Đang ở đâu:** bài **{title}** đang đạt **{passed_count}/{total_count}** kiểm thử."
+    if _adaptation(adaptive_strategy, "no_code_yet"):
+        progress = f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào; đây là khung để bắt đầu."
+    repeat_note = ""
+    concept_rec = _adaptation(adaptive_strategy, "concept_recurring_difficulty")
+    if concept_rec:
+        ctx = concept_rec.get("context", {})
+        repeat_note = (f"\n\n🔁 Nhóm kiến thức **{ctx.get('kc_label', '')}** từng gây vướng ở bài **{ctx.get('exercise_title', '')}**. "
+                       "Lần này hãy dùng **Chạy từng bước** với đúng đầu vào của kiểm thử chưa đạt và ghi lại giá trị biến ở từng dòng.")
+    elif strategy == "recurring_difficulty":
+        repeat_note = ("\n\n🔁 Bạn đã thử bài này vài lần. Thay vì sửa tiếp theo cảm tính, lần này hãy dùng "
+                       "**Chạy từng bước** với đúng đầu vào của kiểm thử chưa đạt và ghi lại giá trị biến ở từng dòng.")
+
+    extra = _model_notes(adaptive_strategy)
+    if extra:
+        repeat_note += "\n\n" + extra
+
     if hint_level == 1:
+        if failed_tc:
+            desc = failed_tc.get("description") or f"kiểm thử #{failed_tc.get('test_idx', '?')}"
+            kind = {"RUNTIME_ERROR": "chương trình dừng vì lỗi khi chạy",
+                    "FAIL": "kết quả in ra khác kỳ vọng"}.get(failed_tc.get("status"), "chưa đạt")
+            evidence = f"🔎 **Bằng chứng:** {desc} — {kind}."
+        else:
+            evidence = "🔎 **Bằng chứng:** chưa có kiểm thử nào được ghi nhận là lỗi cụ thể; dữ liệu chưa đủ để khoanh vùng."
+        structure = ast_analysis.get("structural_summary")
+        if structure:
+            evidence += f" Cấu trúc bài làm: {structure}"
         return (
             f"💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**\n\n"
-            f"Hiện tại code của bạn đã đạt **{passed_count}/{total_count}** test cases. Hãy suy ngẫm về hướng tiếp cận thuật toán:\n\n"
-            f"1. 🎯 **Đánh giá hướng đi:** {ast_analysis.get('structural_summary', 'Bạn đang tiếp cận bài toán bằng các cấu trúc lập trình cơ bản.')}\n\n"
-            f"2. ❓ **Câu hỏi Socratic gợi mở:**\n"
-            f"   - Biến lưu trữ kết quả của bạn đã được gán giá trị khởi tạo chính xác cho trường hợp đầu tiên chưa?\n"
-            f"   - Trong Python, dải `range(start, stop)` sẽ dừng lại ở giá trị nào? Có bao gồm giá trị `stop` không hay dừng ở `stop - 1`?\n\n"
-            f"3. 📖 **Khái niệm trọng tâm:** Xem lại cú pháp vòng lặp `for ... in range(...)`, kỹ thuật tích lũy biến số `+=`, và cách đọc dữ liệu bằng `input()`."
+            f"{progress}\n\n{evidence}\n\n"
+            f"❓ **Câu hỏi để tự kiểm:**\n" + "\n".join(f"- {q}" for q in questions) + "\n\n"
+            f"{_next_step_line('chọn một câu hỏi ở trên, tự trả lời bằng một ví dụ nhỏ rồi bấm Chạy thử để đối chiếu.', adaptive_strategy)}"
+            f"{repeat_note}"
         )
-    elif hint_level == 2:
-        if failed_tc:
-            inp_val = failed_tc.get('input', '').strip()
-            exp_val = failed_tc.get('expected_output', '').strip()
-            act_val = failed_tc.get('actual_output', '').strip() or '(không in ra gì hoặc chương trình kết thúc sớm)'
+
+    if hint_level == 2:
+        if not failed_tc:
             return (
-                f"🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**\n\n"
-                f"1. 📍 **Khoanh vùng vị trí lỗi trong code:**\n"
-                f"   - Cấu trúc mã nguồn AST: {ast_analysis.get('structural_summary', 'Kiểm tra cấu trúc vòng lặp hoặc biểu thức gán')}.\n"
-                f"   - Lỗi nằm ở **cận trên của vòng lặp** hoặc **biểu thức cập nhật giá trị** khiến kết quả bị lệch.\n\n"
-                f"2. 🔍 **Mổ xẻ Test Case bị lỗi:**\n"
-                f"   - **Đầu vào (Input):** `{inp_val}`\n"
-                f"   - **Kết quả thực tế từ code của bạn:** `{act_val}`\n"
-                f"   - **Kết quả đề bài kỳ vọng (Expected):** `{exp_val}`\n\n"
-                f"3. 🛠️ **Chỉ dẫn sửa lỗi:**\n"
-                f"   - Kết quả thực tế bị lệch so với kỳ vọng do vòng lặp của bạn đang dừng sớm hơn 1 bước hoặc biểu thức tính toán chưa đúng.\n"
-                f"   - Nếu bạn muốn vòng lặp tính đến $n$, hãy đảm bảo cận trên là `n + 1` vì `range(1, n)` chỉ chạy đến $n - 1$."
+                f"🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT]**\n\n{progress}\n\n"
+                "🔎 **Bằng chứng:** kết quả chấm chưa cho biết kiểm thử cụ thể nào lỗi, nên chưa thể khoanh vùng dòng lệnh.\n\n"
+                "➡️ **Bước kế tiếp:** bấm Chạy thử để xem bảng kiểm thử, rồi xin lại gợi ý Mức 2." + repeat_note
             )
+        inp_val = (failed_tc.get("input") or "").strip()
+        exp_val = (failed_tc.get("expected_output") or "").strip()
+        act_val = (failed_tc.get("actual_output") or "").strip()
+        err_msg = (failed_tc.get("error_message") or "").strip()
+        if failed_tc.get("status") == "RUNTIME_ERROR":
+            observed = f"chương trình dừng với lỗi `{err_msg or 'lỗi khi chạy'}`"
+            next_step = ("tìm dòng mà thông báo lỗi nhắc tới, xác định biến nào ở dòng đó mang giá trị gây lỗi "
+                         "với đầu vào trên.")
         else:
-            return (
-                f"🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT]**\n\n"
-                f"Code của bạn đã đạt {passed_count}/{total_count} test cases nhưng chưa bao quát được các trường hợp đặc biệt. Hãy rà soát lại điều kiện biên (giá trị nhỏ nhất hoặc chuỗi rỗng)."
-            )
-    else:  # Level 3
+            observed = _observed_difference(exp_val, act_val)
+            next_step = ("dùng **Chạy từng bước** với đúng đầu vào này và dừng ở dòng đầu tiên mà giá trị biến "
+                         "khác với điều bạn dự tính.")
         return (
-            f"📘 **[MỨC 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**\n\n"
-            f"Dưới đây là dàn ý thuật toán chi tiết và khung code mẫu từng bước cho bài **{title}**:\n\n"
-            f"### 1. Dàn ý các bước thuật toán:\n"
-            f"- **Bước 1:** Nhập dữ liệu đầu vào và chuyển về kiểu số thích hợp: `n = int(input())`.\n"
-            f"- **Bước 2:** Khởi tạo biến lưu kết quả với giá trị ban đầu chính xác (ví dụ `ans = 0` khi tính tổng, hoặc `ans = 1` khi tính giai thừa/tích).\n"
-            f"- **Bước 3:** Sử dụng vòng lặp duyệt qua các giá trị cần xử lý và thực hiện phép tính tích lũy.\n"
-            f"- **Bước 4:** In kết quả cuối cùng ra màn hình bằng hàm `print(ans)`.\n\n"
-            f"### 2. Khung mã nguồn mẫu (Hãy tự điền vào các chỗ trống `...`):\n"
-            f"```python\n"
-            f"# Khung code hướng dẫn giải:\n"
-            f"n = int(input())\n\n"
-            f"# Bước 2: Khởi tạo biến kết quả ban đầu\n"
-            f"ans = 0\n\n"
-            f"# Bước 3: Duyệt và cộng dồn\n"
-            f"for i in range(1, ...):  # TODO: Điền cận trên đúng (gợi ý: n + 1)\n"
-            f"    ans += ...          # TODO: Điền biến cần cộng dồn vào ans\n\n"
-            f"# Bước 4: In kết quả\n"
-            f"print(ans)\n"
-            f"```\n\n"
-            f"*(Bạn hãy quan sát khung code trên, suy nghĩ và tự điền các phần `...` vào trình biên dịch nhé!)*"
+            f"🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**\n\n{progress}\n\n"
+            f"🔎 **Bằng chứng từ kiểm thử #{failed_tc.get('test_idx', '?')}:**\n"
+            f"- **Đầu vào:** `{inp_val}`\n"
+            f"- **Kỳ vọng:** `{exp_val}`\n"
+            f"- **Thực tế:** `{act_val or '(không in ra gì)'}`\n"
+            f"- **Quan sát:** {observed}.\n\n"
+            f"❓ **Câu hỏi khoanh vùng:** {questions[0]}\n\n"
+            f"{_next_step_line(next_step, adaptive_strategy)}"
+            f"{repeat_note}\n\n"
+            "*(Gợi ý tự động khi không có mô hình AI: chỉ nêu điều quan sát được, chưa chỉ ra được dòng lệnh cụ thể.)*"
         )
+
+    # Level 3: dàn ý 4 bước + khung code có chỗ trống; không điền sẵn biểu thức cốt lõi.
+    target = ""
+    if failed_tc and failed_tc.get("status") == "FAIL":
+        target = (f"\n\n🔎 **Dùng để tự kiểm:** với đầu vào `{(failed_tc.get('input') or '').strip()}` "
+                  f"chương trình cần in `{(failed_tc.get('expected_output') or '').strip()}`.")
+    return (
+        f"📘 **[MỨC 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**\n\n"
+        f"{progress}{target}\n\n"
+        f"### 1. Dàn ý các bước thuật toán:\n"
+        f"- **Bước 1:** Đọc dữ liệu đầu vào đúng định dạng đề nêu và ép về kiểu phù hợp.\n"
+        f"- **Bước 2:** Khởi tạo biến lưu kết quả bằng giá trị ban đầu hợp lý cho phép tính của đề.\n"
+        f"- **Bước 3:** Xử lý dữ liệu (rẽ nhánh hoặc lặp) và cập nhật biến kết quả.\n"
+        f"- **Bước 4:** In kết quả đúng định dạng đề yêu cầu bằng `print()`.\n\n"
+        f"### 2. Khung mã nguồn (tự điền các chỗ `...`):\n"
+        f"```python\n"
+        f"# Bước 1: đọc dữ liệu\n"
+        f"du_lieu = ...          # TODO: đọc và ép kiểu đầu vào\n\n"
+        f"# Bước 2: khởi tạo kết quả\n"
+        f"ket_qua = ...          # TODO: giá trị ban đầu\n\n"
+        f"# Bước 3: xử lý\n"
+        f"...                    # TODO: rẽ nhánh / vòng lặp cập nhật ket_qua\n\n"
+        f"# Bước 4: in kết quả\n"
+        f"print(ket_qua)\n"
+        f"```\n\n"
+        f"{_level3_progress_note(code, adaptive_strategy)}"
+        f"{repeat_note}"
+    )
+
+
+def llm_disabled() -> bool:
+    """PYTUTOR_DISABLE_LLM=1 ép chế độ offline (không gọi provider ngoài) cho kiểm thử, benchmark và pilot mặc định."""
+    return os.getenv("PYTUTOR_DISABLE_LLM", "").strip().lower() in ("1", "true", "yes")
 
 
 async def call_qwen_api(prompt: str, timeout_seconds: float = 45.0) -> Optional[str]:
     """
     Gọi trực tiếp API Qwen2.5-14B qua HTTP POST.
     """
+    if llm_disabled():
+        return None
     headers = {
         "Content-Type": "application/json",
         "x-ollama-seckey": QWEN_SECKEY
@@ -361,7 +601,7 @@ def _sync_call_gemini(prompt: str) -> Optional[tuple[str, str]]:
 
 async def call_gemini_api(prompt: str) -> Optional[tuple[str, str]]:
     """Gọi Gemini API qua thread pool để tránh block event loop."""
-    if not GEMINI_API_KEY:
+    if not GEMINI_API_KEY or llm_disabled():
         return None
     try:
         return await asyncio.to_thread(_sync_call_gemini, prompt)
@@ -372,7 +612,7 @@ async def call_gemini_api(prompt: str) -> Optional[tuple[str, str]]:
 
 async def call_gemini_with_usage(prompt: str) -> tuple[Optional[tuple[str, str]], dict]:
     """Call Gemini and return provider usage counts when the SDK exposes them."""
-    if not GEMINI_API_KEY:
+    if not GEMINI_API_KEY or llm_disabled():
         return None, {"prompt_tokens": None, "completion_tokens": None}
     try:
         result = await asyncio.to_thread(_sync_call_gemini_with_usage, prompt)
@@ -466,16 +706,23 @@ async def generate_tutor_hint(
             hint_level=hint_level,
             all_passed=all_passed
         )
-        safe, reason = check_student_output(sanitized_hint)
+        # Chẩn đoán được phép trích lại dòng code của chính người học (không tính là lời giải).
+        safe, reason = check_student_output(sanitized_hint, quoted_context=code or "")
         if not safe and hint_level in (1, 2) and not all_passed:
-            fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level)
+            fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level,
+                                                    adaptive_strategy=adaptive_strategy)
             return fallback, "Pedagogical-Rule-Engine (Output Guard Fallback)", {
                 "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                 "model_name": model_name, **usage, "input_guard": "allowed",
                 "output_guard": reason, "status": "blocked_fallback"}
+        guard_label = "allowed" if safe else "post_acceptance_review"
+        if hint_level == 3 and not all_passed:
+            # Mức 3 cho cấu trúc, không cho logic: che biểu thức lời giải trong khung mã.
+            sanitized_hint, masked = enforce_level3_skeleton(sanitized_hint)
+            guard_label = f"level3_masked:{masked}" if masked else "level3_skeleton_ok"
         return sanitized_hint, model_name, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                 "model_name": model_name, **usage, "input_guard": "allowed",
-                "output_guard": "allowed" if safe else "post_acceptance_review", "status": "success"}
+                "output_guard": guard_label, "status": "success"}
 
     # 2. Dự phòng: Thử Qwen2.5-14B (nếu server trường mở)
     qwen_response = await call_qwen_api(prompt, timeout_seconds=15.0)
@@ -485,9 +732,13 @@ async def generate_tutor_hint(
             hint_level=hint_level,
             all_passed=all_passed
         )
+        qwen_guard = "checked"
+        if hint_level == 3 and not all_passed:
+            sanitized_hint, masked = enforce_level3_skeleton(sanitized_hint)
+            qwen_guard = f"level3_masked:{masked}" if masked else "level3_skeleton_ok"
         return sanitized_hint, QWEN_MODEL, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                 "model_name": QWEN_MODEL, "prompt_tokens": None, "completion_tokens": None,
-                "input_guard": "allowed", "output_guard": "checked", "status": "success"}
+                "input_guard": "allowed", "output_guard": qwen_guard, "status": "success"}
 
     # 3. Dự phòng cấp cuối: Rule-based Fallback
     fallback_hint = generate_rule_based_fallback(
@@ -495,7 +746,8 @@ async def generate_tutor_hint(
         code=code,
         test_results=test_results,
         ast_analysis=ast_analysis,
-        hint_level=hint_level
+        hint_level=hint_level,
+        adaptive_strategy=adaptive_strategy
     )
     return fallback_hint, "Pedagogical-Rule-Engine (Offline Fallback)", {
         "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
@@ -510,10 +762,15 @@ async def generate_chat_followup(
     history: list = None,
     ast_summary: str = "",
     student_model: dict = None,
+    chat_scope: str = "legacy",
+    class_id: str | None = None,
 ) -> tuple[str, str, dict]:
     """
     Sinh phản hồi cho câu hỏi làm rõ của sinh viên trong phiên chat đa lượt (Phase 8).
     Tuân thủ nghiêm ngặt nguyên tắc Socratic và Anti-Spoil Guard (Không giải hộ).
+
+    `chat_scope` (S1.4): "concept_only" khi chưa có lượt nộp pass → prompt không chứa code bài làm;
+    "code_review" khi đã nộp pass → `code` là code đã nộp; "legacy" giữ hành vi cũ.
     """
     title = exercise.get("title", "Bài tập lập trình Python")
     desc = exercise.get("description", "")
@@ -529,10 +786,13 @@ async def generate_chat_followup(
 
     history_text = "\n".join(history_turns) if history_turns else "(Bắt đầu cuộc trò chuyện làm rõ)"
 
-    rag_docs = retrieve_knowledge(user_message, top_k=4)
+    rag_docs = retrieve_knowledge(user_message, top_k=3, class_id=class_id)
     rag_context = "\n\n".join(
-        f"Nguồn: {doc['source']} (đoạn {doc['path']})\n{doc['content']}" for doc in rag_docs
-    ) or "Không tìm thấy tài liệu nội bộ liên quan; chỉ giải thích ở mức khái niệm chung."
+        f"Nguồn: {doc['source']} — mục \"{doc.get('section') or 'Tổng quan'}\"\n{doc['content']}" for doc in rag_docs
+    ) or ("Không tìm thấy tài liệu nội bộ liên quan. Chỉ giải thích ở mức khái niệm chung, "
+          "KHÔNG trích dẫn hay nêu tên bất kỳ tài liệu/giáo trình nào.")
+    # Nguồn hiển thị cho người học: chỉ tên tệp + mục, không kèm nội dung.
+    source_refs = _source_refs(rag_docs)
     metrics = (student_model or {}).get("analytics_metrics") or {}
     prompt = render_socratic_prompt(
         exercise={"title": title, "description": desc}, code=code,
@@ -540,8 +800,9 @@ async def generate_chat_followup(
         hint_level=1,
         autonomy_score=float(metrics.get("autonomy_score", 0) or 0),
         first_try_pass_rate=float(metrics.get("first_try_pass_rate", 0) or 0),
+        chat_scope=chat_scope,
     )
-    if ast_summary:
+    if ast_summary and chat_scope != "concept_only":
         prompt += f"\n<ast_summary>{ast_summary}</ast_summary>\n"
 
     started = asyncio.get_running_loop().time()
@@ -549,35 +810,225 @@ async def generate_chat_followup(
     gemini_res, usage = await call_gemini_with_usage(prompt)
     if gemini_res:
         raw_reply, model_name = gemini_res
-        safe, reason = check_student_output(raw_reply)
-        sanitized = sanitize_spoil_code(raw_reply, hint_level=1, all_passed=False)
+        quoted_ctx = code if chat_scope == "code_review" else ""
+        safe, reason = check_student_output(raw_reply, quoted_context=quoted_ctx)
+        sanitized = sanitize_spoil_code(raw_reply, hint_level=1, all_passed=(chat_scope == "code_review"))
         if safe:
-            safe, reason = check_student_output(sanitized)
+            safe, reason = check_student_output(sanitized, quoted_context=quoted_ctx)
         telemetry = {
             "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
             "model_name": model_name, **usage,
             "input_guard": "allowed", "output_guard": "allowed" if safe else reason,
             "status": "success" if safe else "blocked",
             "rag_sources": [doc["source"] for doc in rag_docs],
+            # Phản hồi bị chặn không dùng nội dung nguồn nên không gắn nguồn cho người học.
+            "source_refs": source_refs if safe else [],
         }
+        if safe and source_refs and reply_says_no_source(sanitized):
+            # Mô hình tự nhận mục truy xuất không liên quan: không hiển thị nguồn trái với lời của chính câu trả lời.
+            telemetry["source_refs"] = []
+            telemetry["knowledge_status"] = "no_source"
         if safe:
             return sanitized, model_name, telemetry
         return ("Mình chưa thể gửi phản hồi đó vì có thể chứa quá nhiều nội dung giải sẵn. "
                 "Bạn hãy hỏi về một khái niệm hoặc bước cụ thể để mình gợi mở nhé!"), model_name, telemetry
 
-    # Dự phòng offline
-    fallback = (
-        "Chào bạn! Gia sư PyTutor đã ghi nhận câu hỏi của bạn. "
-        "Hãy đối chiếu với gợi ý ở các mức 1, 2, 3 bên trên và thử chạy lại từng bước để quan sát kết quả nhé! "
-        "Nếu gặp lỗi cú pháp, bạn hãy chú ý thụt dòng (indentation) và dấu hai chấm ':' ở cuối câu lệnh.",
-        "Rule-Based Assistant"
-    )
-    return fallback[0], fallback[1], {
+    # Dự phòng offline. Thứ tự: (1) câu hỏi về luật nút/sao → trả đúng luật hệ thống; (2) chưa nộp pass mà nhờ gỡ
+    # code bài đang làm → chuyển hướng sang "Hỏi Gia sư AI"; (3) trích đoạn tài liệu nội bộ (có nguồn) hoặc nói rõ
+    # giới hạn, không bịa nguồn.
+    system_reply = build_system_rule_reply(user_message, chat_scope)
+    if system_reply:
+        return system_reply, "Rule-Based Assistant", {
+            "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+            "model_name": "Rule-Based Assistant", "prompt_tokens": None, "completion_tokens": None,
+            "input_guard": "allowed", "output_guard": "fallback", "status": "fallback",
+            "rag_sources": [], "source_refs": [], "knowledge_status": "not_applicable",
+        }
+    reply, used_refs = build_offline_chat_reply(rag_docs)
+    if chat_scope == "code_review":
+        # S8a offline: nói về bài ĐÃ NỘP bằng tóm tắt cấu trúc (AST), kèm trích đoạn tài liệu nếu có.
+        reply = build_offline_code_review_reply(title, ast_summary, reply if used_refs else "")
+        return reply, "Rule-Based Assistant", {
+            "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+            "model_name": "Rule-Based Assistant", "prompt_tokens": None, "completion_tokens": None,
+            "input_guard": "allowed", "output_guard": "fallback", "status": "fallback",
+            "rag_sources": [ref["source"] for ref in used_refs], "source_refs": used_refs,
+            "knowledge_status": "grounded" if used_refs else "not_applicable",
+        }
+    return reply, "Rule-Based Assistant", {
         "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
-        "model_name": fallback[1], "prompt_tokens": None, "completion_tokens": None,
+        "model_name": "Rule-Based Assistant", "prompt_tokens": None, "completion_tokens": None,
         "input_guard": "allowed", "output_guard": "fallback", "status": "fallback",
-        "rag_sources": [doc["source"] for doc in rag_docs],
+        "rag_sources": [ref["source"] for ref in used_refs],
+        "source_refs": used_refs,
     }
+
+
+_STAR_RULE_QUESTION = re.compile(
+    r"sao tự lực|[123]\s*(?:⭐|sao)\b|mấy sao|bao nhiêu sao|số sao|tăng sao|cày sao|luật (?:tính )?sao|cách tính sao|⭐|(?:ba|3) nút",
+    flags=re.IGNORECASE)
+_DEBUG_MY_CODE_REQUEST = re.compile(
+    r"(?:sửa|fix|gỡ|chữa|xem|kiểm tra|soát)\s+(?:giúp |hộ |giùm |lại |cho |em |mình |tôi |tớ )*(?:lỗi |bug )?(?:trong |ở |của )?"
+    r"(?:code|bài làm|bài của|bài này|chương trình|đoạn mã)"
+    r"|(?:code|bài làm|bài|chương trình)\s+(?:của\s+)?(?:em|mình|tôi|tớ)\b.*(?:sai|lỗi|không chạy|fail)"
+    r"|(?:sai|lỗi)\s+(?:ở|chỗ|dòng)\s+(?:đâu|nào)|dòng nào\s+(?:bị\s+)?(?:sai|lỗi)"
+    r"|tại sao\s+(?:code|bài)\b.*(?:sai|lỗi|không chạy|fail|không pass)|\bdebug\b",
+    flags=re.IGNORECASE)
+
+
+def build_system_rule_reply(user_message: str, chat_scope: str = "legacy") -> Optional[str]:
+    """Câu trả lời tất định cho hai tình huống không cần LLM (S1.4); None nếu không thuộc hai tình huống này."""
+    text = user_message or ""
+    if _STAR_RULE_QUESTION.search(text):
+        return ("Luật của PyTutor về ba nút và Sao tự lực:\n\n" + SYSTEM_RULES_TEXT +
+                "\n\n❓ Với bài đang làm, bạn muốn thử tự giải tới đâu trước khi cần gợi ý?")
+    if chat_scope == "concept_only" and _DEBUG_MY_CODE_REQUEST.search(text):
+        return ("Ở khung trò chuyện này mình chỉ giải thích **khái niệm Python tổng quát** khi bạn chưa nộp bài đạt, "
+                "nên mình không xem hay chẩn đoán code bài bạn đang làm tại đây. Để được gợi ý dựa trên kết quả chấm thật, "
+                "hãy bấm nút **🤖 Hỏi Gia sư AI** và chọn mức gợi ý 1–3 (Mức 2 sẽ khoanh vùng lỗi). "
+                "Sau khi **🚀 Nộp bài** đạt 100% kiểm thử, bạn có thể quay lại đây hỏi chi tiết về code đã nộp.\n\n"
+                "❓ Trong lúc đó, bạn muốn mình giải thích khái niệm nào (ví dụ: vòng lặp, `range`, ép kiểu)?")
+    return None
+
+
+_SAYS_NO_SOURCE = re.compile(r"không\s+tìm\s+thấy\s+tài\s+liệu\s+(nội\s+bộ|nào)", flags=re.IGNORECASE)
+
+
+def reply_says_no_source(reply: str) -> bool:
+    """Câu trả lời tự nói không có tài liệu phù hợp (đúng cụm prompt yêu cầu mô hình dùng).
+
+    Dùng để giao diện không hiện "Tài liệu nội bộ liên quan" ngược với lời của chính câu trả lời.
+    Chỉ nhìn phần đầu câu trả lời; nếu mô hình diễn đạt khác cụm này thì không phát hiện được.
+    """
+    return bool(_SAYS_NO_SOURCE.search((reply or "")[:400]))
+
+
+def _source_refs(rag_docs: list[dict]) -> list[dict]:
+    refs: list[dict] = []
+    for doc in rag_docs:
+        ref = {"source": doc["source"], "section": doc.get("section") or "Tổng quan"}
+        if doc.get("scope", "global") != "global":
+            ref["origin"] = "class"  # tài liệu do giảng viên lớp cung cấp
+        if ref not in refs:
+            refs.append(ref)
+    return refs
+
+
+def build_offline_chat_reply(rag_docs: list[dict]) -> tuple[str, list[dict]]:
+    """Câu trả lời chat tất định khi không có LLM. Trả về (nội dung, nguồn thực sự được dùng)."""
+    no_source_reply = (
+        "Hiện mô hình AI chưa sẵn sàng và mình không tìm thấy đoạn tài liệu nội bộ nào khớp với câu hỏi này, "
+        "nên mình không trích nguồn nào cả. Bạn có thể hỏi lại bằng tên khái niệm Python cụ thể "
+        "(ví dụ: vòng lặp, `range`, ép kiểu, lỗi `TypeError`), hoặc bấm Chạy thử và xin gợi ý theo mức ở phía trên."
+    )
+    if not rag_docs:
+        return no_source_reply, []
+    top = rag_docs[0]
+    # Bỏ khối code khỏi trích đoạn để không vượt giới hạn Anti-Spoil.
+    excerpt = re.sub(r"```.*?```", "", top["content"], flags=re.DOTALL).strip()
+    if len(excerpt) > 520:
+        excerpt = excerpt[:520].rsplit(" ", 1)[0] + "…"
+    origin = (f"tài liệu **{top['source']}** do giảng viên lớp cung cấp" if top.get("scope", "global") != "global"
+              else "tài liệu nội bộ của PyTutor")
+    reply = (
+        f"Theo {origin}, mục **{top.get('section') or 'Tổng quan'}**:\n\n{excerpt}\n\n"
+        "❓ Từ đoạn trên, điều nào áp dụng được vào bài bạn đang làm? Hãy thử nói lại bằng lời của mình rồi chạy thử để kiểm chứng."
+    )
+    safe, _ = check_student_output(reply)
+    if not safe or not excerpt:
+        return no_source_reply, []
+    return reply, _source_refs([top])
+
+
+def build_offline_code_review_reply(title: str, ast_summary: str, knowledge_reply: str = "") -> str:
+    """Câu trả lời chat tất định sau khi đã nộp đạt (S8a) khi không có LLM.
+
+    Chỉ nêu điều quan sát được từ phân tích cấu trúc (AST) của code đã nộp; không chép lại mã nguồn,
+    không diễn giải từng dòng (việc đó cần mô hình AI).
+    """
+    if ast_summary:
+        observed = f"Cấu trúc quan sát được từ **code bạn đã nộp** (phân tích tự động, không chép lại mã): {ast_summary}"
+    else:
+        observed = "Hiện mình chưa phân tích được cấu trúc của code bạn đã nộp."
+    reply = (
+        f"Ở **{title}**, bạn đã có lượt nộp đạt 100% kiểm thử, nên ở đây mình nói về chính code đã nộp đó. "
+        "Mô hình AI hiện chưa sẵn sàng, vì vậy mình chưa giải thích được từng dòng mà chỉ tóm tắt cấu trúc.\n\n"
+        f"{observed}\n\n"
+        "❓ Tự kiểm: bạn hãy thử nói bằng lời của mình vì sao cấu trúc này cho kết quả đúng với mọi bộ kiểm thử, "
+        "và trường hợp biên nào (đầu vào nhỏ nhất, rỗng, bằng 0) dễ làm nó sai nhất?"
+    )
+    if knowledge_reply:
+        reply += f"\n\n---\n{knowledge_reply}"
+    safe, _ = check_student_output(reply)
+    if not safe:
+        return ("Bài của bạn đã có lượt nộp đạt 100% kiểm thử. Mô hình AI hiện chưa sẵn sàng nên mình chưa giải thích "
+                "chi tiết được code đã nộp; bạn có thể mở Pythonic Review hoặc hỏi lại sau.")
+    return reply
+
+
+def build_class_summary_answer(summary: dict) -> str:
+    """Trả lời tất định cho giảng viên từ số liệu tổng hợp của lớp (dùng khi không có LLM).
+
+    Luôn nêu khoảng thời gian, cỡ mẫu và giới hạn diễn giải; không chứa danh tính sinh viên.
+    """
+    metrics = (summary or {}).get("metrics") or {}
+    cls = (summary or {}).get("class") or {}
+    days = (summary or {}).get("days", 7)
+    header = f"**Lớp {cls.get('class_code', '')} — {days} ngày gần nhất** (chỉ tính lượt *Nộp bài* chính thức)."
+    if metrics.get("data_status", "no_data") == "no_data":
+        return (f"{header}\n\nChưa có lượt nộp bài chính thức nào trong khoảng thời gian này, "
+                "nên chưa thể nhận xét về tiến độ hay điểm nghẽn. Hãy thử mở rộng khoảng thời gian hoặc chờ sinh viên nộp bài.")
+    lines = [
+        header,
+        f"- **Cỡ mẫu:** {metrics.get('submissions', 0)} lượt nộp từ {metrics.get('active_students', 0)}"
+        f"/{metrics.get('enrolled_students', 0)} sinh viên ghi danh, trên {metrics.get('exercises_attempted', 0)} bài.",
+    ]
+    groups = (summary or {}).get("process_groups") or {}
+    overall = groups.get("overall") or {}
+    if groups.get("pairs"):
+        labels = {d["key"]: d["label"] for d in groups.get("definitions", [])}
+        counts = " · ".join(f"{labels.get(k, k)} {v}" for k, v in overall.items() if v)
+        lines.append(f"- **Quá trình học (số cặp sinh viên–bài):** {counts}.")
+    else:
+        lines.append(f"- **Tỷ lệ lượt nộp đạt:** {metrics.get('pass_rate', 0)}%.")
+    mix = (summary or {}).get("error_mix") or {}
+    if mix:
+        lines.append(f"- **Cơ cấu kết quả:** đạt {mix.get('passed_percent', 0)}% · sai một phần kiểm thử "
+                     f"{mix.get('partial_percent', 0)}% · không đạt kiểm thử nào (cú pháp/runtime) {mix.get('zero_pass_percent', 0)}%.")
+    bottlenecks = [b for b in (summary or {}).get("bottlenecks") or [] if b.get("unsuccessful", 0) > 0][:3]
+    if bottlenecks:
+        lines.append("- **Bài có nhiều lượt chưa đạt nhất:**")
+        for item in bottlenecks:
+            lines.append(f"  - {item.get('title', item.get('exercise_id', ''))}: {item.get('unsuccessful', 0)}/{item.get('submissions', 0)} "
+                         f"lượt chưa đạt, {item.get('students_passed', 0)}/{item.get('students_attempted', 0)} sinh viên đã qua.")
+    else:
+        lines.append("- Chưa ghi nhận bài nào có lượt nộp chưa đạt trong khoảng này.")
+    if metrics.get("data_status") == "limited":
+        lines.append("\n⚠️ **Giới hạn:** dưới 3 sinh viên có hoạt động trong khoảng này; số liệu chỉ mang tính mô tả, "
+                     "chưa nên dùng để kết luận về cả lớp.")
+    else:
+        lines.append("\nℹ️ **Giới hạn:** đây là thống kê mô tả từ lượt nộp; không cho biết nguyên nhân và không thay thế quan sát trên lớp.")
+    lines.append("*(Trả lời tự động từ số liệu tổng hợp; mô hình AI hiện không khả dụng.)*")
+    return "\n".join(lines)
+
+
+_PROCESS_AS_STUDENTS = re.compile(
+    r"\d+\s+sinh viên\s+(?:đạt độc lập|đạt sau thử|đạt nhờ gợi ý|đang tiến triển|đang trong quá trình tiến triển|chỉ chạy thử)",
+    flags=re.IGNORECASE)
+PROCESS_UNIT_NOTE = ("\n\n*Lưu ý về đơn vị (PyTutor bổ sung): các nhóm quá trình học được đếm theo cặp sinh viên–bài; "
+                     "một sinh viên làm nhiều bài được đếm nhiều lần, nên các con số nhóm ở trên không phải số sinh viên.*")
+
+
+def add_process_unit_note(reply: str, summary: dict) -> str:
+    """Nếu câu trả lời của mô hình gọi số đếm nhóm quá trình là "N sinh viên ...", gắn ghi chú đơn vị tất định.
+
+    Nhóm quá trình đếm theo cặp sinh viên–bài (xem docs/PROCESS_GROUPS.md); gọi nhầm thành số sinh viên
+    làm giảng viên đọc sai quy mô. Không sửa câu chữ của mô hình, chỉ thêm ghi chú.
+    """
+    groups = (summary or {}).get("process_groups") or {}
+    if groups.get("pairs") and _PROCESS_AS_STUDENTS.search(reply) and PROCESS_UNIT_NOTE.strip() not in reply:
+        return reply.rstrip() + PROCESS_UNIT_NOTE
+    return reply
 
 
 async def generate_instructor_answer(summary: dict, user_message: str) -> tuple[str, str, dict]:
@@ -588,11 +1039,13 @@ async def generate_instructor_answer(summary: dict, user_message: str) -> tuple[
         reply, source = result
         safe, reason = check_student_output(reply)
         if safe and 0 < len(reply) <= 5000:
+            reply = add_process_unit_note(reply, summary)
             return reply, source, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                                   "model_name": source, **usage,
                                   "input_guard": "allowed", "output_guard": "allowed", "status": "success"}
         logger.warning("Instructor output blocked by output guard: %s", reason)
-    return ("Chưa thể phân tích hoặc câu trả lời chưa qua kiểm tra an toàn. Dữ liệu tổng hợp vẫn được giữ an toàn; vui lòng thử lại sau.",
+    # Không có LLM hoặc đầu ra bị chặn: trả lời tất định từ chính số liệu tổng hợp đã được phân quyền.
+    return (build_class_summary_answer(summary),
             "Rule-Based Assistant",
             {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
              "model_name": "Rule-Based Assistant", "prompt_tokens": None, "completion_tokens": None,
@@ -653,7 +1106,7 @@ async def generate_pythonic_review(
         "strengths": "Cấu trúc chương trình rõ ràng, biến được khởi tạo và cập nhật logic chuẩn xác.",
         "improvements": "Trong Python hiện đại, bạn có thể tận dụng các hàm tích hợp sẵn (built-in) như sum() hoặc slicing để mã nguồn tinh gọn hơn.",
         "pythonic_code": student_code.strip(),
-        "explanation": "Viết mã nguồn chuẩn Pythonic giúp tiết kiệm bộ nhớ, tăng tốc độ thực thi và thể hiện phong cách của một lập trình viên chuyên nghiệp."
+        "explanation": "Nhận xét tự động khi mô hình AI không khả dụng: điểm và nhận xét chỉ dựa trên độ dài mã, mang tính tham khảo và chưa phân tích cụ thể lời giải của bạn."
     }, "Pedagogical-Rule-Reviewer", {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
         "model_name": "Pedagogical-Rule-Reviewer", "prompt_tokens": None, "completion_tokens": None,
         "input_guard": "allowed", "output_guard": "fallback", "status": "fallback"}

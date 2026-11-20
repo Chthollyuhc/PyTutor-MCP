@@ -144,24 +144,24 @@ export default function ExecutionVisualizerModal({
   const handleTogglePlay = () => setIsPlaying((prev) => !prev);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
-      <div className="w-full max-w-5xl h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm select-text animate-fade-in">
+      <div className="w-full max-w-5xl h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-bento overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-3 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-600 dark:text-cyan-400 font-bold shadow-soft">
               <Code className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm sm:text-base font-bold text-white tracking-wide">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-wide">
                   👁️ Trực quan hóa Từng bước Thực thi
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
-                  MCP Tool 8: trace_code_execution
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-500/10 text-cyan-800 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/20 font-mono">
+                  Theo dõi từng bước
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Theo dõi dòng lệnh đang chạy, biến đổi giá trị biến số và luồng stdout
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function ExecutionVisualizerModal({
             <button
               onClick={() => setShowStdin((prev) => !prev)}
               type="button"
-              className="px-2.5 py-1 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 rounded-lg transition-colors cursor-pointer"
+              className="px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl transition-colors cursor-pointer"
             >
               ⌨️ {showStdin ? 'Ẩn Stdin' : 'Nhập Stdin'}
             </button>
@@ -179,15 +179,15 @@ export default function ExecutionVisualizerModal({
               onClick={() => loadTrace(code, stdinInput)}
               disabled={isLoading}
               type="button"
-              className="p-1.5 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               title="Chạy lại Tracing"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-cyan-500' : ''}`} />
             </button>
             <button
               onClick={onClose}
               type="button"
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               title="Đóng cửa sổ"
             >
               <X className="w-5 h-5" />
@@ -197,19 +197,19 @@ export default function ExecutionVisualizerModal({
 
         {/* Collapsible Stdin Input Bar */}
         {showStdin && (
-          <div className="px-5 py-2.5 bg-slate-950/80 border-b border-slate-800/80 flex items-center space-x-3 text-xs">
-            <span className="text-slate-400 shrink-0 font-medium">Dữ liệu đầu vào (Stdin):</span>
+          <div className="px-5 py-2.5 bg-slate-100/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800/80 flex items-center space-x-3 text-xs">
+            <span className="text-slate-600 dark:text-slate-400 shrink-0 font-medium">Dữ liệu đầu vào (Stdin):</span>
             <input
               type="text"
               value={stdinInput}
               onChange={(e) => setStdinInput(e.target.value)}
               placeholder="Ví dụ: 5 hoặc nguyen van a (dùng cho hàm input())"
-              className="flex-1 bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1 text-slate-200 text-xs font-mono focus:outline-none focus:border-cyan-500"
+              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-900 dark:text-slate-200 text-xs font-mono focus:outline-none focus:border-cyan-500"
             />
             <button
               onClick={() => loadTrace(code, stdinInput)}
               disabled={isLoading}
-              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-md font-semibold text-xs transition-colors"
+              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold text-xs transition-colors shadow-soft cursor-pointer"
             >
               Áp dụng & Trace
             </button>
@@ -217,13 +217,13 @@ export default function ExecutionVisualizerModal({
         )}
 
         {/* Navigation / Playback Controls Toolbar */}
-        <div className="px-5 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-2.5 bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-1.5 sm:space-x-2">
             {/* First */}
             <button
               onClick={handleFirst}
               disabled={steps.length === 0 || currentStepIdx === 0}
-              className="p-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-750 disabled:opacity-40 disabled:hover:text-slate-300 rounded-lg border border-slate-700/60 transition-colors cursor-pointer"
+              className="p-1.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 rounded-xl border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer shadow-soft"
               title="Về bước đầu tiên"
             >
               <SkipBack className="w-3.5 h-3.5" />
@@ -233,7 +233,7 @@ export default function ExecutionVisualizerModal({
             <button
               onClick={handlePrev}
               disabled={steps.length === 0 || currentStepIdx === 0}
-              className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-750 disabled:opacity-40 disabled:hover:text-slate-300 rounded-lg border border-slate-700/60 transition-colors cursor-pointer"
+              className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 rounded-xl border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer shadow-soft"
               title="Lùi 1 bước"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -244,10 +244,10 @@ export default function ExecutionVisualizerModal({
             <button
               onClick={handleTogglePlay}
               disabled={steps.length === 0}
-              className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-soft ${
                 isPlaying
-                  ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-sm'
-                  : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm'
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                  : 'bg-cyan-600 hover:bg-cyan-700 text-white'
               }`}
               title="Tự động chạy từng bước"
             >
@@ -268,7 +268,7 @@ export default function ExecutionVisualizerModal({
             <button
               onClick={handleNext}
               disabled={steps.length === 0 || currentStepIdx >= steps.length - 1}
-              className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-750 disabled:opacity-40 disabled:hover:text-slate-300 rounded-lg border border-slate-700/60 transition-colors cursor-pointer"
+              className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 disabled:opacity-40 rounded-xl border border-slate-200 dark:border-slate-700/60 transition-colors cursor-pointer shadow-soft"
               title="Tiếp 1 bước"
             >
               <span className="hidden sm:inline">Tiếp 1 bước</span>
@@ -334,14 +334,14 @@ export default function ExecutionVisualizerModal({
         {/* Main Content Split View (Code on Left, Variables & Stdout on Right) */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-0 overflow-hidden">
           {/* Left Column: Code View with Active Line Highlight (~55%) */}
-          <div className="md:col-span-7 border-r border-slate-800 flex flex-col bg-slate-950 overflow-hidden">
-            <div className="px-4 py-2 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between text-xs text-slate-400">
-              <span className="font-semibold flex items-center space-x-1.5 text-slate-300">
-                <Code className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="md:col-span-7 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
+            <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/40 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+              <span className="font-semibold flex items-center space-x-1.5 text-slate-800 dark:text-slate-300">
+                <Code className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>MÃ NGUỒN PYTHON</span>
               </span>
               {currentStep && (
-                <span className="font-mono text-[11px] text-cyan-400">
+                <span className="font-mono text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold">
                   Đang chạy: Dòng {currentStep.line} ({currentStep.event})
                 </span>
               )}
@@ -349,12 +349,12 @@ export default function ExecutionVisualizerModal({
 
             <div className="flex-1 overflow-auto p-3 font-mono text-xs leading-6 select-text">
               {isLoading ? (
-                <div className="h-full flex items-center justify-center text-slate-400 space-x-2">
-                  <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
-                  <span>Đang tracing mã nguồn qua MCP Server...</span>
+                <div className="h-full flex items-center justify-center text-slate-500 space-x-2">
+                  <RefreshCw className="w-5 h-5 animate-spin text-cyan-500" />
+                  <span>Đang theo dõi quá trình chạy mã...</span>
                 </div>
               ) : codeLines.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-slate-500">
+                <div className="h-full flex items-center justify-center text-slate-400">
                   Không có mã nguồn để hiển thị.
                 </div>
               ) : (
@@ -366,19 +366,19 @@ export default function ExecutionVisualizerModal({
                       <div
                         key={lineNum}
                         ref={isActive ? activeLineRef : null}
-                        className={`flex items-center rounded px-2 transition-colors ${
+                        className={`flex items-center rounded-lg px-2 transition-colors ${
                           isActive
                             ? 'bg-primary/15 border-l-2 border-primary text-foreground font-semibold'
-                            : 'hover:bg-slate-900/60 text-slate-300'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {/* Arrow Pointer & Line Number */}
-                        <span className="w-10 text-right pr-3 text-slate-500 select-none font-mono text-[11px] shrink-0 flex items-center justify-end space-x-1">
+                        <span className="w-10 text-right pr-3 text-slate-400 select-none font-mono text-[11px] shrink-0 flex items-center justify-end space-x-1">
                           {isActive && <span className="text-primary font-bold">▶</span>}
                           <span>{lineNum}</span>
                         </span>
                         {/* Line Code */}
-                        <pre className="flex-1 overflow-x-auto py-0.5 font-mono text-xs text-slate-200">
+                        <pre className="flex-1 overflow-x-auto py-0.5 font-mono text-xs text-slate-800 dark:text-slate-200">
                           {lineText || ' '}
                         </pre>
                       </div>
@@ -390,16 +390,16 @@ export default function ExecutionVisualizerModal({
           </div>
 
           {/* Right Column: Scope & Variables Table + Stdout (~45%) */}
-          <div className="md:col-span-5 flex flex-col bg-slate-900 overflow-hidden">
+          <div className="md:col-span-5 flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
             {/* Top Right: Variables Table (~65% height) */}
-            <div className="flex-1 border-b border-slate-800 flex flex-col overflow-hidden">
-              <div className="px-4 py-2 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between text-xs text-slate-400">
-                <span className="font-semibold flex items-center space-x-1.5 text-slate-300">
-                  <Variable className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex-1 border-b border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+              <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/50 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-semibold flex items-center space-x-1.5 text-slate-800 dark:text-slate-300">
+                  <Variable className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>CÁC BIẾN TRONG PHẠM VI</span>
                 </span>
                 {currentStep && (
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]">
+                  <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[11px]">
                     Phạm vi: {currentStep.func_name || '<main>'}
                   </span>
                 )}
@@ -407,20 +407,20 @@ export default function ExecutionVisualizerModal({
 
               <div className="flex-1 overflow-auto p-3">
                 {!currentStep || !currentStep.locals || Object.keys(currentStep.locals).length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-slate-500 text-xs italic">
+                  <div className="h-full flex items-center justify-center text-slate-400 text-xs italic">
                     Chưa có biến nào được gán ở bước này.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
+                    <table className="table-stack w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
                           <th className="pb-2 pl-2">Tên biến</th>
                           <th className="pb-2">Kiểu</th>
                           <th className="pb-2 pr-2">Giá trị</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 font-mono">
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-mono">
                         {Object.entries(currentStep.locals).map(([name, info]) => {
                           const isChanged = changedVars.has(name);
                           return (
@@ -428,20 +428,20 @@ export default function ExecutionVisualizerModal({
                               key={name}
                               className={`transition-colors ${
                                 isChanged
-                                  ? 'bg-emerald-500/15 text-emerald-300'
-                                  : 'hover:bg-slate-800/40 text-slate-200'
+                                  ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-500/15 dark:text-emerald-300'
+                                  : 'hover:bg-slate-100 dark:hover:bg-slate-800/40 text-slate-800 dark:text-slate-200'
                               }`}
                             >
                               <td className="py-2 pl-2 font-bold flex items-center space-x-1.5">
                                 <span>{name}</span>
                                 {isChanged && (
-                                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/30 text-emerald-300 font-sans font-normal">
+                                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-200 text-emerald-800 dark:bg-emerald-500/30 dark:text-emerald-300 font-sans font-normal">
                                     mới đổi
                                   </span>
                                 )}
                               </td>
-                              <td className="py-2 text-[11px] text-slate-400">{info.type}</td>
-                              <td className="py-2 pr-2 font-semibold text-cyan-300 break-all">
+                              <td className="py-2 text-[11px] text-slate-500 dark:text-slate-400">{info.type}</td>
+                              <td className="py-2 pr-2 font-semibold text-sky-700 dark:text-cyan-300 break-all">
                                 {info.value}
                               </td>
                             </tr>
@@ -455,7 +455,7 @@ export default function ExecutionVisualizerModal({
             </div>
 
             {/* Bottom Right: Stdout Terminal (~35% height) */}
-            <div className="h-44 flex flex-col bg-slate-950 overflow-hidden">
+            <div className="h-44 flex flex-col bg-slate-950 overflow-hidden keep-dark" data-keep-dark="true">
               <div className="px-4 py-1.5 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
                 <span className="font-semibold flex items-center space-x-1.5 text-slate-300">
                   <Terminal className="w-3.5 h-3.5 text-cyan-400" />
@@ -470,7 +470,7 @@ export default function ExecutionVisualizerModal({
                 {currentStep?.stdout ? (
                   currentStep.stdout
                 ) : (
-                  <span className="text-slate-600 italic">Chưa có kết quả in ra màn hình.</span>
+                  <span className="text-slate-500 italic">Chưa có kết quả in ra màn hình.</span>
                 )}
               </div>
             </div>

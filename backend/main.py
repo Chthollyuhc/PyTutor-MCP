@@ -5,9 +5,12 @@ FastAPI Backend Application cho PyTutor.
 import sys
 import logging
 import uuid
+import re
+import json
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, File, Form, HTTPException, Depends, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 
 # Cấu hình UTF-8 cho logging trên Windows
@@ -19,6 +22,14 @@ logger = logging.getLogger("pytutor.api")
 
 from backend.database import (
     init_db,
+    save_practice_run,
+    MAX_KB_DOCUMENTS_PER_CLASS,
+    count_kb_documents,
+    create_kb_document,
+    list_kb_documents,
+    set_kb_document_active,
+    delete_kb_document,
+    get_active_kb_documents_for_index,
     get_db_connection,
     get_all_exercises as db_get_all_exercises,
     get_exercise_by_id as db_get_exercise_by_id,
@@ -47,6 +58,13 @@ from backend.database import (
     get_class_students,
     get_class_students_with_progress,
     get_class_learning_summary,
+    get_class_insights,
+    get_exercise_journey,
+    get_student_journey_overview,
+    get_tutor_feedback_summary,
+    explain_autonomy_stars,
+    get_autonomy_hint_context,
+    get_latest_passed_submission_code,
     instructor_owns_class,
     save_llm_interaction,
     save_llm_interaction_sources,
@@ -58,7 +76,11 @@ from backend.database import (
     get_exam_sessions,
     get_exam_session_by_id,
     create_exam_session,
-    delete_exam_session
+    delete_exam_session,
+    get_all_knowledge_components,
+    create_knowledge_component,
+    delete_knowledge_component,
+    get_exercise_class_info
 )
 from backend.auth import (
     authenticate_user,
@@ -67,6 +89,7 @@ from backend.auth import (
     require_instructor
 )
 from backend.schemas import (
+    KnowledgeToggleRequest,
     HealthResponse,
     CompilerConfig,
     ExerciseSummary,
@@ -111,7 +134,9 @@ from backend.schemas import (
     ClassExerciseUpdateRequest,
     ClassStudentProgressItem,
     ExamSessionItem,
-    ExamSessionCreateRequest
+    ExamSessionCreateRequest,
+    KnowledgeComponentItem,
+    KnowledgeComponentCreateRequest
 )
 from backend.mcp_client import (
     discover_tools,
@@ -122,13 +147,26 @@ from backend.mcp_client import (
     save_learning_event_via_mcp,
     get_student_profile_via_mcp,
     run_custom_test_pipeline,
+    get_code_structure_summary,
     execute_trace_pipeline
 )
-from backend.llm_service import generate_tutor_hint, generate_chat_followup, generate_pythonic_review, generate_instructor_answer
+from backend.llm_service import (generate_tutor_hint, generate_chat_followup, generate_pythonic_review,
+                                 generate_instructor_answer, build_pass_feedback)
 from backend.guardrails import check_student_input
-from backend.adaptive_policy import select_hint_strategy
+from backend.adaptive_policy import is_blank_attempt, select_hint_strategy
+from backend.class_overview import build_class_overview, build_action_cards
+from backend.student_journey import build_student_headline, describe_exercise_journey, DISCLAIMER_VI
+from backend.plain_language import (build_class_plain_view, build_course_path, build_story, build_today_card,
+                                    class_brief_line, story_one_liner)
+from pytutor_shared.learner_model import summarize_attempt_features
 
 
+
+
+def rebuild_knowledge_index() -> int:
+    """Dựng lại toàn bộ chỉ mục RAG: tài liệu chung + tài liệu lớp đang bật (truyền từ DB vào retriever)."""
+    from backend.rag.retriever import ingest_knowledge_base
+    return ingest_knowledge_base(class_documents=get_active_kb_documents_for_index())
 
 
 @asynccontextmanager
@@ -137,8 +175,7 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.")
-        from backend.rag.retriever import ingest_knowledge_base
-        chunks = ingest_knowledge_base()
+        chunks = rebuild_knowledge_index()
         logger.info("RAG knowledge base ready: %s local chunks indexed.", chunks)
     except Exception as e:
         logger.error(f"Lỗi khởi tạo DB: {e}")
@@ -147,7 +184,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PyTutor API",
-    description="Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập. MCP được dùng làm giao thức tích hợp công cụ.",
+    description="Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng dựa trên mô hình người học. MCP được dùng làm giao thức tích hợp công cụ.",
     version="3.6",
     lifespan=lifespan
 )
@@ -293,12 +330,33 @@ async def list_exercises(token_data: dict = Depends(verify_token)):
 
 
 @app.get("/api/exercises/{exercise_id}", response_model=ExerciseDetail)
-async def get_exercise(exercise_id: str, token_data: dict = Depends(verify_token)):
+async def get_exercise(
+    exercise_id: str,
+    class_id: Optional[str] = None,
+    token_data: dict = Depends(verify_token)
+):
     """Lấy chi tiết một bài tập: đề bài, starter code, test cases chuẩn."""
     try:
         data = await get_exercise_details(exercise_id)
         if "error" in data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=data["error"])
+        # Sinh viên đã từng `submit` pass bài này → giao diện mở sẵn phạm vi chat "code đã nộp" (khớp /api/tutor/chat).
+        # Chỉ là gợi ý hiển thị (quyền thật do /api/tutor/chat quyết định) → lỗi DB không được làm hỏng việc xem đề.
+        data["has_passed"] = False
+        username = token_data.get("sub")
+        if token_data.get("role") == "student":
+            try:
+                data["has_passed"] = get_latest_passed_submission_code(username, exercise_id) is not None
+            except Exception as exc:
+                logger.warning(f"Không đọc được trạng thái nộp đạt của bài {exercise_id}: {exc}")
+
+        cls_info = get_exercise_class_info(exercise_id, student_username=username, preferred_class_id=class_id)
+        if cls_info:
+            data["class_id"] = cls_info["id"]
+            data["class_name"] = cls_info["class_name"]
+            data["class_code"] = cls_info["class_code"]
+            data["semester"] = cls_info["semester"]
+
         return data
     except HTTPException:
         raise
@@ -322,6 +380,15 @@ async def run_test_only(request: RunTestOnlyRequest, token_data: dict = Depends(
     """
     try:
         res = await run_test_only_pipeline(exercise_id=request.exercise_id, code=request.code)
+        if token_data.get("role") == "student":
+            # v5.4: chỉ ghi số test đạt (không lưu mã nguồn); lỗi ghi chỉ log cảnh báo bên trong save_practice_run.
+            tr = res.get("test_results") or {}
+            try:
+                run_features = summarize_attempt_features(tr, res.get("ast_analysis"))
+            except Exception:  # noqa: BLE001 - đặc trưng chỉ là phụ trợ
+                run_features = None
+            save_practice_run(token_data["sub"], request.exercise_id, tr.get("passed_tests", 0),
+                              tr.get("total_tests", 0), bool(tr.get("all_passed")), features=run_features)
         return RunTestOnlyResponse(
             exercise_id=request.exercise_id,
             test_results=TestResults(**res["test_results"]),
@@ -366,11 +433,22 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bài tập không thuộc đợt học đã chọn.")
             is_exam_mode = sess_info.get("allow_ai_hints") == 0 or sess_info.get("session_type") == "EXAM"
 
+        # Lớp dùng để tính mô hình người học: từ đợt học (đã kiểm tra), hoặc class_id nếu sinh viên đã ghi danh.
+        # Không ghi danh thì bỏ qua lớp (không 403) vì giao diện có thể gửi lớp đầu tiên làm mặc định.
+        model_class_id = None
+        if request.exam_session_id:
+            model_class_id = sess_info["class_id"]
+        elif request.class_id:
+            candidate = get_credit_class_by_id(request.class_id, current_username=student_username)
+            if candidate and candidate.get("is_enrolled", False):
+                model_class_id = request.class_id
+
         # 1. Thực thi pipeline qua MCP stdio
         pipeline_res = await execute_submission_pipeline(
             exercise_id=request.exercise_id,
             code=request.code,
-            session_id=student_username
+            session_id=student_username,
+            class_id=model_class_id
         )
 
         exercise = pipeline_res["exercise"]
@@ -383,12 +461,16 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
 
         # 2. Sinh gợi ý sư phạm: Nếu ở chế độ thi thì khóa AI tutor, ngược lại xử lý theo action_type
         hint_telemetry = None
-        adaptive_strategy = select_hint_strategy(request.hint_level, test_results_raw, attempt_history, student_model)
+        # Chưa có code chỉ được phép ở `ask_ai` (xin gợi ý); `submit` rỗng vẫn chấm như cũ.
+        no_code = request.action_type == "ask_ai" and is_blank_attempt(request.code, exercise.get("starter_code"))
+        adaptive_strategy = select_hint_strategy(request.hint_level, test_results_raw, attempt_history, student_model,
+                                                 exercise_id=request.exercise_id, no_code=no_code)
         if is_exam_mode:
             tutor_hint = "🔒 **[Chế độ Kỳ thi / Kiểm tra nghiêm ngặt]** Hệ thống đã ghi nhận kết quả chấm điểm Test Cases của bạn. Trong chế độ Thi, tính năng gợi ý từ Gia sư AI được khóa để đảm bảo tính công bằng học thuật."
             llm_source = "Exam-Mode-Guard"
         elif request.action_type == "submit" and test_results_raw.get("all_passed", False):
-            tutor_hint = "🎉 **Chúc mừng!** Bạn đã vượt qua 100% test cases và nộp bài thành công. Hãy tiếp tục thử thách với các bài tập tiếp theo trên lộ trình kỹ năng!"
+            # Rút giàn giáo khi đã pass: phản hồi tất định (ghi nhận → tự kiểm → mở rộng tùy chọn), không gọi LLM.
+            tutor_hint = build_pass_feedback(exercise, test_results_raw, ast_analysis_raw, adaptive_strategy=adaptive_strategy)
             llm_source = "System-Celebration"
         else:
             tutor_hint, llm_source, hint_telemetry = await generate_tutor_hint(
@@ -408,6 +490,11 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
             save_llm_interaction({"id": hint_interaction_id, "username": student_username,
                                   "role": "student", "task_type": "adaptive_hint", **hint_telemetry})
 
+        # 2.1. Ngữ cảnh sao tự lực phải đọc TRƯỚC khi lưu lượt hiện tại (để biết đã từng nộp pass hay chưa).
+        star_context = None
+        if request.action_type == "submit" and test_results_raw.get("all_passed", False):
+            star_context = get_autonomy_hint_context(student_username, request.exercise_id)
+
         # 3. Ghi nhận sự kiện học tập vào cơ sở dữ liệu qua MCP Tool
         try:
             await save_learning_event_via_mcp(
@@ -420,29 +507,33 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
                 all_passed=test_results_raw.get("all_passed", False),
                 llm_source=llm_source,
                 tutor_hint=tutor_hint,
-                action_type=request.action_type
+                action_type=request.action_type,
+                attempt_features=None if no_code else summarize_attempt_features(test_results_raw, ast_analysis_raw)
             )
         except Exception as e:
             logger.warning(f"Không thể lưu learning event qua MCP: {e}")
 
         # 3.1. Tính và lưu sao tự lực
         stars_earned = 0
+        star_rationale = None
         new_badges = []
         # CHỈ tính và lưu sao khi là nộp bài chính thức (action_type == 'submit') và vượt qua toàn bộ test cases
-        if request.action_type == "submit" and test_results_raw.get("all_passed", False):
+        if star_context is not None:
             effective_user = student_username
-            # Kiểm tra lịch sử các lần hỏi AI / thử trước đó của sinh viên ở bài tập này trong attempt_history
-            max_hint_used = 1
-            if attempt_history:
-                for att in attempt_history:
-                    h = att.get("hint_level", 1) or 1
-                    if h > max_hint_used:
-                        max_hint_used = h
+            # Chống "cày sao" (S2.4): mức gợi ý cao nhất lấy từ TOÀN BỘ lượt `ask_ai` cho tới lần nộp pass đầu tiên
+            # (không dùng attempt_history vì bị LIMIT 5 và lẫn hint_level của lượt `submit`). Nộp lại sau khi
+            # đã pass cho ra đúng mức sao cũ, nên không thể đẩy trôi vết Mức 2/3 để tăng sao.
+            max_hint_used = star_context["max_hint_level_used"]
+            official_attempts = star_context["submit_count"] + 1
 
             stars_earned = calculate_autonomy_stars(
-                attempt_count=len(attempt_history) + 1,
+                attempt_count=official_attempts,
                 max_hint_level_used=max_hint_used,
                 all_passed=True
+            )
+            star_rationale = explain_autonomy_stars(
+                stars_earned, max_hint_used, official_attempts,
+                has_passed_before=star_context["has_passed_before"],
             )
             try:
                 star_res = save_exercise_stars(
@@ -468,6 +559,7 @@ async def submit_solution(request: SubmitRequest, token_data: dict = Depends(req
             student_model=student_model,
             mcp_trace=mcp_trace,
             stars_earned=stars_earned,
+            star_rationale=star_rationale,
             new_badges=new_badges,
             interaction_id=hint_interaction_id,
             adaptive_strategy=adaptive_strategy
@@ -528,13 +620,24 @@ async def tutor_chat_endpoint(request: TutorChatRequest, token_data: dict = Depe
             except Exception:
                 pass
 
+        # S1.4: khóa phạm vi chat theo trạng thái nộp bài. Chưa có lượt `submit` pass ở bài này → chỉ giải thích
+        # khái niệm, KHÔNG đưa code bài làm vào prompt. Đã pass → mở ngữ cảnh là code đã nộp (đọc từ DB,
+        # không tin code do client gửi lên).
+        passed_code = get_latest_passed_submission_code(token_data["sub"], request.exercise_id) if request.exercise_id else None
+        chat_scope = "code_review" if passed_code is not None else "concept_only"
+        # S8a: tóm tắt cấu trúc code ĐÃ NỘP (qua MCP) để cả LLM lẫn nhánh offline đều nói được về bài đã nộp.
+        ast_summary = await get_code_structure_summary(passed_code) if passed_code else ""
+
         sm_data = compute_student_model(token_data["sub"], class_id=request.class_id)
         reply, llm_source, telemetry = await generate_chat_followup(
             exercise=ex_details,
-            code=request.code,
+            code=passed_code or "",
             user_message=request.user_message,
             history=request.history,
+            ast_summary=ast_summary,
             student_model=sm_data,
+            chat_scope=chat_scope,
+            class_id=request.class_id,  # đã kiểm tra ghi danh ở trên; chỉ truy xuất tài liệu chung + của lớp này
         )
         interaction_id = str(uuid.uuid4())
         save_llm_interaction({"id": interaction_id, "username": token_data["sub"], "role": "student",
@@ -549,7 +652,10 @@ async def tutor_chat_endpoint(request: TutorChatRequest, token_data: dict = Depe
             reply=reply,
             llm_source=llm_source,
             updated_history=updated_history,
-            interaction_id=interaction_id
+            interaction_id=interaction_id,
+            sources=telemetry.get("source_refs", []),
+            knowledge_status=telemetry.get("knowledge_status") or ("grounded" if telemetry.get("source_refs") else "no_source"),
+            chat_scope=chat_scope,
         )
     except HTTPException:
         raise
@@ -590,8 +696,229 @@ async def instructor_class_ai_chat(request: InstructorAIChatRequest, token_data:
     interaction_id = str(uuid.uuid4())
     save_llm_interaction({"id": interaction_id, "username": token_data["sub"], "role": "instructor",
                           "task_type": "instructor_class_analytics", **telemetry})
-    return InstructorAIChatResponse(reply=reply, interaction_id=interaction_id,
-                                    class_id=request.class_id, llm_source=source)
+    metrics = summary.get("metrics") or {}
+    return InstructorAIChatResponse(
+        reply=reply, interaction_id=interaction_id, class_id=request.class_id, llm_source=source,
+        days=summary.get("days", request.days), data_status=metrics.get("data_status", "unknown"),
+        sample={"submissions": metrics.get("submissions", 0), "active_students": metrics.get("active_students", 0),
+                "enrolled_students": metrics.get("enrolled_students", 0)},
+    )
+
+
+_ATTENTION_CACHE: dict[str, tuple[float, dict]] = {}
+_ATTENTION_TTL_SECONDS = 60.0
+
+
+@app.get("/api/instructor/classes-attention")
+async def instructor_classes_attention(token_data: dict = Depends(require_instructor)):
+    """Tổng hợp số việc cần xem của MỌI lớp giảng viên sở hữu trong một lần gọi (cửa sổ 7 ngày cố định, đệm 60 giây).
+
+    Chỉ trả lớp của chính giảng viên; xếp lớp theo số việc cần xem, không xếp sinh viên.
+    """
+    import time
+    username = token_data.get("sub", "")
+    cached = _ATTENTION_CACHE.get(username)
+    if cached and time.monotonic() - cached[0] < _ATTENTION_TTL_SECONDS:
+        return cached[1]
+    rows = []
+    for cls in get_credit_classes(instructor_username=username):
+        try:
+            insights = get_class_insights(cls["id"], 7)
+            overview = build_class_overview(insights) if insights else {}
+            status = (insights or {}).get("data_status", "no_data")
+            attention = len(overview.get("attention", []))
+            issues = len(overview.get("class_issues", []))
+            plain = build_class_plain_view(insights, overview, 7) if insights else None
+            check_in = len(plain["groups"]["check_in"]) if plain else 0
+            brief = class_brief_line(plain)
+        except Exception as exc:  # noqa: BLE001 - một lớp lỗi không làm hỏng cả danh sách
+            logger.warning("Không tổng hợp được lớp %s: %s", cls.get("id"), exc)
+            attention, issues, status, check_in, brief = 0, 0, "error", 0, "Chưa tải được tình hình lớp này."
+        rows.append({"id": cls["id"], "class_code": cls.get("class_code"), "class_name": cls.get("class_name"),
+                     "semester": cls.get("semester"), "attention": attention, "issues": issues,
+                     "data_status": status, "total": attention + issues,
+                     "check_in": check_in, "brief_vi": brief})
+    rows.sort(key=lambda r: (-r["total"], (r["class_code"] or ""), r["id"]))
+    result = {"days": 7, "classes": rows, "total_classes": len(rows),
+              "needing_attention": sum(1 for r in rows if r["total"] > 0),
+              "note": "Số việc cần xem theo quy ước vận hành chưa hiệu chuẩn; không phải điểm hay xếp hạng lớp."}
+    _ATTENTION_CACHE[username] = (time.monotonic(), result)
+    return result
+
+
+@app.get("/api/instructor/classes/{class_id}/insights")
+async def instructor_class_insights(class_id: str, days: int = 7, token_data: dict = Depends(require_instructor)):
+    """Góc nhìn sư phạm theo lớp: bài gây nghẽn, cơ cấu lỗi, sinh viên cần hỗ trợ kèm cỡ mẫu và giới hạn."""
+    if not get_credit_class_by_id(class_id) or not instructor_owns_class(class_id, token_data.get("sub", "")):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy lớp hoặc bạn không có quyền truy cập.")
+    if days < 1 or days > 90:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Khoảng thời gian phải từ 1 đến 90 ngày.")
+    insights = get_class_insights(class_id, days)
+    if insights:
+        insights["overview"] = build_class_overview(insights)
+        insights["action_cards"] = build_action_cards(insights["overview"], insights)
+        insights["plain"] = build_class_plain_view(insights, insights["overview"], days)
+    return insights
+
+
+@app.get("/api/instructor/classes/{class_id}/students/{username}/exercises/{exercise_id}/journey")
+async def instructor_student_exercise_journey(class_id: str, username: str, exercise_id: str, days: Optional[int] = None,
+                                              token_data: dict = Depends(require_instructor)):
+    """Dấu chân của MỘT sinh viên ở MỘT bài (v5.8). Giảng viên sở hữu lớp; không trả mã nguồn."""
+    ensure_class_access(class_id, token_data)
+    students = get_class_students(class_id)
+    enrolled = {s.get("username") or s.get("student_username") for s in students}
+    if username not in enrolled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sinh viên trong lớp này.")
+    if exercise_id not in {e["exercise_id"] for e in get_class_exercises(class_id)}:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy bài tập trong lớp này.")
+    if days is not None and (days < 1 or days > 90):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Khoảng thời gian phải từ 1 đến 90 ngày.")
+    journey = get_exercise_journey(username, exercise_id, days=days, include_code=False)
+    journey.update({"class_id": class_id, "username": username, "days": days})
+    name = next((s.get("full_name") for s in students
+                 if (s.get("username") or s.get("student_username")) == username), None) or username
+    journey["story"] = build_story(journey["points"], journey["summary"], audience="teacher", student_name=name)
+    return journey
+
+
+@app.get("/api/instructor/classes/{class_id}/students/{username}/learner-model")
+async def instructor_student_learner_model(class_id: str, username: str, token_data: dict = Depends(require_instructor)):
+    """Mô hình người học v3 của MỘT sinh viên trong lớp của giảng viên (heuristic mô tả, chưa hiệu chuẩn).
+
+    Chỉ giảng viên sở hữu lớp và chỉ với sinh viên đã ghi danh. Không đưa vào /api/instructor/ai/class-chat.
+    """
+    ensure_class_access(class_id, token_data)
+    enrolled = {s.get("username") or s.get("student_username") for s in get_class_students(class_id)}
+    if username not in enrolled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy sinh viên trong lớp này.")
+    sm = compute_student_model(username, class_id=class_id)
+    return {
+        "class_id": class_id, "username": username,
+        "data_status": (sm.get("analytics_metrics") or {}).get("data_status", "no_data"),
+        "analytics_metrics": sm.get("analytics_metrics"),
+        "learner_model": sm.get("learner_model"),
+    }
+
+
+@app.get("/api/instructor/ai/feedback-summary")
+async def instructor_ai_feedback_summary(days: int = 30, token_data: dict = Depends(require_instructor)):
+    """Tổng hợp 👍/👎 theo loại tác vụ AI cho sinh viên thuộc lớp của giảng viên (chỉ số đếm)."""
+    if days < 1 or days > 90:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Khoảng thời gian phải từ 1 đến 90 ngày.")
+    return get_tutor_feedback_summary(token_data.get("sub", ""), days)
+
+
+@app.get("/api/instructor/knowledge-base")
+async def instructor_knowledge_base(token_data: dict = Depends(require_instructor)):
+    """Danh mục tài liệu nội bộ mà RAG đang nạp, để giảng viên kiểm tra nguồn kiến thức của AI."""
+    from backend.rag.retriever import list_knowledge_documents, MIN_RELEVANCE
+    documents = list_knowledge_documents()
+    return {
+        "documents": documents,
+        "total_documents": len(documents),
+        "total_chunks": sum(doc["chunk_count"] for doc in documents),
+        "retrieval": {"method": "TF-IDF thưa + cosine trên SQLite cục bộ", "min_relevance": MIN_RELEVANCE, "top_k": 3},
+        "scope": "global",
+        "notice": ("Đây là tài liệu chung do dự án biên soạn nội bộ, áp dụng cho mọi lớp, chưa phải giáo trình chính thức của NEU. "
+                   "Tài liệu riêng của từng lớp nằm ở tab \"Tài liệu cho Gia sư AI\" trong trang chi tiết lớp. "
+                   "Khi không có đoạn nào đủ liên quan, gia sư trả lời không kèm nguồn."),
+    }
+
+
+# ------------------------------------------------------------------------------
+# v5.4 (C): tài liệu giảng viên tải lên cho Gia sư AI, gắn theo lớp học phần
+# ------------------------------------------------------------------------------
+KB_LICENSE_TYPES = {"own": "Tự biên soạn", "licensed": "Được tác giả/đơn vị cấp phép", "open": "Tài liệu mở có giấy phép"}
+
+
+def _kb_doc_view(doc: dict) -> dict:
+    from backend.rag.retriever import _chunk_document
+    text = doc.get("content_text")
+    view = {k: v for k, v in doc.items() if k != "content_text"}
+    view["is_active"] = bool(doc["is_active"])
+    if text is not None:
+        chunks = _chunk_document(text)
+        view["chunk_count"] = len(chunks)
+        view["sections"] = list(dict.fromkeys(section for section, _ in chunks if section))
+    return view
+
+
+@app.post("/api/instructor/classes/{class_id}/knowledge", status_code=status.HTTP_201_CREATED)
+async def upload_class_knowledge(
+    class_id: str,
+    file: UploadFile = File(...),
+    title: str = Form(""),
+    license_type: str = Form(""),
+    license_detail: str = Form(""),
+    provenance: str = Form(""),
+    no_personal_data: str = Form(""),
+    token_data: dict = Depends(require_instructor),
+):
+    """Tải tài liệu cho Gia sư AI của đúng lớp này. Từ chối khi sai định dạng/quá giới hạn/thiếu khai báo."""
+    from backend.rag.extract import ExtractionError, MAX_FILE_BYTES, extract_text, file_format
+    ensure_class_access(class_id, token_data)
+    filename = (file.filename or "").strip()
+    try:
+        file_format(filename)  # kiểm tra định dạng trước khi đọc nội dung
+    except ExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    if license_type not in KB_LICENSE_TYPES:
+        raise HTTPException(status_code=422, detail="Hãy chọn quyền sử dụng tài liệu (tự biên soạn / được cấp phép / tài liệu mở).")
+    if license_type == "open" and not license_detail.strip():
+        raise HTTPException(status_code=422, detail="Tài liệu mở phải ghi rõ giấy phép (ví dụ CC BY 4.0).")
+    if not provenance.strip():
+        raise HTTPException(status_code=422, detail="Hãy khai báo nguồn gốc tài liệu (tác giả, năm, đường dẫn nếu có).")
+    if no_personal_data.strip().lower() not in {"true", "1", "on", "yes"}:
+        raise HTTPException(status_code=422, detail="Bạn cần cam kết tài liệu không chứa dữ liệu cá nhân sinh viên, đề thi hay đáp án bài tập của lớp.")
+    if count_kb_documents(class_id) >= MAX_KB_DOCUMENTS_PER_CLASS:
+        raise HTTPException(status_code=422, detail=f"Mỗi lớp tối đa {MAX_KB_DOCUMENTS_PER_CLASS} tài liệu. Hãy xóa bớt tài liệu cũ.")
+    data = await file.read(MAX_FILE_BYTES + 1)
+    try:
+        fmt, text, warnings = extract_text(filename, data)
+    except ExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    clean_title = (title.strip() or filename.rsplit(".", 1)[0])[:200]
+    detail = license_detail.strip()
+    full_provenance = provenance.strip()[:500] + (f" · Giấy phép: {detail[:200]}" if detail else "")
+    doc_id = create_kb_document(class_id, clean_title, filename[:255], fmt, text, full_provenance, license_type,
+                                token_data["sub"])
+    chunks = rebuild_knowledge_index()
+    doc = next(d for d in list_kb_documents(class_id, include_text=True) if d["id"] == doc_id)
+    return {"document": _kb_doc_view(doc), "warnings": warnings, "total_chunks_indexed": chunks}
+
+
+@app.get("/api/instructor/classes/{class_id}/knowledge")
+async def list_class_knowledge(class_id: str, token_data: dict = Depends(require_instructor)):
+    ensure_class_access(class_id, token_data)
+    from backend.rag import extract as kb_limits
+    documents = [_kb_doc_view(d) for d in list_kb_documents(class_id, include_text=True)]
+    return {
+        "documents": documents,
+        "total_documents": len(documents),
+        "limits": {"max_documents": MAX_KB_DOCUMENTS_PER_CLASS, "max_file_mb": kb_limits.MAX_FILE_BYTES // (1024 * 1024),
+                   "max_chars": kb_limits.MAX_TEXT_CHARS, "formats": list(kb_limits.ALLOWED_EXTENSIONS)},
+        "license_types": KB_LICENSE_TYPES,
+    }
+
+
+@app.patch("/api/instructor/classes/{class_id}/knowledge/{doc_id}")
+async def toggle_class_knowledge(class_id: str, doc_id: int, request: KnowledgeToggleRequest,
+                                 token_data: dict = Depends(require_instructor)):
+    ensure_class_access(class_id, token_data)
+    if not set_kb_document_active(class_id, doc_id, request.is_active):
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong lớp này.")
+    rebuild_knowledge_index()
+    return {"id": doc_id, "is_active": request.is_active}
+
+
+@app.delete("/api/instructor/classes/{class_id}/knowledge/{doc_id}")
+async def delete_class_knowledge(class_id: str, doc_id: int, token_data: dict = Depends(require_instructor)):
+    ensure_class_access(class_id, token_data)
+    if not delete_kb_document(class_id, doc_id):
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong lớp này.")
+    rebuild_knowledge_index()
+    return {"id": doc_id, "deleted": True}
 
 
 @app.post("/api/custom-run", response_model=CustomRunResponse)
@@ -680,6 +1007,7 @@ async def get_student_profile_endpoint(
             analytics_metrics=sm.get("analytics_metrics"),
             diagnostic_evaluation=sm.get("diagnostic_evaluation"),
             data_status=(sm.get("analytics_metrics") or {}).get("data_status", "available" if sm.get("total_submissions", 0) else "no_data"),
+            learner_model=sm.get("learner_model"),
             recent_attempts=attempts
         )
     except HTTPException:
@@ -701,8 +1029,83 @@ async def get_student_profile_endpoint(
             analytics_metrics=sm.get("analytics_metrics"),
             diagnostic_evaluation=sm.get("diagnostic_evaluation"),
             data_status=(sm.get("analytics_metrics") or {}).get("data_status", "available" if sm.get("total_submissions", 0) else "no_data"),
+            learner_model=sm.get("learner_model"),
             recent_attempts=attempts
         )
+
+
+def _pick_path_class(username: str, class_id: Optional[str], recent: list[dict]) -> Optional[dict]:
+    """Lớp để vẽ chặng đường: lớp đang xem; nếu không có thì lớp chứa bài vừa làm gần nhất; nếu không thì lớp đầu tiên."""
+    if class_id:
+        cls = get_credit_class_by_id(class_id) or {}
+        return {"id": class_id, "class_name": cls.get("class_name"), "exercises": get_class_exercises(class_id, username)}
+    classes = get_student_classes(username)
+    if not classes:
+        return None
+    loaded = [{"id": c["id"], "class_name": c.get("class_name"), "exercises": get_class_exercises(c["id"], username)}
+              for c in classes]
+    for item in recent or []:
+        for c in loaded:
+            if any(e.get("exercise_id") == item.get("exercise_id") for e in c["exercises"]):
+                return c
+    return loaded[0]
+
+
+@app.get("/api/student/journey")
+async def get_student_journey_endpoint(
+    class_id: Optional[str] = None,
+    exercise_id: Optional[str] = None,
+    token_data: dict = Depends(require_student),
+):
+    """Hành trình học (v5.8): câu tóm tắt, bản đồ khái niệm, dấu chân. Chỉ dữ liệu của chính người dùng trong token."""
+    username = token_data["sub"]
+    if class_id:
+        ensure_class_access(class_id, token_data)
+        if exercise_id and exercise_id not in {e["exercise_id"] for e in get_class_exercises(class_id)}:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy bài tập trong lớp này.")
+    elif exercise_id and not db_get_exercise_by_id(exercise_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy bài tập.")
+    try:
+        data = await get_student_profile_via_mcp(session_id=username, class_id=class_id)
+        sm = data.get("student_model", {})
+    except Exception as e:  # noqa: BLE001 - fallback như /api/student/profile
+        logger.warning(f"Lỗi truy xuất hành trình qua MCP, dùng fallback: {e}")
+        sm = compute_student_model(username, class_id=class_id)
+    lm = sm.get("learner_model") or {}
+    next_practice = (sm.get("analytics_metrics") or {}).get("next_practice")
+    overview = get_student_journey_overview(username, class_id=class_id)
+    for item in overview["recent_exercises"]:
+        item["story_vi"] = story_one_liner(item)
+    current = None
+    if exercise_id:
+        current = get_exercise_journey(username, exercise_id, include_code=True)
+        current["description_vi"] = describe_exercise_journey(current["points"], current["summary"])
+        current["story"] = build_story(current["points"], current["summary"], audience="student")
+    path_class = _pick_path_class(username, class_id, overview["recent_exercises"])
+    path = (build_course_path(path_class["exercises"], path_class["id"], path_class["class_name"])
+            if path_class else None)
+    today = build_today_card(full_name=token_data.get("name"), concepts=lm.get("concepts", []),
+                             next_practice=next_practice, week=overview["week"],
+                             recent=overview["recent_exercises"], path=path, now=datetime.now())
+    if today and today.get("next_step"):
+        next_eid = today["next_step"].get("exercise_id")
+        next_cls = get_exercise_class_info(next_eid, student_username=username, preferred_class_id=class_id)
+        if next_cls:
+            today["next_step"]["class_id"] = next_cls["id"]
+            today["next_step"]["class_name"] = next_cls.get("class_name")
+            today["next_step"]["class_code"] = next_cls.get("class_code")
+    return {
+        "today": today,
+        "headline": build_student_headline(lm, next_practice, overview["week"], overview["recent_exercises"]),
+        "week": overview["week"],
+        "concepts": lm.get("concepts", []),
+        "support_profile": lm.get("support_profile"),
+        "next_practice": next_practice,
+        "recent_exercises": overview["recent_exercises"],
+        "current": current,
+        "data_status": (sm.get("analytics_metrics") or {}).get("data_status", "no_data"),
+        "disclaimer": DISCLAIMER_VI,
+    }
 
 
 @app.get("/api/skill-roadmap", response_model=SkillRoadmapResponse)
@@ -886,10 +1289,12 @@ async def pythonic_review_endpoint(request: PythonicReviewRequest, token_data: d
 
         clean_score = review_dict.get("clean_score", 85)
         username = token_data["sub"]
-        save_llm_interaction({"id": str(uuid.uuid4()), "username": username, "role": "student",
+        review_interaction_id = str(uuid.uuid4())
+        save_llm_interaction({"id": review_interaction_id, "username": username, "role": "student",
                               "task_type": "pythonic_review", **telemetry})
 
-        # Cập nhật điểm clean score; huy hiệu không còn được cấp.
+        # Cập nhật điểm clean score nếu bài đã có dòng sao (từ `submit`); review không tự cấp sao
+        # và không tạo dòng 0 sao. Huy hiệu không còn được cấp.
         save_res = save_exercise_stars(
             username=username,
             exercise_id=request.exercise_id,
@@ -903,6 +1308,8 @@ async def pythonic_review_endpoint(request: PythonicReviewRequest, token_data: d
             improvements=review_dict.get("improvements", ""),
             pythonic_code=review_dict.get("pythonic_code", request.code),
             explanation=review_dict.get("explanation", ""),
+            interaction_id=review_interaction_id,
+            llm_source=llm_source,
             stars_earned=save_res.get("stars_earned", 0),
             new_badges=save_res.get("new_badges", [])
         )
@@ -1072,6 +1479,68 @@ async def unshare_exercise_from_instructor(exercise_id: str, instructor_username
     if not revoke_exercise_share(exercise_id, instructor_username, token_data.get("sub", "")):
         raise HTTPException(status_code=404, detail="Bài không thuộc quyền sở hữu của bạn.")
     return {"status": "revoked", "exercise_id": exercise_id, "instructor_username": instructor_username}
+
+
+# ==============================================================================
+# QUẢN LÝ ĐƠN VỊ KIẾN THỨC (KNOWLEDGE COMPONENTS - KC) DÀNH CHO GIẢNG VIÊN
+# ==============================================================================
+
+@app.get("/api/knowledge-components", response_model=list[KnowledgeComponentItem])
+def get_public_knowledge_components():
+    """Lấy danh sách các đơn vị kiến thức (KC) đang hoạt động trong hệ thống."""
+    return get_all_knowledge_components(include_inactive=False)
+
+
+@app.get("/api/instructor/knowledge-components", response_model=list[KnowledgeComponentItem])
+def get_instructor_knowledge_components(token_data: dict = Depends(require_instructor)):
+    """[Giảng viên] Lấy toàn bộ danh sách các đơn vị kiến thức (bao gồm nguồn gốc người tạo)."""
+    return get_all_knowledge_components(include_inactive=False)
+
+
+@app.post("/api/instructor/knowledge-components", response_model=KnowledgeComponentItem)
+def create_instructor_knowledge_component(
+    body: KnowledgeComponentCreateRequest,
+    token_data: dict = Depends(require_instructor)
+):
+    """[Giảng viên] Thêm hoặc cập nhật đơn vị kiến thức (KC) mới và từ khóa nhận diện."""
+    username = token_data.get("sub", "instructor")
+    raw_kc = body.kc
+    if not raw_kc or not raw_kc.strip():
+        from pytutor_shared.learner_model import _fold
+        clean_text = _fold(body.label_vi)
+        raw_kc = re.sub(r"[^a-z0-9]+", "_", clean_text).strip("_")
+    raw_kc = raw_kc.strip().lower()
+    if not re.match(r"^[a-z0-9_]{2,40}$", raw_kc):
+        raise HTTPException(
+            status_code=400,
+            detail="Mã định danh KC (slug) chỉ được chứa chữ cái thường, số và dấu gạch dưới, độ dài từ 2 đến 40 ký tự."
+        )
+    clean_kws = [k.strip() for k in body.keywords if k and k.strip()]
+    if not clean_kws:
+        raise HTTPException(status_code=400, detail="Cần ít nhất một từ khóa nhận diện cho đơn vị kiến thức này.")
+
+    res = create_knowledge_component(
+        kc=raw_kc,
+        label_vi=body.label_vi.strip(),
+        keywords=clean_kws,
+        created_by=username
+    )
+    return res
+
+
+@app.delete("/api/instructor/knowledge-components/{kc}")
+def delete_instructor_knowledge_component(
+    kc: str,
+    token_data: dict = Depends(require_instructor)
+):
+    """[Giảng viên] Xóa đơn vị kiến thức tùy chỉnh (không thể xóa 6 KC mặc định của hệ thống)."""
+    try:
+        success = delete_knowledge_component(kc)
+        if not success:
+            raise HTTPException(status_code=404, detail="Không tìm thấy đơn vị kiến thức cần xóa.")
+        return {"status": "success", "message": f"Đã xóa đơn vị kiến thức '{kc}' thành công."}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
 
 
 # ==============================================================================

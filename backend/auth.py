@@ -5,13 +5,21 @@ Hỗ trợ 2 vai trò:
 - 'instructor': Giảng viên quản lý ngân hàng bài tập (CRUD) và xem thống kê
 """
 import os
+import logging
 import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.database import get_db_connection
+from backend.passwords import verify_password
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "pytutor-scaffolding-jwt-secret-2026")
+_DEFAULT_SECRET = "pytutor-scaffolding-jwt-secret-2026"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", _DEFAULT_SECRET)
+if SECRET_KEY == _DEFAULT_SECRET:
+    # Không chặn khởi động (để bản demo chạy được) nhưng phải cảnh báo: khóa mặc định nằm trong mã nguồn công khai.
+    logging.getLogger("pytutor.auth").warning(
+        "JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã nguồn. Chỉ chấp nhận cho bản demo cục bộ; "
+        "đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.")
 ALGORITHM = "HS256"
 security = HTTPBearer(auto_error=False)
 
@@ -68,7 +76,7 @@ def authenticate_user(username: str, password: str) -> dict | None:
     user = cursor.fetchone()
     conn.close()
 
-    if user and user["password"] == password:
+    if user and verify_password(password, user["password"]):
         return {
             "username": user["username"],
             "role": user["role"],

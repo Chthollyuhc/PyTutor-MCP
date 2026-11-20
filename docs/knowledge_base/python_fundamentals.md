@@ -8,7 +8,7 @@ List comprehension tạo một danh sách mới từ một iterable bằng biể
 
 ## Vòng lặp và điều kiện dừng
 
-Vòng lặp `for` duyệt lần lượt các phần tử của iterable. `range(start, stop)` bao gồm `start` nhưng không bao gồm `stop`; vì vậy `range(1, n + 1)` duyệt các số từ 1 đến n. Vòng lặp `while` tiếp tục khi điều kiện còn đúng, nên thân vòng lặp cần cập nhật trạng thái để tránh lặp vô hạn.
+Vòng lặp `for` duyệt lần lượt các phần tử của iterable. `range(start, stop)` bao gồm `start` nhưng không bao gồm `stop`; nói cách khác, `range(1, n)` chỉ lấy các số từ 1 đến n − 1 chứ không lấy cả số n, còn `range(1, n + 1)` mới duyệt các số từ 1 đến n. Vòng lặp `while` tiếp tục khi điều kiện còn đúng, nên thân vòng lặp cần cập nhật trạng thái để tránh lặp vô hạn.
 
 ## Hàm và giá trị trả về
 

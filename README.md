@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🎓 PyTutor-MCP: Intelligent Tutoring System
-### Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
+### Hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng dựa trên mô hình người học
 
 [![Python Version](https://img.shields.io/badge/Python-3.14%20%7C%203.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -10,7 +10,7 @@
 [![Google Gemini](https://img.shields.io/badge/AI%20Model-Gemini%203.5%20Flash%20Lite-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
 [![University](https://img.shields.io/badge/NEU-Khoa%20CNTT-red?logo=bookstack&logoColor=white)](https://lms.neu.edu.vn/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Release-v5.0%20Pro%20(Defense--Ready)-success)](https://github.com/Chthollyuhc/PyTutor-MCP)
+[![Status](https://img.shields.io/badge/Release-v5.5%20Research%20Prototype-blue)](https://github.com/Chthollyuhc/PyTutor-MCP)
 
 <br/>
 
@@ -19,7 +19,7 @@
 > **Sinh viên thực hiện:** **Trần Minh Khánh** (Sinh viên Khóa K65 CNTT — MSV: `11236131`)  
 > **Giảng viên hướng dẫn:** Thầy **Phạm Thảo**  
 > **Kho lưu trữ chính thức:** [https://github.com/Chthollyuhc/PyTutor-MCP](https://github.com/Chthollyuhc/PyTutor-MCP)  
-> **Tên đề tài đề xuất:** *Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập*
+> **Tên đề tài đề xuất:** *Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng dựa trên mô hình người học*
 >
 > **Báo cáo Thực nghiệm:** [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md)
 
@@ -160,17 +160,17 @@ Thanh công cụ Monaco Editor cung cấp 3 nút bấm với màu sắc và phí
 - **`🤖 Hỏi Gia sư AI` (Màu Vàng Amber):** Gửi yêu cầu với `action_type = 'ask_ai'`. AI phân tích AST + Sandbox để trả lời theo mức gợi ý (1, 2, 3), **không cấp sao và không mở modal chúc mừng** để sinh viên tiếp tục hoàn thiện mã nguồn.
 - **`🚀 Nộp bài` (Ctrl + Shift + Enter | Màu Xanh Emerald):** Gửi yêu cầu với `action_type = 'submit'`. Hệ thống chấm điểm chính thức: nếu vượt qua 100% test cases, hệ thống kiểm tra lịch sử các lần hỏi AI để cấp đúng số **Sao Tự Lực (1 - 3 ⭐)**, mở khóa huy hiệu, kích hoạt pháo hoa confetti và cập nhật Cây lộ trình.
 
-### 3.4. Phương Pháp Sư Phạm Giàn Giáo 3 Cấp Độ & Anti-Spoil Guard
-Hệ thống phân hóa 3 cấp độ gợi ý với độ tương phản rõ rệt:
-- **💡 Mức 1 — Gợi Mở Tư Duy (Bảo toàn 3 ⭐):** Đánh giá hướng đi tổng quan, đặt 2 câu hỏi Socratic sắc bén về điều kiện biên/cận vòng lặp, chỉ ra từ khóa/khái niệm Python cần ôn lại. Tuyệt đối không trích dòng code cụ thể, không viết code sửa.
-- **🔍 Mức 2 — Chẩn Đoán Dòng Lỗi (Bảo toàn 2 ⭐):** Khoanh vùng chính xác dòng code hoặc biểu thức của học viên bị sai. Mổ xẻ chi tiết Test Case bị FAIL (`Input`, `Actual Output` từ code của bạn, `Expected Output` đề bài yêu cầu, giải thích lý do sai số). Chỉ dẫn logic sửa bằng lời giải thích kỹ thuật.
-- **📘 Mức 3 — Dàn Ý & Khung Code Mẫu (Bảo toàn 1 ⭐):** Cung cấp dàn ý giải thuật 4 bước rõ ràng VÀ một **Khung mã nguồn gợi ý (Scaffolded Code Skeleton)** chuẩn chỉnh có chừa các chỗ trống `...` hoặc `# TODO:` để sinh viên nhìn vào hiểu ngay cấu trúc giải thuật và tự hoàn thành phần cốt lõi.
-- **🛡️ Anti-Spoil Guard:** Bộ lọc regex tự động hậu kiểm phản hồi của LLM, lập tức thay thế các khối mã nguồn dài $\ge 3$ dòng bằng thông báo sư phạm nếu học viên ở Mức 1 và 2.
+### 3.4. Phương Pháp Sư Phạm Giàn Giáo 3 Cấp Độ & Các Lớp Kiểm Soát Đầu Ra
+Người học tự chọn mức gợi ý; hệ thống **không tự nâng mức**. Mỗi gợi ý theo khung *đang ở đâu → bằng chứng → một bước kế tiếp*.
+- **💡 Mức 1 — Gợi mở khái niệm:** đánh giá hướng đi, đặt câu hỏi gợi mở về khái niệm, nhắc tên kiến thức cần ôn. Không trích dòng code lỗi, không nêu đầu vào/đầu ra cụ thể của kiểm thử (đó là bằng chứng của Mức 2), không viết code sửa.
+- **🔍 Mức 2 — Chẩn đoán:** nêu kiểm thử chưa đạt (đầu vào, kỳ vọng, thực tế), có thể trích **một** dòng code của người học, giải thích vì sao sai và hướng cần xem lại, rồi hỏi lại đúng một câu. **Không nêu cách sửa** (điều kiện/biểu thức cần dùng); đó là việc của Mức 3. *Đây là lựa chọn sư phạm của dự án, chưa được kiểm chứng với người học.*
+- **📘 Mức 3 — Dàn ý & khung mã:** dàn ý bốn bước và khung mã có chỗ trống `...` / `# TODO`. Các biểu thức mang logic lời giải (điều kiện, miền lặp, vế phải phép gán, biểu thức trong `print`) được **che tất định** bằng `...`; khung sau khi che vẫn là Python hợp lệ.
+- **🛡️ Các lớp kiểm soát (không phải bảo đảm tuyệt đối):** (1) chỉ dẫn trong prompt; (2) bộ lọc đầu vào chặn chèn lệnh/ngoài phạm vi; (3) bộ lọc đầu ra (Mức 1–2, trò chuyện) thay phản hồi chứa lời giải bằng phản hồi tất định, không đếm đoạn trích lại dòng code của chính người học; (4) che logic khung mã Mức 3; (5) trước khi nộp đạt, trò chuyện chỉ bàn khái niệm và mô hình **không nhận mã bài làm**. Các bộ lọc dựa trên biểu thức chính quy: trên tập giữ riêng còn lọt 4/14 tình huống tấn công (xem `docs/EVALUATION_REPORT_V5_3.md`).
 
 ### 3.5. Gamification, Chuẩn Sao Mastery Rubric & Hồ Sơ Năng Lực 4D
 - **Quy tắc Thang đo Năng lực (Mastery Rubric):**
-  - Bài tập yêu cầu đạt chuẩn tối thiểu (ví dụ `min_stars_required = 2`).
-  - Nếu giải đúng 100% test cases nhưng dùng quá nhiều gợi ý (chỉ đạt 1 ⭐) $\rightarrow$ Trạng thái `NEEDS_MORE_STARS` (Yêu cầu làm lại tự lực hơn để mở khóa bài tiếp theo).
+  - Sao chỉ sinh khi **Nộp bài** và đạt mọi kiểm thử; số sao theo mức gợi ý cao nhất đã dùng ở "Hỏi Gia sư AI" cho tới lần nộp đạt đầu tiên (không dùng hoặc Mức 1 → 3⭐; Mức 2 → 2⭐; Mức 3 → 1⭐). Số lần chạy thử và số lần nộp **không** trừ sao; nộp lại sau khi đạt là ôn tập, **không tăng sao**. Mỗi lần cấp sao kèm thẻ lý do. Sao là quy ước của sản phẩm, không phải điểm học phần.
+  - *(Cơ chế `NEEDS_MORE_STARS` của các phiên bản cũ đã được bỏ.)*
   - Bài phụ thuộc trong Đồ thị có hướng (DAG) chỉ mở khóa khi bài tiên quyết đã đạt chuẩn (`MASTERED`).
 - **5 Huy hiệu Vinh danh:** `first_blood` (Bước Chân Đầu Tiên), `clean_coder` (Bậc Thầy Clean Code), `independent_thinker` (Nhà Tư Duy Độc Lập), `speed_demon` (Chiến Binh Tốc Độ), `bug_hunter` (Dũng Sĩ Diệt Bug).
 - **Động cơ Phân tích 4D (Student 4D Analytics):** Đo lường Định lượng:
@@ -275,7 +275,6 @@ PyTutor-MCP/
 │   │   │   ├── ExecutionVisualizerModal.jsx # Trực quan hóa từng bước thực thi (Tracer steps)
 │   │   │   ├── Header.jsx          # Thanh điều hướng trên, MCP Status Pill & User identity
 │   │   │   ├── LeaderboardModal.jsx# Bảng Vàng vinh danh học viên K65
-│   │   │   ├── MCPInspectorModal.jsx # Trực quan hóa 8 MCP Tools & Nhật ký JSON-RPC Trace
 │   │   │   ├── ProblemPanel.jsx    # Đề bài Markdown, Metadata & Ngữ cảnh Lớp học phần
 │   │   │   ├── PythonicReviewModal.jsx # Đánh giá Clean Code PEP 8 từ Tech Lead
 │   │   │   ├── StudentProfileModal.jsx # Hồ sơ năng lực 4 chiều & Lịch sử nạp lại code
@@ -347,23 +346,31 @@ Hệ thống cung cấp hơn 30+ endpoints RESTful chuẩn mực được bảo 
 - `GET /api/leaderboard`: Lấy Bảng Vàng vinh danh top học viên K65 theo lớp.
 
 ### Thực thi Mã Nguồn & Gia Sư AI (Coding & ITS Engine)
-- `POST /api/run-test`: Chạy thử nhanh mã nguồn trong Sandbox (0.07s, không tốn quota AI).
-- `POST /api/submit`: Xử lý 2 hành động:
-  - `action_type = "ask_ai"`: Sinh phản hồi Socratic theo 3 mức độ gợi ý, không cấp sao.
-  - `action_type = "submit"`: Chấm điểm chính thức, cấp sao tự lực (1-3 ⭐) và mở khóa bài tiếp theo.
-- `POST /api/run-custom`: Chạy thử mã nguồn với dữ liệu đầu vào tự do (Custom Stdin).
-- `POST /api/tutor/chat`: Trò chuyện đàm thoại nhiều lượt (Multi-turn Follow-up Chat) với Gia sư AI.
-- `POST /api/code-review`: Chấm điểm Clean Code PEP 8 và phân tích độ phức tạp thuật toán.
-- `POST /api/trace`: Truy xuất chuỗi vết thực thi từng dòng lệnh cho Visualizer.
+- `POST /api/run-test`: chạy thử mã trên bộ kiểm thử; không gọi AI, không cấp sao.
+- `POST /api/submit`: hai hành động theo `action_type`:
+  - `"ask_ai"`: sinh gợi ý theo Mức 1–3, không cấp sao, không tính vào chỉ số chính thức.
+  - `"submit"`: chấm chính thức; khi đạt mọi kiểm thử thì cấp sao tự lực (1–3 ⭐) kèm thẻ lý do.
+- `POST /api/custom-run`: chạy mã với dữ liệu đầu vào tự nhập (stdin).
+- `POST /api/trace-execution`: truy vết thực thi từng bước cho trình "Chạy từng bước".
+- `POST /api/tutor/chat`: trò chuyện với gia sư; phạm vi (`concept_only` / `code_review`) do máy chủ quyết định từ lịch sử nộp bài.
+- `POST /api/tutor/feedback`: đánh giá 👍/👎 cho một phản hồi của gia sư.
+- `POST /api/tutor/pythonic-review`: nhận xét phong cách code sau khi đã đạt.
+- `GET /api/exercises`, `GET /api/exercises/{exercise_id}`: danh sách và chi tiết bài tập.
+- `GET /api/student/model`, `GET /api/student/profile`: hồ sơ học tập kèm `data_status` và cỡ mẫu.
+- `GET /api/student/achievements`, `GET /api/leaderboard`: huy hiệu và bảng xếp hạng lớp.
 
-### Quản trị Giảng viên (Instructor Dashboard)
-- `GET /api/instructor/stats`: Lấy 4 chỉ số KPIs giảng dạy tổng hợp toàn trường.
-- `POST /api/instructor/exercises`: Thêm bài tập mới vào ngân hàng đề kèm test cases.
-- `PUT /api/instructor/exercises/{id}`: Chỉnh sửa bài tập và cấu hình test cases.
-- `DELETE /api/instructor/exercises/{id}`: Xóa bài tập khỏi hệ thống.
-- `GET /api/instructor/submissions`: Xem toàn bộ lịch sử nộp bài của sinh viên kèm code và lời khuyên AI.
-- `GET /api/instructor/export-csv`: Xuất báo cáo dữ liệu nộp bài chuẩn UTF-8 BOM cho Excel.
-- `GET /api/health`: Kiểm tra thông số trình thông dịch Python 3.14, sandbox flags và 8 MCP tools.
+### Quản trị Giảng viên (Instructor)
+- `GET /api/instructor/dashboard`, `GET /api/instructor/submissions[/{submission_id}]`: tổng quan và lượt nộp.
+- `GET|POST /api/instructor/exercises`, `PUT|DELETE /api/instructor/exercises/{exercise_id}`: ngân hàng bài tập và bộ kiểm thử; `POST|DELETE .../exercises/{exercise_id}/shares[/{instructor_username}]`: chia sẻ bài tập giữa giảng viên.
+- `POST /api/instructor/classes`, `.../classes/{class_id}/exercises`, `.../students`: lớp học phần, lộ trình bài, danh sách sinh viên.
+- `GET /api/instructor/classes/{class_id}/insights`: bài gây nghẽn, cơ cấu kết quả, nhóm quá trình học (luôn kèm cỡ mẫu).
+- `POST /api/instructor/ai/class-chat`: hỏi đáp về lớp trên số liệu tổng hợp (không mã, không danh tính sinh viên).
+- `GET /api/instructor/ai/feedback-summary`, `GET /api/instructor/knowledge-base`: tổng hợp 👍/👎 và danh mục tài liệu.
+- `GET|POST|PATCH|DELETE /api/instructor/classes/{class_id}/knowledge[/{doc_id}]`: tài liệu riêng của lớp cho gia sư AI.
+- `GET /api/health`: tình trạng hệ thống và lớp công cụ.
+- *(Phân hệ đợt thi `/api/exam-sessions`, `/api/instructor/exam-sessions` còn trong mã từ giai đoạn đầu, đang ẩn trên giao diện và không được phát triển tiếp.)*
+
+Danh sách đầy đủ và lược đồ: Swagger UI tại `http://127.0.0.1:8000/docs`.
 
 ---
 
@@ -371,10 +378,9 @@ Hệ thống cung cấp hơn 30+ endpoints RESTful chuẩn mực được bảo 
 
 Khi đứng trước Hội đồng chấm Đồ án Tốt nghiệp, sinh viên thực hiện theo kịch bản mẫu 5 bước chuẩn mực:
 
-### Bước 1: Trình diễn Khám phá Động MCP (Dynamic MCP Discovery)
+### Bước 1: Đăng nhập và (tùy chọn) xem lớp công cụ
 - Đăng nhập với tài khoản **Sinh viên** (`student`).
-- Bấm vào biểu tượng **⚡ MCP (8)** trên thanh điều hướng.
-- **Thuyết minh với Hội đồng:** Hệ thống không hardcode danh sách công cụ mà tự động khám phá 8 công cụ thông qua giao thức chuẩn JSON-RPC 2.0 `stdio` khi khởi động. Hiển thị trực quan từng lệnh `initialize` và `tools/list` trong nhật ký.
+- *Tùy chọn:* mở `http://127.0.0.1:8000/api/health` để cho thấy 8 công cụ được khám phá qua JSON-RPC 2.0 `stdio` khi khởi động. Giao diện sinh viên không còn nút hay màn hình MCP: MCP chỉ là lớp tích hợp công cụ, không phải điểm nhấn của đề tài.
 
 ### Bước 2: Trình diễn Không gian Lớp học phần & Điều hướng Đa tầng
 - Tại Cổng sinh viên, chọn lớp **"Cơ sở lập trình"** (`CNTT1128(223)_02`).
@@ -383,9 +389,9 @@ Khi đứng trước Hội đồng chấm Đồ án Tốt nghiệp, sinh viên t
 ### Bước 3: Trình diễn 3 Nút Độc lập & Sư phạm Giàn giáo (Scaffolding Pedagogy)
 - Mở bài tập *"Bài 01: Tính tổng từ 1 đến n"*.
 - **Thao tác 1 (Chạy thử):** Bấm **"▶ Chạy thử"**: Mã được kiểm thử trong Sandbox độc lập chỉ tốn **0.07 giây**, hoàn toàn không tốn quota AI.
-- **Thao tác 2 (Hỏi Gia sư AI):** Cố ý sửa code sai logic (`tong = n * 2`), chọn **Level 1** và bấm **"🤖 Hỏi Gia sư AI"**:
-  - AI đóng vai trò nhà sư phạm Socratic, đặt câu hỏi gợi mở, **tuyệt đối không đưa ra lời giải** (tuân thủ Anti-Spoil Guard).
-  - Bấm nâng cấp lên **Level 2** (Chẩn đoán nguyên nhân) và **Level 3** (Dàn ý thuật toán & Khung code mẫu `# TODO`).
+- **Thao tác 2 (Hỏi Gia sư AI):** Cố ý sửa code sai logic (`tong = n * 2`), chọn **Mức 1** và bấm **"🤖 Hỏi Gia sư AI"**:
+  - Gia sư đặt câu hỏi gợi mở về khái niệm và không đưa lời giải; việc này được ràng buộc bằng các lớp kiểm soát ở mục 3.4 (không phải bảo đảm tuyệt đối).
+  - Bấm **Mức 2** (chẩn đoán, không nêu cách sửa) và **Mức 3** (dàn ý & khung mã có `...`, logic đã bị che).
 - **Thao tác 3 (Nộp bài):** Viết code đúng và bấm **"🚀 Nộp bài"**: Modal chúc mừng xuất hiện, cấp sao tự lực (1-3 ⭐) dựa trên mức độ sử dụng gợi ý AI và trao huy hiệu vinh danh.
 
 ### Bước 4: Trình diễn Công cụ Trực quan hóa (Visualizer) & Đánh giá Mã nguồn (Review)
@@ -408,7 +414,9 @@ Hệ thống tích hợp kịch bản kiểm thử kỹ thuật cho các chức 
 - **Phản hồi sư phạm:** kiểm tra gợi ý theo cấp độ và các ca Anti-Spoil đã định nghĩa.
 - **Tích hợp công cụ qua MCP:** kiểm tra khám phá 8 tools và độ trễ trong môi trường benchmark.
 
-Các kết quả này là kiểm thử chức năng/kỹ thuật; không nên diễn giải thành bằng chứng rằng hệ thống đã cải thiện kết quả học tập thực tế. Chi tiết phương pháp và giới hạn xem trong [`docs/EVALUATION_REPORT.md`](docs/EVALUATION_REPORT.md).
+Các kết quả này là kiểm thử chức năng/kỹ thuật; không nên diễn giải thành bằng chứng rằng hệ thống đã cải thiện kết quả học tập thực tế. Chi tiết phương pháp và giới hạn: [`docs/EVALUATION_REPORT_V5_3.md`](docs/EVALUATION_REPORT_V5_3.md) (kiểm thử, benchmark chống lộ lời giải và truy xuất), [`docs/REAL_LLM_RUNS_SUMMARY.md`](docs/REAL_LLM_RUNS_SUMMARY.md) (đo nhiều lần với mô hình thật), [`docs/THESIS_CHAPTER4_DRAFT.md`](docs/THESIS_CHAPTER4_DRAFT.md). Báo cáo `docs/EVALUATION_REPORT.md` (v3.0) là bản cũ.
+
+> **Trạng thái trung thực (13/11/2026):** bản mẫu nghiên cứu. Chưa chạy pilot với người dùng thật; chưa có chấm điểm sư phạm do người đánh giá; chạy mã của người học chưa được cô lập bảo mật; mật khẩu của cơ sở dữ liệu có từ trước có thể còn lưu dạng văn bản thường.
 
 Chạy kịch bản tự động:
 ```powershell

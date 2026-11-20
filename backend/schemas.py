@@ -114,6 +114,7 @@ class SubmitRequest(BaseModel):
     session_id: Optional[str] = Field("default_session", description="Mã định danh phiên học viên phục vụ mô hình thích ứng")
     exam_session_id: Optional[str] = Field(None, description="Mã kỳ thi / đợt thực hành nếu đang làm bài trong lớp")
     action_type: str = Field("submit", description="'ask_ai' (chỉ xin gợi ý AI) hoặc 'submit' (nộp bài chấm điểm chính thức)")
+    class_id: Optional[str] = Field(None, description="Lớp học phần hiện tại (tùy chọn); chỉ dùng nếu sinh viên đã ghi danh, ngược lại bị bỏ qua")
 
 
 class SubmitResponse(BaseModel):
@@ -130,6 +131,7 @@ class SubmitResponse(BaseModel):
     student_model: Optional[dict] = Field(default=None, description="Mô hình học sinh thích ứng")
     mcp_trace: list[MCPTraceItem] = Field(default_factory=list, description="Nhật ký các lệnh MCP JSON-RPC 2.0")
     stars_earned: int = Field(0, description="Số sao tự lực đạt được (0-3 ⭐)")
+    star_rationale: Optional[dict] = Field(None, description="Giải thích vì sao nhận số sao này; chỉ có khi nộp bài chính thức và pass")
     new_badges: list[dict] = Field(default_factory=list, description="Trường tương thích cũ; luôn rỗng")
 
 
@@ -148,6 +150,7 @@ class StudentProfileResponse(BaseModel):
     analytics_metrics: Optional[dict] = None
     diagnostic_evaluation: Optional[dict] = None
     data_status: str = "unknown"
+    learner_model: Optional[dict] = None
 
 
 # ==============================================================================
@@ -176,6 +179,11 @@ class ExerciseDetail(BaseModel):
     test_cases: list[TestCase]
     is_active: Optional[bool] = True
     created_by: str = "system"
+    has_passed: bool = Field(False, description="Sinh viên đang đăng nhập đã có lượt `submit` pass ở bài này (mở chat về code đã nộp)")
+    class_id: Optional[str] = Field(None, description="Mã lớp học phần chứa bài tập")
+    class_name: Optional[str] = Field(None, description="Tên lớp học phần chứa bài tập")
+    class_code: Optional[str] = Field(None, description="Mã lớp học phần NEU")
+    semester: Optional[str] = Field(None, description="Học kỳ của lớp")
 
 
 class ExerciseUpsertRequest(BaseModel):
@@ -258,11 +266,18 @@ class TutorChatRequest(BaseModel):
     class_id: Optional[str] = Field(None, description="Lớp học phần hiện tại nếu có")
 
 
+class KnowledgeToggleRequest(BaseModel):
+    is_active: bool
+
+
 class TutorChatResponse(BaseModel):
     reply: str
     llm_source: str = "gemini-3.5-flash-lite"
     updated_history: list[ChatMessage]
     interaction_id: Optional[str] = None
+    sources: list[dict] = Field(default_factory=list, description="Nguồn tài liệu nội bộ đã dùng: [{source, section}]")
+    knowledge_status: str = Field("not_applicable", description="grounded | no_source | not_applicable")
+    chat_scope: str = Field("concept_only", description="concept_only (chưa nộp bài đạt: chỉ khái niệm) | code_review (đã nộp đạt: hỏi về code đã nộp)")
 
 
 class TutorFeedbackRequest(BaseModel):
@@ -281,6 +296,9 @@ class InstructorAIChatResponse(BaseModel):
     interaction_id: str
     class_id: str
     llm_source: str
+    days: int = 7
+    data_status: str = "unknown"
+    sample: dict = Field(default_factory=dict, description="Cỡ mẫu của số liệu tổng hợp đã dùng để trả lời")
 
 
 class CustomRunRequest(BaseModel):
@@ -403,6 +421,8 @@ class PythonicReviewResponse(BaseModel):
     improvements: str = Field(..., description="Các điểm cần tối ưu hóa")
     pythonic_code: str = Field(..., description="Đoạn mã mẫu viết chuẩn Pythonic")
     explanation: str = Field(..., description="Giải thích lý do tối ưu")
+    interaction_id: Optional[str] = Field(None, description="ID phản hồi AI, dùng cho feedback 👍/👎")
+    llm_source: str = ""
     stars_earned: int = 0
     new_badges: list[dict] = Field(default_factory=list, description="Trường tương thích cũ; luôn rỗng")
 
@@ -526,6 +546,21 @@ class ExamSessionCreateRequest(BaseModel):
     exercise_ids: list[str] = Field(..., description="Danh sách mã bài tập được chọn từ ngân hàng đề")
     duration_minutes: int = Field(45, ge=5, le=360, description="Thời gian làm bài tính bằng phút")
     allow_ai_hints: int = Field(1, description="1: Cho phép AI Tutor, 0: Khóa AI Tutor trong giờ thi")
+
+
+class KnowledgeComponentItem(BaseModel):
+    kc: str = Field(..., description="Mã định danh đơn vị kiến thức (slug, vd: loop, file_io)")
+    label_vi: str = Field(..., description="Tên tiếng Việt hiển thị của đơn vị kiến thức")
+    keywords: list[str] = Field(default_factory=list, description="Danh sách từ khóa regex nhận diện")
+    created_by: str = Field("system", description="Người tạo (system hoặc username)")
+    created_at: Optional[str] = None
+    is_active: bool = True
+
+
+class KnowledgeComponentCreateRequest(BaseModel):
+    kc: Optional[str] = Field(None, description="Mã định danh slug (tùy chọn, nếu để trống hệ thống tự sinh từ label_vi)")
+    label_vi: str = Field(..., min_length=2, max_length=100, description="Tên tiếng Việt hiển thị của đơn vị kiến thức")
+    keywords: list[str] = Field(..., min_items=1, description="Danh sách các từ khóa nhận diện")
 
 
 

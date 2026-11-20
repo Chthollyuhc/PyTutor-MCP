@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, HelpCircle, Compass, Code, ChevronRight, ChevronDown, ChevronUp, Send, MessageSquare, ShieldAlert, Lock } from 'lucide-react';
-import { sendTutorChatMessage, submitTutorFeedback } from '../services/api';
+import { Sparkles, HelpCircle, Compass, Code, ChevronRight, ChevronDown, ChevronUp, Send, MessageSquare, ShieldAlert, Star, Copy, Check, FileInput, Undo2 } from 'lucide-react';
+import { Badge } from './ui';
+import { sendTutorChatMessage } from '../services/api';
+import TutorFeedbackButtons from './TutorFeedbackButtons';
 
 export default function TutorPanel({
   hintLevel,
@@ -14,25 +16,46 @@ export default function TutorPanel({
   testResults,
   onAskAI,
   onEscalate,
+  onInsertSkeleton = null,
+  canUndoInsert = false,
+  onUndoInsert = null,
   exerciseId,
   code,
   sessionId,
   onOpenPythonicReview,
   starsEarned = 3,
+  hintInteractionId = null,
+  starRationale = null,
   isExamMode = false,
   currentSession = null,
+  hasPassedBefore = false,
+  classId = null,
 }) {
   const [isAstOpen, setIsAstOpen] = useState(true);
+  const [isStarRuleOpen, setIsStarRuleOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [userQuestion, setUserQuestion] = useState('');
   const [isSendingChat, setIsSendingChat] = useState(false);
-  const [feedbackById, setFeedbackById] = useState({});
+  // v5.3 (S1.4): phạm vi chat do backend quyết định theo trạng thái nộp bài ('concept_only' | 'code_review').
+  const [chatScope, setChatScope] = useState(null);
 
   // Khi học viên đổi bài tập, đặt lại lịch sử chat làm rõ
   useEffect(() => {
     setChatMessages([]);
     setUserQuestion('');
+    setChatScope(null);
   }, [exerciseId]);
+
+  // Vừa "Nộp bài" đạt (có star_rationale) hoặc backend xác nhận đã từng nộp đạt → mở hỏi về code đã nộp.
+  // `hasPassedBefore` đến từ API chi tiết bài tập (đã nộp đạt ở phiên trước); backend vẫn là nơi quyết định phạm vi thật.
+  const isCodeChatUnlocked = Boolean(starRationale) || hasPassedBefore || chatScope === 'code_review';
+
+  // Mỗi mức một màu: 1 xanh ngọc (gợi mở), 2 cam (chẩn đoán), 3 tím (dàn ý chi tiết).
+  const LEVEL_STYLE = {
+    1: { bg: 'bg-success-soft', border: 'border-success-line', borderOn: 'border-success', ring: 'border-success', dot: 'bg-success', title: 'text-success-strong' },
+    2: { bg: 'bg-warning-soft', border: 'border-warning-line', borderOn: 'border-warning', ring: 'border-warning', dot: 'bg-warning', title: 'text-warning-strong' },
+    3: { bg: 'bg-ai-soft', border: 'border-ai-line', borderOn: 'border-ai', ring: 'border-ai', dot: 'bg-ai', title: 'text-ai-strong' },
+  };
 
   const levels = [
     {
@@ -82,11 +105,18 @@ export default function TutorPanel({
         user_message: currentMsg,
         history: chatMessages,
         exam_session_id: currentSession?.id || null,
-        class_id: currentSession?.class_id || null,
+        class_id: classId || currentSession?.class_id || null,
       });
 
       if (res && res.reply) {
-        setChatMessages(prev => [...prev, { role: 'assistant', content: res.reply, interactionId: res.interaction_id }]);
+        if (res.chat_scope) setChatScope(res.chat_scope);
+        setChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: res.reply,
+          interactionId: res.interaction_id,
+          sources: Array.isArray(res.sources) ? res.sources : [],
+          knowledgeStatus: res.knowledge_status || 'not_applicable',
+        }]);
       }
     } catch (err) {
       console.error('Lỗi khi gửi câu hỏi tới Gia sư AI:', err);
@@ -102,148 +132,130 @@ export default function TutorPanel({
     }
   };
 
-  const handleFeedback = async (message, rating) => {
-    if (!message.interactionId || feedbackById[message.interactionId]) return;
-    try {
-      await submitTutorFeedback({ interaction_id: message.interactionId, rating });
-      setFeedbackById(prev => ({ ...prev, [message.interactionId]: rating }));
-    } catch (err) {
-      console.error('Không thể lưu đánh giá phản hồi AI:', err);
-    }
-  };
+  // Sao chỉ được ghi nhận ở lượt "Nộp bài" chính thức; chạy thử / hỏi AI không sinh star_rationale.
+  const officialStars = starRationale ? Math.max(0, Math.min(3, Number(starRationale.stars) || 0)) : null;
 
   return (
-    <div className="h-full flex flex-col bg-slate-900 text-slate-200 select-text overflow-hidden">
-      {/* Panel Header */}
-      <div className="h-11 bg-slate-900 border-b border-slate-800 px-3.5 flex items-center justify-between shrink-0">
-        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span>Trợ lý học tập PyTutor</span>
-        </div>
-        <span className="text-[10.5px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-medium">
-          {getLlmBadgeLabel(llmSource)}
-        </span>
+    <div className="flex h-full select-text flex-col overflow-hidden bg-surface text-foreground">
+      {/* Tiêu đề cột: màu tím = Gia sư AI */}
+      <div className="on-brand flex min-h-12 shrink-0 items-center justify-between gap-2 bg-ai px-4 text-on-solid">
+        <h2 className="flex items-center gap-2 text-sm font-bold">
+          <Sparkles aria-hidden="true" className="size-4" />
+          Gia sư PyTutor
+        </h2>
+        <span className="rounded-full bg-header-foreground/20 px-2.5 py-0.5 text-[0.8125rem] font-semibold">{getLlmBadgeLabel(llmSource)}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs leading-relaxed">
+      <div className="flex-1 space-y-5 overflow-y-auto p-4 text-sm leading-relaxed">
         {/* Section 1: Hint Level Selector or Exam Mode Lock Notice */}
         {isExamMode ? (
-          <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-amber-200 text-xs space-y-2 shadow-md">
-            <div className="flex items-center space-x-2 font-bold text-amber-400">
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>CHẾ ĐỘ KỲ THI / KIỂM TRA NGHIÊM NGẶT</span>
-            </div>
-            <p className="text-[11px] leading-relaxed text-slate-300">
-              Đang trong chế độ kiểm tra / thi: Trợ lý AI tạm khóa để đảm bảo đánh giá công bằng. Bạn hãy sử dụng nút <strong>"Chạy thử code"</strong> và <strong>"Nộp bài chấm điểm"</strong> ở cột giữa.
+          <div role="status" className="space-y-2 rounded-lg border border-warning-line bg-warning-soft p-4">
+            <p className="flex items-center gap-2 font-bold text-warning-strong">
+              <ShieldAlert aria-hidden="true" className="size-4 shrink-0" />
+              Chế độ kỳ thi: Gia sư AI tạm khóa
             </p>
-            <div className="pt-2 border-t border-amber-500/30 flex items-center justify-between text-[10.5px] text-amber-300/80">
-              <span>MCP Sandbox & AST vẫn chấm điểm 100%</span>
-              <span className="font-mono">AI Hints: LOCKED</span>
-            </div>
+            <p className="text-[0.8125rem] text-foreground">
+              Để đánh giá công bằng, hãy dùng “Chạy thử” và “Nộp bài” ở cột giữa. Hệ thống vẫn chấm điểm đầy đủ.
+            </p>
           </div>
         ) : (
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-              <Compass className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Bạn muốn mình gợi ý đến mức nào?</span>
-            </div>
+          <fieldset>
+            <legend className="mb-2 flex items-center gap-1.5 text-sm font-bold">
+              <Compass aria-hidden="true" className="size-4 text-ai-strong" />
+              Bạn muốn gợi ý đến mức nào?
+            </legend>
 
-            <div className="grid grid-cols-1 gap-1.5">
+            <div role="radiogroup" aria-label="Mức gợi ý" className="grid grid-cols-1 gap-2">
               {levels.map((item) => {
                 const active = hintLevel === item.level;
+                const st = LEVEL_STYLE[item.level];
                 return (
                   <button
                     key={item.level}
                     type="button"
+                    role="radio"
+                    aria-checked={active}
                     onClick={() => setHintLevel(item.level)}
-                    className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
-                      active
-                        ? 'bg-emerald-500/10 border-emerald-500/60 text-white shadow-sm ring-1 ring-emerald-500/20'
-                        : 'bg-slate-950/40 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                    } ${item.color}`}
+                    className={`rounded-2xl border-2 px-3.5 py-3 text-left transition-all shadow-soft cursor-pointer ${st.bg} ${active ? st.borderOn : st.border}`}
                   >
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className={`font-semibold text-xs ${active ? 'text-emerald-400' : 'text-slate-300'}`}>
-                        {item.title}
+                    <span className={`flex items-center gap-2 text-xs font-bold ${st.title}`}>
+                      <span aria-hidden="true" className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${st.ring}`}>
+                        {active && <span className={`size-2 rounded-full ${st.dot}`} />}
                       </span>
-                    </div>
-                    <p className="text-[10.5px] leading-snug opacity-80">{item.desc}</p>
+                      {item.title}
+                    </span>
+                    <span className="mt-1 block pl-6 text-xs leading-snug text-foreground/80">{item.desc}</span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Nút bấm trực quan nhận gợi ý */}
             <button
               type="button"
               onClick={() => onAskAI && onAskAI(hintLevel)}
               disabled={isAskingAI || isSubmitting}
-              className="w-full mt-2.5 py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-lg transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              aria-busy={isAskingAI}
+              className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-purple-600 px-4 text-xs font-semibold text-white transition-all shadow-soft active:scale-95 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
             >
               {isAskingAI ? (
                 <>
-                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-amber-300" />
-                  <span>Đang xin gợi ý Mức {hintLevel}...</span>
+                  <span aria-hidden="true" className="size-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+                  Đang xin gợi ý Mức {hintLevel}…
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Nhận gợi ý Mức {hintLevel} từ Gia sư AI</span>
+                  <Sparkles aria-hidden="true" className="size-4" />
+                  Nhận gợi ý Mức {hintLevel}
                 </>
               )}
             </button>
-          </div>
+          </fieldset>
         )}
 
         {/* Section 2: Code Structure Recognition Card (Collapsible) */}
         {astAnalysis && (
-          <div className="rounded-lg border border-slate-800 bg-slate-950/60 overflow-hidden">
+          <div className="overflow-hidden rounded-lg border border-info-line bg-info-soft/50">
             <button
               type="button"
               onClick={() => setIsAstOpen(!isAstOpen)}
-              className="w-full p-2.5 flex items-center justify-between text-[11px] font-semibold text-slate-300 hover:bg-slate-850 transition-colors cursor-pointer"
+              aria-expanded={isAstOpen}
+              className="flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-bold text-info-strong transition-colors hover:bg-info-soft"
             >
-              <span className="flex items-center space-x-1.5">
-                <Code className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Nhận diện nhanh code của bạn</span>
+              <span className="flex items-center gap-2">
+                <Code aria-hidden="true" className="size-4" />
+                Nhận diện nhanh code của bạn
               </span>
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    astAnalysis.valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
-                  }`}
-                >
-                  {astAnalysis.valid ? 'Hợp lệ ✅' : 'Có lỗi cú pháp ⚠️'}
-                </span>
-                {isAstOpen ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
-              </div>
+              <span className="flex items-center gap-2">
+                <Badge variant={astAnalysis.valid ? 'success' : 'danger'}>{astAnalysis.valid ? 'Hợp lệ' : 'Có lỗi cú pháp'}</Badge>
+                {isAstOpen ? <ChevronUp aria-hidden="true" className="size-4" /> : <ChevronDown aria-hidden="true" className="size-4" />}
+              </span>
             </button>
 
             {isAstOpen && (
-              <div className="p-2.5 pt-0 border-t border-slate-800/60 space-y-2 mt-1">
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="bg-slate-900/80 p-1.5 rounded">
-                    <span className="text-slate-500 text-[10px] block">Độ dài:</span>
-                    <span className="text-slate-200 font-semibold">{astAnalysis.line_count} dòng lệnh</span>
+              <div className="space-y-2 border-t border-info-line p-3">
+                <div className="grid grid-cols-2 gap-2 text-[0.8125rem]">
+                  <div className="rounded-md bg-surface p-2">
+                    <span className="block text-muted">Độ dài</span>
+                    <span className="font-bold">{astAnalysis.line_count} dòng lệnh</span>
                   </div>
-                  <div className="bg-slate-900/80 p-1.5 rounded">
-                    <span className="text-slate-500 text-[10px] block">Vòng lặp:</span>
-                    <span className="text-slate-200 font-semibold">
-                      {astAnalysis.has_loops ? `Có dùng (${astAnalysis.loop_details?.for_loops ? 'for' : ''}${astAnalysis.loop_details?.while_loops ? 'while' : ''})` : 'Chưa dùng'}
+                  <div className="rounded-md bg-surface p-2">
+                    <span className="block text-muted">Vòng lặp</span>
+                    <span className="font-bold">
+                      {astAnalysis.has_loops ? `Có dùng (${[astAnalysis.loop_details?.for_count ? 'for' : '', astAnalysis.loop_details?.while_count ? 'while' : ''].filter(Boolean).join(', ') || 'vòng lặp'})` : 'Chưa dùng'}
                     </span>
                   </div>
-                  <div className="bg-slate-900/80 p-1.5 rounded">
-                    <span className="text-slate-500 text-[10px] block">Biến cộng dồn / tích lũy:</span>
-                    <span className="text-slate-200 font-semibold">{astAnalysis.has_accumulator ? 'Có' : 'Chưa có'}</span>
+                  <div className="rounded-md bg-surface p-2">
+                    <span className="block text-muted">Biến cộng dồn</span>
+                    <span className="font-bold">{astAnalysis.has_accumulator ? 'Có' : 'Chưa có'}</span>
                   </div>
-                  <div className="bg-slate-900/80 p-1.5 rounded">
-                    <span className="text-slate-500 text-[10px] block">Đệ quy:</span>
-                    <span className="text-slate-200 font-semibold">{astAnalysis.has_recursion ? 'Có' : 'Không'}</span>
+                  <div className="rounded-md bg-surface p-2">
+                    <span className="block text-muted">Đệ quy</span>
+                    <span className="font-bold">{astAnalysis.has_recursion ? 'Có' : 'Không'}</span>
                   </div>
                 </div>
 
                 {astAnalysis.structural_summary && (
-                  <p className="text-[10.5px] text-slate-400 italic bg-slate-900/40 p-1.5 rounded border border-slate-800/40">
+                  <p className="rounded-md bg-surface p-2 text-[0.8125rem] text-muted">
                     {astAnalysis.structural_summary}
                   </p>
                 )}
@@ -254,30 +266,80 @@ export default function TutorPanel({
 
         {/* Thẻ Gamification & Nút Thử thách Tối ưu Code Pythonic (Khi pass 100%) */}
         {testResults?.all_passed && (
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-amber-950/30 border border-emerald-500/40 space-y-2.5 shadow-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div>
-                  <h4 className="text-xs font-bold text-emerald-300">Đã vượt qua 100% Test Cases!</h4>
-                  <p className="text-[10.5px] text-slate-300">Sao tự lực: {starsEarned || 3}</p>
+          <div className="space-y-3 rounded-xl border border-success-line bg-success-soft p-3.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-success-strong">Đã vượt qua toàn bộ kiểm thử</h4>
+                <p className="text-[0.8125rem] text-foreground">
+                  {officialStars != null
+                    ? `Sao tự lực lượt nộp này: ${officialStars}/3`
+                    : 'Sao tự lực chỉ được ghi nhận khi bạn bấm "Nộp bài".'}
+                </p>
+              </div>
+              {officialStars != null && (
+                <div className="flex shrink-0 items-center gap-0.5" role="img" aria-label={`${officialStars} trên 3 sao tự lực`}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Star key={i} aria-hidden="true" className={`size-6 ${i < officialStars ? 'fill-warning text-warning' : 'text-warning-line'}`} />
+                  ))}
                 </div>
-              </div>
-              <div className="flex items-center space-x-0.5 text-base text-amber-400">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <span key={i} className={i < (starsEarned || 3) ? 'text-amber-400' : 'text-slate-600'}>
-                    ★
-                  </span>
-                ))}
-              </div>
+              )}
             </div>
+
+            {/* v5.3 (S2): thẻ lý do sao — minh bạch quy tắc, dữ liệu đã dùng và cách đạt mức cao hơn */}
+            {starRationale && (
+              <div className="space-y-2 rounded-lg border border-border bg-surface p-3 text-[0.8125rem] leading-relaxed">
+                <p className="font-bold">Vì sao bạn nhận {officialStars} sao?</p>
+                {starRationale.explanation && <p className="text-foreground">{starRationale.explanation}</p>}
+                <dl className="grid grid-cols-2 gap-2">
+                  <div className="rounded-md bg-warning-soft p-2">
+                    <dt className="text-warning-strong">Mức gợi ý cao nhất</dt>
+                    <dd className="font-bold text-warning-strong">Mức {starRationale.max_hint_level_used ?? '—'}</dd>
+                  </div>
+                  <div className="rounded-md bg-info-soft p-2">
+                    <dt className="text-info-strong">Số lần nộp bài</dt>
+                    <dd className="font-bold text-info-strong">{starRationale.attempt_count ?? '—'}</dd>
+                  </div>
+                </dl>
+                {starRationale.how_to_improve && (
+                  <p>
+                    <span className="font-bold text-success-strong">Bước kế tiếp: </span>
+                    {starRationale.how_to_improve}
+                  </p>
+                )}
+                {Array.isArray(starRationale.rule) && starRationale.rule.length > 0 && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setIsStarRuleOpen((open) => !open)}
+                      aria-expanded={isStarRuleOpen}
+                      className="flex min-h-9 items-center gap-1 rounded font-semibold text-info-strong hover:underline"
+                    >
+                      {isStarRuleOpen ? <ChevronUp aria-hidden="true" className="size-4" /> : <ChevronDown aria-hidden="true" className="size-4" />}
+                      <span>Quy tắc tính sao</span>
+                    </button>
+                    {isStarRuleOpen && (
+                      <ul className="mt-1.5 space-y-1">
+                        {starRationale.rule.map((item) => (
+                          <li key={item.stars} className={`flex items-start gap-2 ${item.stars === officialStars ? 'font-bold text-foreground' : 'text-muted'}`}>
+                            <span className="shrink-0 font-mono font-bold text-warning-strong">{item.stars}★</span>
+                            <span>{item.condition}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                {starRationale.note && <p className="border-t border-border pt-2 text-muted">{starRationale.note}</p>}
+              </div>
+            )}
 
             {onOpenPythonicReview && (
               <button
                 onClick={onOpenPythonicReview}
                 type="button"
-                className="w-full py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-lg shadow-md shadow-emerald-950/40 transition-all cursor-pointer group"
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-ai px-3 text-sm font-semibold text-on-solid transition-colors hover:bg-ai/85"
               >
-                <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform text-amber-300" />
+                <Sparkles aria-hidden="true" className="size-4" />
                 <span>Thử thách tối ưu code Pythonic</span>
               </button>
             )}
@@ -286,33 +348,44 @@ export default function TutorPanel({
 
         {/* Section 3: AI Tutor Response Card */}
         <div>
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span className="flex items-center space-x-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Gợi ý hướng giải từ Gia sư:</span>
-            </span>
-          </div>
+          <h3 className="mb-2 text-sm font-bold">Gợi ý hướng giải</h3>
 
           {isAskingAI || (isSubmitting && !testResults?.all_passed) ? (
-            <div className="p-6 rounded-lg border border-slate-800 bg-slate-950/60 flex flex-col items-center justify-center text-center space-y-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-400" />
-              <p className="text-slate-300 text-xs font-medium">Trợ lý AI đang phân tích bài giải của bạn...</p>
-              <p className="text-[11px] text-slate-500">Đang chuẩn bị gợi ý Mức {hintLevel} phù hợp nhất với bài làm hiện tại</p>
+            <div role="status" className="flex flex-col items-center justify-center space-y-2 rounded-lg border border-ai-line bg-ai-soft p-6 text-center">
+              <span aria-hidden="true" className="size-6 animate-spin rounded-full border-2 border-ai-line border-t-ai" />
+              <p className="text-sm font-semibold text-ai-strong">Trợ lý AI đang phân tích bài giải của bạn…</p>
+              <p className="text-[0.8125rem] text-muted">Đang chuẩn bị gợi ý Mức {hintLevel} phù hợp nhất với bài làm hiện tại</p>
             </div>
           ) : tutorHint ? (
             <div
-              className={`p-3.5 rounded-xl border text-xs leading-relaxed space-y-3 transition-all shadow-sm ${
+              className={`space-y-3 rounded-xl border p-3.5 text-sm leading-relaxed ${
                 testResults?.all_passed
-                  ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-100'
-                  : 'border-slate-700/80 bg-slate-950/80 text-slate-200'
+                  ? 'border-success-line bg-success-soft'
+                  : 'border-ai-line bg-ai-soft'
               }`}
             >
-              <div className="prose prose-invert prose-xs max-w-none space-y-2">
-                {formatHintText(tutorHint)}
+              <div className="max-w-none space-y-2 text-foreground">
+                {formatHintText(tutorHint, {
+                  canInsert: hintLevel === 3 && !testResults?.all_passed && Boolean(onInsertSkeleton),
+                  onInsert: onInsertSkeleton,
+                })}
+                {canUndoInsert && onUndoInsert && (
+                  <button
+                    type="button"
+                    onClick={onUndoInsert}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-[0.8125rem] font-semibold text-foreground hover:border-primary"
+                  >
+                    <Undo2 aria-hidden="true" className="size-4" />
+                    Hoàn tác, trả lại code cũ
+                  </button>
+                )}
               </div>
               {adaptiveStrategy && !testResults?.all_passed && (
-                <p className="border-t border-slate-700 pt-2 text-[11px] text-slate-400">
-                  Vì sao nhận gợi ý này: {adaptiveStrategy.reason_code === 'recurring_difficulty' ? 'lịch sử cho thấy bạn đã thử bài này nhiều lần' : adaptiveStrategy.reason_code === 'failed_case_diagnosis' ? 'có kiểm thử chưa đạt để làm căn cứ phân tích' : 'chưa có đủ dữ liệu lịch sử nên bắt đầu bằng gợi mở an toàn'}.
+                <p className="border-t border-ai-line pt-2 text-[0.8125rem] text-muted">
+                  Vì sao nhận gợi ý này: {adaptiveStrategy.adaptation_codes?.includes('no_code_yet') ? 'bạn chưa viết dòng code nào nên gợi ý giúp hiểu đề và chọn bước đầu tiên' : adaptiveStrategy.reason_code === 'recurring_difficulty' ? 'lịch sử cho thấy bạn đã thử bài này nhiều lần' : adaptiveStrategy.reason_code === 'failed_case_diagnosis' ? 'có kiểm thử chưa đạt để làm căn cứ phân tích' : 'chưa có đủ dữ liệu lịch sử nên bắt đầu bằng gợi mở an toàn'}.
+                  {Array.isArray(adaptiveStrategy.adaptations) && adaptiveStrategy.adaptations.map((a) => (
+                    <span key={a.code} className="block mt-1">· {a.reason_vi}</span>
+                  ))}
                 </p>
               )}
 
@@ -327,50 +400,64 @@ export default function TutorPanel({
                     else if (onEscalate) onEscalate(nextLevel);
                   }}
                   disabled={isAskingAI || isSubmitting}
-                  className="w-full mt-2.5 py-2 px-3 flex items-center justify-center space-x-1.5 text-xs font-semibold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                  className="mt-1 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-warning-line bg-warning-soft px-3 text-sm font-semibold text-warning-strong transition-colors hover:border-warning disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   <span>Vẫn thấy khó? Xem gợi ý chi tiết hơn (Mức {hintLevel + 1})</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight aria-hidden="true" className="size-4 shrink-0" />
                 </button>
               )}
 
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10.5px] text-slate-500">
+              {/* v5.3 (S1.2): đánh giá gợi ý ask_ai; lượt nộp đã pass dùng lời chúc tất định nên không có interaction để đánh giá */}
+              <TutorFeedbackButtons
+                interactionId={hintInteractionId}
+                prompt="Gợi ý này có giúp bạn không?"
+                className="border-t border-ai-line pt-2"
+              />
+
+              <div className="flex items-center justify-between gap-2 border-t border-ai-line pt-2 text-[0.8125rem] text-muted">
                 <span>{getLlmBadgeLabel(llmSource)}</span>
-                <span>Dựa trên kết quả chạy thực tế & phân tích code</span>
+                <span className="text-right">Dựa trên kết quả chạy thực tế & phân tích code</span>
               </div>
             </div>
           ) : (
-            <div className="p-6 rounded-xl border border-dashed border-slate-800 text-center text-slate-500 space-y-2">
-              <HelpCircle className="w-7 h-7 mx-auto opacity-30 text-emerald-400" />
-              <p className="text-xs font-medium text-slate-400">Chưa có gợi ý từ Gia sư AI.</p>
-              <p className="text-[11px] text-slate-500 leading-normal">
-                Hãy viết code và bấm <span className="text-cyan-400 font-medium">"Chạy thử code"</span> hoặc <span className="text-emerald-400 font-medium">"Hỏi Gia sư AI"</span> để nhận hướng dẫn.
+            <div className="space-y-2 rounded-xl border-2 border-dashed border-ai-line bg-ai-soft/40 p-6 text-center">
+              <HelpCircle aria-hidden="true" className="mx-auto size-8 text-ai" />
+              <p className="text-sm font-bold">Chưa có gợi ý từ Gia sư AI.</p>
+              <p className="text-[0.8125rem] leading-normal text-muted">
+                Hãy viết code và bấm <span className="font-bold text-info-strong">“Chạy thử”</span> hoặc <span className="font-bold text-ai-strong">“Hỏi gia sư AI”</span> để nhận hướng dẫn.
               </p>
             </div>
           )}
         </div>
 
         {/* Section 4: Multi-turn Chat với Gia sư AI (Phase 8) */}
-        {tutorHint && (
-          <div className="pt-3 border-t border-slate-800 space-y-2.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
-              <span className="flex items-center space-x-1.5 text-cyan-300">
-                <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Trò chuyện làm rõ với Gia sư:</span>
+        {/* Mở sẵn từ khi vào bài (hỏi khái niệm không cần xin gợi ý trước); chỉ khóa ô nhập ở chế độ kỳ thi. */}
+        {(
+          <div className="space-y-2.5 border-t border-border pt-4">
+            <div className="flex items-center justify-between text-sm font-bold">
+              <span className="flex items-center gap-1.5 text-info-strong">
+                <MessageSquare aria-hidden="true" className="size-4" />
+                <span>{isCodeChatUnlocked ? 'Trò chuyện về bài đã nộp' : 'Hỏi khái niệm Python'}</span>
               </span>
               {chatMessages.length > 0 && (
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="rounded-full bg-info-soft px-2 py-0.5 font-mono text-[0.8125rem] font-semibold text-info-strong">
                   {chatMessages.length} tin nhắn
                 </span>
               )}
             </div>
 
             {/* Chat History Bubbles */}
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1.5 text-[13px] leading-relaxed" aria-live="polite" aria-relevant="additions text">
+            <div className="max-h-64 space-y-3 overflow-y-auto pr-1.5 text-sm leading-relaxed" aria-live="polite" aria-relevant="additions text">
               {chatMessages.length === 0 ? (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-slate-300">
-                  <MessageSquare className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" aria-hidden="true" />
-                  <p className="text-xs leading-relaxed">Có điều gì chưa rõ trong bài làm hay gợi ý trên? Hãy hỏi phía dưới để Gia sư giải thích thêm.</p>
+                <div className="flex items-start gap-2.5 rounded-xl border border-info-line bg-info-soft p-3">
+                  <MessageSquare className="mt-0.5 size-4 shrink-0 text-info-strong" aria-hidden="true" />
+                  {isCodeChatUnlocked ? (
+                    <p className="text-[0.8125rem] leading-relaxed">Bạn đã nộp bài đạt. Giờ bạn có thể hỏi chi tiết về code đã nộp: vì sao nó chạy đúng, từng dòng làm gì, hay cách viết khác.</p>
+                  ) : (
+                    <p className="text-[0.8125rem] leading-relaxed">
+                      Khung này giải thích <strong className="font-bold">khái niệm Python tổng quát</strong> và luật Sao tự lực; Gia sư không xem code bài đang làm ở đây. Cần gỡ lỗi bài làm, hãy bấm <strong className="font-bold text-ai-strong">Hỏi gia sư AI</strong>. Sau khi <strong className="font-bold">Nộp bài</strong> đạt, bạn hỏi được chi tiết về code đã nộp.
+                    </p>
+                  )}
                 </div>
               ) : (
                 chatMessages.map((msg, idx) => (
@@ -380,64 +467,75 @@ export default function TutorPanel({
                       msg.role === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    <span className={`text-[11px] font-medium px-1 mb-1 ${msg.role === 'user' ? 'text-cyan-200/90' : 'text-emerald-200/90'}`}>
+                    <span className={`mb-1 px-1 text-[0.8125rem] font-semibold ${msg.role === 'user' ? 'text-info-strong' : 'text-ai-strong'}`}>
                       {msg.role === 'user' ? 'Bạn' : 'Gia sư PyTutor'}
                     </span>
                     <div
-                      className={`p-2.5 rounded-xl max-w-[92%] leading-relaxed ${
+                      className={`max-w-[90%] rounded-2xl p-3 leading-relaxed ${
                         msg.role === 'user'
-                          ? 'bg-slate-800 text-cyan-50 border border-slate-700 rounded-br-sm'
-                          : 'bg-slate-950/80 text-slate-100 border border-emerald-500/25 rounded-bl-sm'
-                      } whitespace-pre-wrap break-words`}
+                          ? 'rounded-br-sm bg-slate-950 text-white dark:bg-emerald-500 dark:text-white shadow-soft'
+                          : 'rounded-bl-sm border border-border/80 bg-surface-raised text-foreground shadow-soft'
+                      } whitespace-pre-wrap break-words text-xs`}
                     >
                       {renderBold(msg.content)}
                     </div>
-                    {msg.role === 'assistant' && msg.interactionId && (
-                      <div className="flex items-center gap-1 mt-1 px-1" role="group" aria-label="Đánh giá phản hồi gia sư">
-                        {[{ value: 1, icon: '👍', label: 'Hữu ích' }, { value: -1, icon: '👎', label: 'Chưa hiểu' }].map(item => (
-                          <button key={item.value} type="button" title={item.label} aria-label={item.label}
-                            onClick={() => handleFeedback(msg, item.value)}
-                            disabled={Boolean(feedbackById[msg.interactionId])}
-                            className={`px-2 py-1 rounded-md text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${feedbackById[msg.interactionId] === item.value ? 'bg-emerald-900 text-emerald-100' : 'text-slate-300 hover:bg-slate-800 hover:text-white'} disabled:cursor-default`}>
-                            {item.icon}
-                          </button>
+                    {/* v5.3 (S1.3): nguồn tài liệu nội bộ đã dùng, hoặc nói rõ là không có nguồn phù hợp */}
+                    {msg.role === 'assistant' && msg.knowledgeStatus === 'grounded' && msg.sources?.length > 0 && (
+                      <div className="mt-1 max-w-[92%] px-1 text-[0.8125rem] leading-snug text-muted">
+                        {/* v5.5: gọi đúng tên — đây là tài liệu đã đưa cho gia sư khi trả lời, chưa chắc câu trả lời đã trích nó */}
+                        <span className="font-semibold text-foreground">Tài liệu nội bộ liên quan: </span>
+                        {msg.sources.map((src, sIdx) => (
+                          <span key={`${src.source}-${src.section}-${sIdx}`}>
+                            {sIdx > 0 && '; '}
+                            {src.section ? `mục “${src.section}”` : 'tài liệu'} <span className="font-mono">({src.source})</span>
+                            {src.origin === 'class' && <span className="font-semibold text-success-strong"> — do giảng viên lớp cung cấp</span>}
+                          </span>
                         ))}
-                        {feedbackById[msg.interactionId] && <span className="text-[9px] text-slate-500">Đã ghi nhận</span>}
+                        {msg.sources.some((src) => src.origin !== 'class') && (
+                          <span className="block">Tài liệu do PyTutor biên soạn, chưa phải giáo trình chính thức của NEU.</span>
+                        )}
+                        <span className="block">Gia sư được cung cấp các mục này khi trả lời. Nếu câu trả lời không nhắc tới chúng, bạn nên tự đọc mục đó để đối chiếu.</span>
                       </div>
+                    )}
+                    {msg.role === 'assistant' && msg.knowledgeStatus === 'no_source' && (
+                      <p className="mt-1 max-w-[92%] px-1 text-[0.8125rem] leading-snug text-muted">
+                        Không có tài liệu nội bộ phù hợp với câu hỏi này, nên câu trả lời không kèm nguồn. Bạn nên đối chiếu thêm với giáo trình hoặc giảng viên.
+                      </p>
+                    )}
+                    {msg.role === 'assistant' && (
+                      <TutorFeedbackButtons interactionId={msg.interactionId} className="mt-1 px-1" />
                     )}
                   </div>
                 ))
               )}
 
               {isSendingChat && (
-                <div className="flex items-center gap-2 text-slate-200 text-xs p-2.5 bg-slate-950/60 rounded-lg" role="status">
-                  <span className="h-3.5 w-3.5 rounded-full border-2 border-emerald-300/30 border-t-emerald-300 animate-spin" aria-hidden="true" />
-                  <span className="text-emerald-100 font-medium">Gia sư đang soạn câu trả lời...</span>
+                <div className="flex items-center gap-2 rounded-2xl bg-surface-raised border border-border/80 p-3 text-xs" role="status">
+                  <span className="size-3.5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" aria-hidden="true" />
+                  <span className="font-semibold text-foreground">Gia sư đang soạn câu trả lời…</span>
                 </div>
               )}
             </div>
 
             {/* Chat Input Form */}
-            <form onSubmit={handleSendChat} className="flex items-center gap-2 mt-1">
+            <form onSubmit={handleSendChat} className="mt-2 relative flex items-center">
               <input
                 type="text"
                 aria-label="Câu hỏi gửi Gia sư PyTutor"
                 value={userQuestion}
                 onChange={(e) => setUserQuestion(e.target.value)}
-                placeholder={isExamMode ? "Gia sư AI bị khóa trong chế độ kỳ thi..." : "Hỏi gia sư về bài làm (ví dụ: giải thích vòng lặp)..."}
+                placeholder={isExamMode ? "Gia sư AI bị khóa trong chế độ kỳ thi..." : (isCodeChatUnlocked ? "Hỏi về code đã nộp..." : "Hỏi một khái niệm Python...")}
                 disabled={isSendingChat || isExamMode}
-                className={`flex-1 min-w-0 bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2.5 text-[13px] text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
-                  isExamMode ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className="min-h-11 w-full rounded-full border border-border/80 bg-surface pl-4 pr-12 text-xs text-foreground placeholder:text-muted/60 outline-none shadow-soft focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-55"
               />
               <button
                 type="submit"
                 disabled={isSendingChat || !userQuestion.trim() || isExamMode}
                 aria-label={isSendingChat ? 'Đang gửi câu hỏi' : 'Gửi câu hỏi tới Gia sư AI'}
-                className="p-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors cursor-pointer shadow-sm shadow-cyan-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+                className="absolute right-1.5 size-8 rounded-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-soft"
                 title={isExamMode ? "Gia sư AI bị khóa trong Chế độ Kỳ thi" : "Gửi câu hỏi tới Gia sư AI"}
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send aria-hidden="true" className="size-3.5" />
               </button>
             </form>
           </div>
@@ -447,7 +545,40 @@ export default function TutorPanel({
   );
 }
 
-function formatHintText(text) {
+function HintCodeBlock({ codeBody, canInsert, onInsert }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeBody);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      alert('Không sao chép được. Hãy bôi đen đoạn code rồi nhấn Ctrl+C.');
+    }
+  };
+  const btn = 'inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border bg-surface-raised px-2.5 text-[0.8125rem] font-semibold text-foreground hover:border-primary';
+  return (
+    <div className="my-2">
+      <pre className="overflow-x-auto rounded-t-lg border border-border bg-surface p-2.5 font-mono text-[0.8125rem] text-success-strong">
+        <code>{codeBody}</code>
+      </pre>
+      <div className="flex flex-wrap items-center justify-end gap-2 rounded-b-lg border border-t-0 border-border bg-surface-raised p-1.5">
+        <button type="button" onClick={copy} className={btn} aria-live="polite">
+          {copied ? <Check aria-hidden="true" className="size-4" /> : <Copy aria-hidden="true" className="size-4" />}
+          {copied ? 'Đã chép' : 'Sao chép'}
+        </button>
+        {canInsert && /TODO/.test(codeBody) && (
+          <button type="button" onClick={() => onInsert(codeBody)} className={btn}>
+            <FileInput aria-hidden="true" className="size-4" />
+            Dán vào editor
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
   if (!text) return null;
 
   const parts = text.split(/(```[\s\S]*?```)/g);
@@ -458,11 +589,7 @@ function formatHintText(text) {
       const lang = lines[0].trim().startsWith('python') ? 'python' : '';
       const codeBody = lang ? lines.slice(1).join('\n') : lines.join('\n');
 
-      return (
-        <pre key={pIdx} className="my-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-x-auto">
-          <code>{codeBody}</code>
-        </pre>
-      );
+      return <HintCodeBlock key={pIdx} codeBody={codeBody} canInsert={canInsert} onInsert={onInsert} />;
     }
 
     const paragraphs = part.split('\n\n');
@@ -476,29 +603,29 @@ function formatHintText(text) {
 
             if (content.startsWith('# ')) {
               return (
-                <h3 key={lIdx} className="font-bold text-emerald-400 text-sm mt-2 mb-1">
+                <h3 key={lIdx} className="mb-1 mt-2 text-base font-bold text-ai-strong">
                   {content.replace('# ', '')}
                 </h3>
               );
             }
             if (content.startsWith('## ')) {
               return (
-                <h4 key={lIdx} className="font-bold text-emerald-400 text-xs mt-2 mb-1">
+                <h4 key={lIdx} className="mb-1 mt-2 text-sm font-bold text-ai-strong">
                   {content.replace('## ', '')}
                 </h4>
               );
             }
             if (content.startsWith('### ')) {
               return (
-                <h5 key={lIdx} className="font-bold text-emerald-400 text-xs mt-1.5 mb-0.5">
+                <h5 key={lIdx} className="mb-0.5 mt-1.5 text-sm font-bold text-ai-strong">
                   {content.replace('### ', '')}
                 </h5>
               );
             }
             if (content.startsWith('- ') || content.startsWith('* ')) {
               return (
-                <div key={lIdx} className="ml-3 flex items-start space-x-1.5 text-slate-300">
-                  <span className="text-emerald-400 font-bold">•</span>
+                <div key={lIdx} className="ml-1 flex items-start gap-2 text-foreground">
+                  <span aria-hidden="true" className="font-bold text-ai-strong">•</span>
                   <span>{renderBold(content.replace(/^[-*]\s+/, ''))}</span>
                 </div>
               );
@@ -506,8 +633,8 @@ function formatHintText(text) {
             const numMatch = content.match(/^(\d+)\.\s+(.*)/);
             if (numMatch) {
               return (
-                <div key={lIdx} className="ml-3 flex items-start space-x-1.5 text-slate-300">
-                  <span className="text-cyan-400 font-mono font-bold">{numMatch[1]}.</span>
+                <div key={lIdx} className="ml-1 flex items-start gap-2 text-foreground">
+                  <span className="font-mono font-bold text-info-strong">{numMatch[1]}.</span>
                   <span>{renderBold(numMatch[2])}</span>
                 </div>
               );
@@ -531,14 +658,14 @@ function renderBold(str) {
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={i} className="text-white font-bold">
+        <strong key={i} className="font-bold text-foreground">
           {part.slice(2, -2)}
         </strong>
       );
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
-        <code key={i} className="bg-slate-800 px-1 py-0.5 rounded text-emerald-400 font-mono text-[11px]">
+        <code key={i} className="rounded border border-ai-line bg-surface px-1 py-0.5 font-mono text-[0.8125rem] text-ai-strong">
           {part.slice(1, -1)}
         </code>
       );

@@ -17,6 +17,11 @@ if sys.platform.startswith("win"):
 
 from backend.main import app
 from backend.auth import create_token
+from backend.database import init_db
+
+# TestClient(app) không dùng `with` nên không chạy lifespan; trên DB tạm cô lập phải tự tạo bảng + seed
+# (cùng cách đã sửa ở backend/test_backend_e2e.py). init_db() là idempotent.
+init_db()
 
 client = TestClient(app)
 student_headers = {"Authorization": f"Bearer {create_token('student', 'student', 'Student Test')}"}

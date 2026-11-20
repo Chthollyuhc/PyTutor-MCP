@@ -1,6 +1,6 @@
 # 📊 BÁO CÁO ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG GIA SƯ THÔNG MINH PYTUTOR-MCP (v3.0)
 
-> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng và phân tích tiến độ học tập
+> **Tên đề tài đề xuất:** Xây dựng hệ thống hỗ trợ học lập trình Python với phản hồi thích ứng dựa trên mô hình người học
 >
 > **Phạm vi đánh giá:** kiểm thử kỹ thuật các chức năng hỗ trợ học và lớp tích hợp MCP; kết quả hiện tại không tự chứng minh mức tăng thành tích học tập của sinh viên.
 > **Sinh viên thực hiện:** Trần Khánh  

@@ -1,0 +1,48 @@
+{
+  "instructor-class@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 17,
+    "smallSample": [
+      "Quản lý lớp học phần 231x40",
+      "Ngân hàng bài tập 231x40",
+      "Giám sát bài nộp và AI 231x40",
+      "Xem Cổng Sinh Viên 223x32",
+      "Đăng xuất 223x34",
+      "Chuyển sang giao diện sáng 40x40",
+      "Làm mới dữ liệu 40x40",
+      "Thêm bài tập mới 158x40",
+      "Danh sách lớp 112x36",
+      "Tìm bài tập trong lộ trình lớp 384x40",
+      "Trang trước 36x36",
+      "Trang sau 36x36",
+      "Gỡ Bài 01: Tính tổng từ 1 đến n khỏi lớp 26x26",
+      "Gỡ Bài 03: Tính giai thừa n! khỏi lớp 26x26",
+      "Gỡ Bài 02: Kiểm tra số nguyên tố khỏi lớ 26x26"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "instructor-class@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "instructor-class@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 844
+  }
+}

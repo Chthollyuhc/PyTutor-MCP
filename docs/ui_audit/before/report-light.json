@@ -1,0 +1,542 @@
+{
+  "student-portal@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 40,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40",
+      "Mở Hồ sơ học tập 128x30",
+      "BUTTON 30x30",
+      "BUTTON 28x28",
+      "INPUT 973x34",
+      "Dạng Lưới 105x28",
+      "Dạng Cột 100x28",
+      "Vào lớp học phần 281x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 281x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 281x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 281x32",
+      "Rút lớp 64x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1573
+  },
+  "student-portal@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 40,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40",
+      "Mở Hồ sơ học tập 40x28",
+      "BUTTON 30x30",
+      "BUTTON 28x28",
+      "INPUT 461x34",
+      "Dạng Lưới 105x28",
+      "Dạng Cột 100x28",
+      "Vào lớp học phần 234x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 234x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 234x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 234x32",
+      "Rút lớp 64x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 2157
+  },
+  "student-portal@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 27,
+    "smallSample": [
+      "Chuyển sang giao diện tối 36x36",
+      "Mở Hồ sơ học tập 32x32",
+      "BUTTON 30x30",
+      "BUTTON 28x28",
+      "INPUT 332x34",
+      "Dạng Lưới 38x26",
+      "Dạng Cột 38x26",
+      "Vào lớp học phần 244x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 244x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 244x32",
+      "Rút lớp 64x34",
+      "Vào lớp học phần 244x32",
+      "Rút lớp 64x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 2920
+  },
+  "student-class@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 11,
+    "smallSample": [
+      "Về Cổng Sinh Viên 138x28",
+      "Chuyển sang giao diện tối 40x40",
+      "Mở Hồ sơ học tập 128x30",
+      "Chương trình & bài tập (5) 209x32",
+      "Bảng xếp hạng & năng lực 210x32",
+      "INPUT 1089x34",
+      "Làm bài trên IDE 147x32",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 36,
+    "lowSample": [
+      "#2 2.50",
+      "Bài 03: Tính giai thừa n! 3.71",
+      "Tích lũy nhân & Trường hợp biê 2.50",
+      "Độ khó: Dễ 2.58",
+      "Dễ 2.58",
+      "• Sao tự lực: 0 ⭐ 2.58",
+      "0 ⭐ 2.73",
+      "• Tiên quyết: ex_01_sum_1_to_n 2.58",
+      "Khóa (Yêu cầu bài trước) 2.50",
+      "#3 2.50",
+      "Bài 02: Kiểm tra số nguyên tố 3.71",
+      "Kiểm tra điều kiện biên & Cờ h 2.50"
+    ],
+    "height": 1112
+  },
+  "student-class@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 11,
+    "smallSample": [
+      "Về Cổng Sinh Viên 138x28",
+      "Chuyển sang giao diện tối 40x40",
+      "Mở Hồ sơ học tập 40x28",
+      "Chương trình & bài tập (5) 209x32",
+      "Bảng xếp hạng & năng lực 210x32",
+      "INPUT 577x34",
+      "Làm bài trên IDE 147x32",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34",
+      "Làm bài trên IDE 149x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 36,
+    "lowSample": [
+      "#2 2.50",
+      "Bài 03: Tính giai thừa n! 3.71",
+      "Tích lũy nhân & Trường hợp biê 2.50",
+      "Độ khó: Dễ 2.58",
+      "Dễ 2.58",
+      "• Sao tự lực: 0 ⭐ 2.58",
+      "0 ⭐ 2.73",
+      "• Tiên quyết: ex_01_sum_1_to_n 2.58",
+      "Khóa (Yêu cầu bài trước) 2.50",
+      "#3 2.50",
+      "Bài 02: Kiểm tra số nguyên tố 3.71",
+      "Kiểm tra điều kiện biên & Cờ h 2.50"
+    ],
+    "height": 1308
+  },
+  "student-class@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 7,
+    "smallSample": [
+      "Về Cổng Sinh Viên 28x28",
+      "Chuyển sang giao diện tối 36x36",
+      "Mở Hồ sơ học tập 32x32",
+      "Chương trình & bài tập (5) 209x32",
+      "Bảng xếp hạng & năng lực 210x32",
+      "INPUT 332x34",
+      "Làm bài trên IDE 147x32"
+    ],
+    "unnamed": 0,
+    "lowContrast": 36,
+    "lowSample": [
+      "#2 2.50",
+      "Bài 03: Tính giai thừa n! 3.71",
+      "Tích lũy nhân & Trường hợp biê 2.50",
+      "Độ khó: Dễ 2.58",
+      "Dễ 2.58",
+      "• Sao tự lực: 0 ⭐ 2.58",
+      "0 ⭐ 2.73",
+      "• Tiên quyết: ex_01_sum_1_to_n 2.58",
+      "Khóa (Yêu cầu bài trước) 2.50",
+      "#3 2.50",
+      "Bài 02: Kiểm tra số nguyên tố 3.71",
+      "Kiểm tra điều kiện biên & Cờ h 2.50"
+    ],
+    "height": 1836
+  },
+  "student-ide@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 14,
+    "smallSample": [
+      "Quay lại Lớp học phần 182x36",
+      "PyTutor 56x24",
+      "Mở nhật ký học tập 144x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Khôi phục code gốc 152x26",
+      "Chạy từng bước để xem biến đổi khi thực  136x26",
+      "Chạy thử code (Ctrl + Enter) 159x30",
+      "Hỏi gia sư AI 122x30",
+      "Nộp bài chính thức (Ctrl + Shift + Enter 198x30",
+      "Bộ kiểm thử chuẩn 135x28",
+      "Tự nhập dữ liệu 117x28",
+      "Nhận gợi ý Mức 1 từ Gia sư AI 332x34",
+      "Câu hỏi gửi Gia sư PyTutor 290x43",
+      "Gửi câu hỏi tới Gia sư AI 34x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 2,
+    "lowSample": [
+      "Khoanh vùng dòng code có vấn đ 3.66",
+      "Các bước giải chi tiết cùng kh 3.66"
+    ],
+    "height": 900
+  },
+  "student-ide@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 14,
+    "smallSample": [
+      "Quay lại Lớp học phần 182x36",
+      "PyTutor 56x24",
+      "Mở nhật ký học tập 144x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Khôi phục code gốc 152x26",
+      "Chạy từng bước để xem biến đổi khi thực  136x26",
+      "Chạy thử code (Ctrl + Enter) 159x30",
+      "Hỏi gia sư AI 122x30",
+      "Nộp bài chính thức (Ctrl + Shift + Enter 198x30",
+      "Bộ kiểm thử chuẩn 135x28",
+      "Tự nhập dữ liệu 117x28",
+      "Nhận gợi ý Mức 1 từ Gia sư AI 740x34",
+      "Câu hỏi gửi Gia sư PyTutor 698x43",
+      "Gửi câu hỏi tới Gia sư AI 34x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 2,
+    "lowSample": [
+      "Khoanh vùng dòng code có vấn đ 3.66",
+      "Các bước giải chi tiết cùng kh 3.66"
+    ],
+    "height": 1024
+  },
+  "student-ide@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 14,
+    "smallSample": [
+      "Quay lại Lớp học phần 42x36",
+      "PyTutor 49x20",
+      "Mở nhật ký học tập 42x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Khôi phục code gốc 61x26",
+      "Chạy từng bước để xem biến đổi khi thực  106x26",
+      "Chạy thử code (Ctrl + Enter) 99x30",
+      "Hỏi gia sư AI 122x30",
+      "Nộp bài chính thức (Ctrl + Shift + Enter 99x30",
+      "Bộ kiểm thử chuẩn 135x28",
+      "Tự nhập dữ liệu 117x28",
+      "Nhận gợi ý Mức 1 từ Gia sư AI 362x34",
+      "Câu hỏi gửi Gia sư PyTutor 320x43",
+      "Gửi câu hỏi tới Gia sư AI 34x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 2,
+    "lowSample": [
+      "Khoanh vùng dòng code có vấn đ 3.66",
+      "Các bước giải chi tiết cùng kh 3.66"
+    ],
+    "height": 844
+  },
+  "instructor-dashboard@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 29,
+    "smallSample": [
+      "Quản lý lớp học phần 231x40",
+      "Ngân hàng bài tập 231x40",
+      "Giám sát bài nộp và AI 231x40",
+      "Xem Cổng Sinh Viên 223x32",
+      "Đăng xuất 223x34",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 148x36",
+      "Chọn lớp cần phân tích 349x40",
+      "Khoảng thời gian phân tích 142x36",
+      "Câu hỏi về tình hình lớp 329x40",
+      "Hỏi AI 86x40",
+      "Dạng Lưới 105x28",
+      "Dạng Danh Sách 141x28",
+      "Mở Lớp Học Phần Mới 183x32"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "instructor-dashboard@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 29,
+    "smallSample": [
+      "Quản lý lớp học phần 40x40",
+      "Ngân hàng bài tập 40x40",
+      "Giám sát bài nộp và AI 40x40",
+      "Xem Cổng Sinh Viên 40x40",
+      "Đăng xuất 40x40",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 148x36",
+      "Chọn lớp cần phân tích 349x37",
+      "Khoảng thời gian phân tích 142x36",
+      "Câu hỏi về tình hình lớp 584x40",
+      "Hỏi AI 86x40",
+      "Dạng Lưới 105x28",
+      "Dạng Danh Sách 141x28",
+      "Mở Lớp Học Phần Mới 183x32"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "instructor-dashboard@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 28,
+    "smallSample": [
+      "Quản lý lớp học phần 40x40",
+      "Ngân hàng bài tập 40x40",
+      "Giám sát bài nộp và AI 40x40",
+      "Xem Cổng Sinh Viên 40x40",
+      "Đăng xuất 40x40",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 30x36",
+      "Chọn lớp cần phân tích 324x37",
+      "Khoảng thời gian phân tích 142x36",
+      "Câu hỏi về tình hình lớp 324x40",
+      "Hỏi AI 86x40",
+      "Dạng Lưới 38x26",
+      "Dạng Danh Sách 38x26",
+      "👉 Quản Lý Chi Tiết Lớp 324x36"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 844
+  },
+  "instructor-class@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 27,
+    "smallSample": [
+      "Quản lý lớp học phần 231x40",
+      "Ngân hàng bài tập 231x40",
+      "Giám sát bài nộp và AI 231x40",
+      "Xem Cổng Sinh Viên 223x32",
+      "Đăng xuất 223x34",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 148x36",
+      "Quay lại Danh sách Lớp 158x16",
+      "📊 Góc nhìn sư phạm 153x28",
+      "📚 Lộ trình (5) 111x28",
+      "🤖 Tài liệu cho Gia sư AI 168x28",
+      "👨‍🎓 Sinh viên (1) 117x28",
+      "Bài 01: Tính tổng từ 1 đến n (Dễ - Vòng  541x37",
+      "INPUT 541x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "instructor-class@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 27,
+    "smallSample": [
+      "Quản lý lớp học phần 40x40",
+      "Ngân hàng bài tập 40x40",
+      "Giám sát bài nộp và AI 40x40",
+      "Xem Cổng Sinh Viên 40x40",
+      "Đăng xuất 40x40",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 148x36",
+      "Quay lại Danh sách Lớp 158x16",
+      "📊 Góc nhìn sư phạm 153x28",
+      "📚 Lộ trình (5) 111x28",
+      "🤖 Tài liệu cho Gia sư AI 168x28",
+      "👨‍🎓 Sinh viên (1) 117x28",
+      "Bài 01: Tính tổng từ 1 đến n (Dễ - Vòng  333x37",
+      "INPUT 333x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "instructor-class@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 27,
+    "smallSample": [
+      "Quản lý lớp học phần 40x40",
+      "Ngân hàng bài tập 40x40",
+      "Giám sát bài nộp và AI 40x40",
+      "Xem Cổng Sinh Viên 40x40",
+      "Đăng xuất 40x40",
+      "Chuyển sang giao diện tối 40x40",
+      "BUTTON 28x28",
+      "Thêm bài tập mới 30x36",
+      "Quay lại Danh sách Lớp 158x16",
+      "📊 Góc nhìn sư phạm 153x28",
+      "📚 Lộ trình (5) 111x28",
+      "🤖 Tài liệu cho Gia sư AI 168x28",
+      "👨‍🎓 Sinh viên (1) 117x28",
+      "Bài 01: Tính tổng từ 1 đến n (Dễ - Vòng  324x37",
+      "INPUT 324x34"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 844
+  },
+  "instructor-exercise-form@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 10,
+    "smallSample": [
+      "PyTutor - Trang chủ 36x36",
+      "PyTutor 56x24",
+      "Mở IDE làm bài 117x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Quay lại Dashboard Giảng viên 199x16",
+      "Thêm Test Case 129x26",
+      "Xóa test case 1 14x14",
+      "Xóa test case 2 14x14",
+      "Hủy bỏ 75x36",
+      "Lưu bài tập vào hệ thống 220x36"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "instructor-exercise-form@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 10,
+    "smallSample": [
+      "PyTutor - Trang chủ 36x36",
+      "PyTutor 56x24",
+      "Mở IDE làm bài 117x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Quay lại Dashboard Giảng viên 199x16",
+      "Thêm Test Case 129x26",
+      "Xóa test case 1 14x14",
+      "Xóa test case 2 14x14",
+      "Hủy bỏ 75x36",
+      "Lưu bài tập vào hệ thống 220x36"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "instructor-exercise-form@390": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 7,
+    "smallSample": [
+      "PyTutor - Trang chủ 36x36",
+      "PyTutor 49x20",
+      "Mở IDE làm bài 38x36",
+      "Chuyển sang giao diện tối 36x36",
+      "Quay lại Dashboard Giảng viên 178x32",
+      "Xóa test case 1 14x14",
+      "Xóa test case 2 14x14"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 844
+  },
+  "login@1440": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 1,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40"
+    ],
+    "unnamed": 0,
+    "lowContrast": 3,
+    "lowSample": [
+      "MSV: 11236131 • K65 CNTT (stud 4.07",
+      "Khoa CNTT - NEU (gv_tran / gv1 3.87",
+      "Khoa CNTT - NEU (gv_tuan / gv1 4.03"
+    ],
+    "height": 900
+  },
+  "login@768": {
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 1,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40"
+    ],
+    "unnamed": 0,
+    "lowContrast": 3,
+    "lowSample": [
+      "MSV: 11236131 • K65 CNTT (stud 4.07",
+      "Khoa CNTT - NEU (gv_tran / gv1 3.87",
+      "Khoa CNTT - NEU (gv_tuan / gv1 4.03"
+    ],
+    "height": 1024
+  },
+  "login@390": {
+    "overflowX": 75,
+    "offenders": [
+      "SECTION.flex min-h-screen items-center justify-center px-4 py-8 sm:px-8 lg:col-span-5 lg:p",
+      "SECTION.rounded-xl border border-border bg-surface w-full max-w-lg p-6 sm:p-8",
+      "DIV.mb-4 flex justify-end",
+      "BUTTON.inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-b",
+      "svg.lucide lucide-moon size-4",
+      "DIV.mb-8 lg:hidden",
+      "DIV.mb-5 flex items-center gap-3",
+      "HEADER.mb-7",
+      "H2.text-2xl font-semibold tracking-tight text-white",
+      "P.mt-2 text-sm leading-relaxed text-muted",
+      "FORM.space-y-5",
+      "DIV.space-y-2"
+    ],
+    "smallTargets": 1,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40"
+    ],
+    "unnamed": 0,
+    "lowContrast": 3,
+    "lowSample": [
+      "MSV: 11236131 • K65 CNTT (stud 4.07",
+      "Khoa CNTT - NEU (gv_tran / gv1 3.87",
+      "Khoa CNTT - NEU (gv_tuan / gv1 4.03"
+    ],
+    "height": 1006
+  }
+}

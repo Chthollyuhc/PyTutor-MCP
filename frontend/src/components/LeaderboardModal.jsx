@@ -45,24 +45,24 @@ export default function LeaderboardModal({
   const top3 = leaderboard[2] || null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
-      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm select-text animate-fade-in">
+      <div className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-bento overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 font-bold shadow-soft">
               <Trophy className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm sm:text-base font-bold text-white tracking-wide">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-wide">
                   🏆 Bảng Vàng Lớp Học & Vinh Danh Sao Tự Lực
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 font-medium">
                   Leaderboard
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Xếp hạng dựa trên Tổng số Sao Tự lực (⭐), Số bài giải đúng và Điểm Clean Code
               </p>
             </div>
@@ -71,7 +71,7 @@ export default function LeaderboardModal({
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Đóng cửa sổ"
           >
             <X className="w-5 h-5" />
@@ -81,8 +81,8 @@ export default function LeaderboardModal({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {isLoading ? (
-            <div className="h-64 flex items-center justify-center text-slate-400 space-x-2">
-              <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+            <div className="h-64 flex items-center justify-center text-slate-500 space-x-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-amber-500" />
               <span>Đang tải bảng vàng lớp học...</span>
             </div>
           ) : (
@@ -91,88 +91,88 @@ export default function LeaderboardModal({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-2">
                 {/* Rank 2 (Silver) */}
                 {top2 ? (
-                  <div className="order-2 sm:order-1 p-3.5 rounded-xl bg-slate-900 border border-slate-700/80 flex flex-col items-center text-center shadow-md">
+                  <div className="order-2 sm:order-1 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 flex flex-col items-center text-center shadow-soft">
                     <span className="text-2xl mb-1">🥈</span>
-                    <span className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">
+                    <span className="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                       Hạng Nhì
                     </span>
-                    <h3 className="text-sm font-bold text-white mt-1 line-clamp-1">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1 line-clamp-1">
                       {top2.full_name}
                     </h3>
-                    <div className="flex items-center space-x-1 text-amber-400 font-bold text-xs mt-1">
+                    <div className="flex items-center space-x-1 text-amber-600 dark:text-amber-400 font-bold text-xs mt-1">
                       <Star className="w-3.5 h-3.5 fill-current" />
                       <span>{top2.total_stars} Sao</span>
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-0.5">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {top2.completed_exercises} bài giải đúng
                     </span>
                   </div>
                 ) : (
-                  <div className="order-2 sm:order-1 p-3.5 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
+                  <div className="order-2 sm:order-1 p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
                     Đang chờ cập nhật
                   </div>
                 )}
 
                 {/* Rank 1 (Gold) */}
                 {top1 ? (
-                  <div className="order-1 sm:order-2 p-4 rounded-xl bg-gradient-to-b from-amber-500/15 via-slate-900 to-slate-900 border-2 border-amber-500/50 flex flex-col items-center text-center shadow-xl shadow-amber-950/30 -translate-y-1">
+                  <div className="order-1 sm:order-2 p-5 rounded-2xl bg-gradient-to-b from-amber-100 via-amber-50/60 to-white dark:from-amber-500/15 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-400 dark:border-amber-500/50 flex flex-col items-center text-center shadow-bento -translate-y-1">
                     <span className="text-3xl mb-1">👑</span>
-                    <span className="text-[11px] font-extrabold uppercase text-amber-400 tracking-wider">
+                    <span className="text-[11px] font-extrabold uppercase text-amber-700 dark:text-amber-400 tracking-wider">
                       Quán Quân 🥇
                     </span>
-                    <h3 className="text-base font-extrabold text-white mt-1 line-clamp-1">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-1 line-clamp-1">
                       {top1.full_name}
                     </h3>
-                    <div className="flex items-center space-x-1.5 text-amber-300 font-extrabold text-sm mt-1 bg-amber-500/20 px-3 py-0.5 rounded-full border border-amber-500/40">
-                      <Star className="w-4 h-4 fill-current text-amber-400" />
+                    <div className="flex items-center space-x-1.5 text-amber-800 dark:text-amber-300 font-extrabold text-sm mt-1 bg-amber-100 dark:bg-amber-500/20 px-3 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40">
+                      <Star className="w-4 h-4 fill-current text-amber-500" />
                       <span>{top1.total_stars} Sao Tự Lực</span>
                     </div>
-                    <span className="text-xs text-slate-300 mt-1">
+                    <span className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                       {top1.completed_exercises} bài • Clean Max: {top1.highest_clean_score}
                     </span>
                   </div>
                 ) : (
-                  <div className="order-1 sm:order-2 p-4 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
+                  <div className="order-1 sm:order-2 p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
                     Chưa có học viên
                   </div>
                 )}
 
                 {/* Rank 3 (Bronze) */}
                 {top3 ? (
-                  <div className="order-3 p-3.5 rounded-xl bg-slate-900 border border-slate-700/80 flex flex-col items-center text-center shadow-md">
+                  <div className="order-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 flex flex-col items-center text-center shadow-soft">
                     <span className="text-2xl mb-1">🥉</span>
-                    <span className="text-[11px] font-bold uppercase text-amber-600 tracking-wider">
+                    <span className="text-[11px] font-bold uppercase text-amber-700 dark:text-amber-600 tracking-wider">
                       Hạng Ba
                     </span>
-                    <h3 className="text-sm font-bold text-white mt-1 line-clamp-1">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1 line-clamp-1">
                       {top3.full_name}
                     </h3>
-                    <div className="flex items-center space-x-1 text-amber-400 font-bold text-xs mt-1">
+                    <div className="flex items-center space-x-1 text-amber-600 dark:text-amber-400 font-bold text-xs mt-1">
                       <Star className="w-3.5 h-3.5 fill-current" />
                       <span>{top3.total_stars} Sao</span>
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-0.5">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {top3.completed_exercises} bài giải đúng
                     </span>
                   </div>
                 ) : (
-                  <div className="order-3 p-3.5 rounded-xl border border-dashed border-slate-800 text-center text-slate-600 text-xs">
+                  <div className="order-3 p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 text-center text-slate-400 text-xs">
                     Đang chờ cập nhật
                   </div>
                 )}
               </div>
 
               {/* Full Leaderboard Table */}
-              <div className="border border-slate-800 rounded-xl bg-slate-950 overflow-hidden">
-                <div className="px-4 py-2.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300 font-semibold">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 overflow-hidden shadow-soft">
+                <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 font-semibold">
                   <span>DANH SÁCH CHI TIẾT HỌC VIÊN</span>
                   <span className="text-slate-500 font-normal">Sắp xếp theo Tổng Sao & Bài giải</span>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="table-stack w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-[11px] text-slate-400 uppercase font-semibold">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 uppercase font-semibold">
                         <th className="py-2.5 pl-4">Hạng</th>
                         <th className="py-2.5">Học viên</th>
                         <th className="py-2.5 text-center">Tổng Sao (⭐)</th>
@@ -180,26 +180,26 @@ export default function LeaderboardModal({
                         <th className="py-2.5 text-center">Điểm Clean Max</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-sans">
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
                       {leaderboard.map((item) => (
-                        <tr key={item.username} className="hover:bg-slate-900/50 transition-colors">
-                          <td className="py-2.5 pl-4 font-bold text-slate-400">
+                        <tr key={item.username} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                          <td className="py-2.5 pl-4 font-bold text-slate-600 dark:text-slate-400">
                             {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : `#${item.rank}`}
                           </td>
                           <td className="py-2.5">
-                            <div className="font-semibold text-white">{item.full_name}</div>
+                            <div className="font-semibold text-slate-900 dark:text-white">{item.full_name}</div>
                             <div className="text-[10.5px] font-mono text-slate-500">{item.username}</div>
                           </td>
                           <td className="py-2.5 text-center">
-                            <span className="font-extrabold text-amber-400 font-mono text-sm">
+                            <span className="font-extrabold text-amber-600 dark:text-amber-400 font-mono text-sm">
                               {item.total_stars} ⭐
                             </span>
                           </td>
-                          <td className="py-2.5 text-center text-slate-300 font-medium">
+                          <td className="py-2.5 text-center text-slate-700 dark:text-slate-300 font-medium">
                             {item.completed_exercises}
                           </td>
                           <td className="py-2.5 text-center">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono font-bold text-[11px]">
+                            <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-slate-800 dark:text-emerald-400 font-mono font-bold text-[11px]">
                               {item.highest_clean_score || 0}
                             </span>
                           </td>

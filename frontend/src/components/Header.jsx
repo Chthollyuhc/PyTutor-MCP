@@ -1,17 +1,14 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, BookOpen, Code2, LayoutDashboard, UserRound,
+  ArrowLeft, BookOpen, Code2, LayoutDashboard, UserRound, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Badge, Button } from './ui';
 import ThemeToggle from './ThemeToggle';
 
 export default function Header({
-  health,
-  onOpenInspector,
   onOpenProfile,
-  mcpTraceCount = 0,
   backUrl = null,
   backLabel = 'Quay lại Lớp học phần',
 }) {
@@ -19,8 +16,6 @@ export default function Header({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isConnected = health?.mcp_server_connected;
-  const tools = health?.discovered_tools || [];
   const isInstructorPage = location.pathname.startsWith('/instructor');
   const homeUrl = isInstructor ? '/instructor' : '/student';
   const displayName = user?.role === 'student'
@@ -31,7 +26,7 @@ export default function Header({
     : (user?.full_name || 'GV').split(/\s+/).slice(-2).map((part) => part[0]).join('').toUpperCase();
 
   return (
-    <header className="relative z-20 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-3 sm:px-5 lg:px-6">
+    <header className="sticky top-0 z-30 flex min-h-16 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-surface/90 backdrop-blur-md px-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         {backUrl ? (
           <Button
@@ -40,7 +35,7 @@ export default function Header({
             onClick={() => navigate(backUrl)}
             title={backLabel}
             aria-label={backLabel}
-            className="shrink-0 px-2.5 sm:px-3"
+            className="shrink-0 px-3"
           >
             <ArrowLeft aria-hidden="true" className="size-4" />
             <span className="hidden sm:inline">{backLabel}</span>
@@ -49,47 +44,34 @@ export default function Header({
           <Link
             to={homeUrl}
             aria-label="PyTutor - Trang chủ"
-          className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-surface-raised text-primary transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-soft transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <BookOpen aria-hidden="true" className="size-4" />
           </Link>
         )}
 
         <div className="flex min-w-0 items-center gap-2.5">
-          <Link to={homeUrl} className="truncate text-sm font-bold tracking-tight text-white transition-colors hover:text-emerald-200 sm:text-base">
+          <Link to={homeUrl} className="truncate text-base font-bold tracking-tight text-foreground transition-colors hover:text-emerald-500">
             PyTutor
           </Link>
-          <Badge variant="success" className="hidden min-h-5 whitespace-nowrap px-2 py-0.5 text-[10px] sm:inline-flex">
-            v5.0 Enterprise LMS
+          <Badge variant="success" className="hidden min-h-5 whitespace-nowrap px-2.5 py-0.5 text-[10px] sm:inline-flex">
+            NEU LMS
           </Badge>
         </div>
       </div>
 
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={onOpenInspector}
-        title={`Mở công cụ MCP và nhật ký JSON-RPC${mcpTraceCount ? ` · ${mcpTraceCount} bản ghi` : ''}`}
-        aria-label={`Trạng thái MCP ${isConnected ? 'đã kết nối' : 'chưa kết nối'}, ${tools.length || 8} công cụ`}
-        className="shrink-0 rounded-full px-2.5 sm:px-3"
-      >
-        <span aria-hidden="true" className={`size-2 rounded-full ${isConnected ? 'bg-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]' : 'bg-rose-400'}`} />
-        <span className={isConnected ? 'text-emerald-200' : 'text-rose-200'}>MCP {tools.length || 8}</span>
-        <span className="hidden text-xs font-normal text-muted lg:inline">JSON-RPC</span>
-      </Button>
-
-      <nav aria-label="Tài khoản và điều hướng" className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <nav aria-label="Tài khoản và điều hướng" className="flex shrink-0 items-center gap-2">
         {onOpenProfile && (
           <Button
-            variant="success"
+            variant="secondary"
             size="sm"
             onClick={onOpenProfile}
-            title="Xem nhật ký học tập, số bài hoàn thành và lịch sử nạp lại code"
-            aria-label="Mở nhật ký học tập"
-            className="px-2.5 sm:px-3"
+            title="Xem hành trình học của bạn"
+            aria-label="Mở Hành trình học"
+            className="px-3"
           >
-            <BookOpen aria-hidden="true" className="size-4" />
-            <span className="hidden md:inline">Nhật ký học tập</span>
+            <BookOpen aria-hidden="true" className="size-3.5 text-emerald-500" />
+            <span className="hidden md:inline">Hành trình học</span>
           </Button>
         )}
 
@@ -99,9 +81,9 @@ export default function Header({
               to="/"
               title="Vào màn hình làm bài của sinh viên"
               aria-label="Mở IDE làm bài"
-              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-2.5 text-xs font-medium text-emerald-200 transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-3"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-soft"
             >
-              <Code2 aria-hidden="true" className="size-4" />
+              <Code2 aria-hidden="true" className="size-3.5" />
               <span className="hidden md:inline">IDE làm bài</span>
             </Link>
           ) : (
@@ -109,21 +91,21 @@ export default function Header({
               to="/instructor"
               title="Vào Dashboard quản lý bài tập của Giảng viên"
               aria-label="Mở Dashboard giảng viên"
-              className="inline-flex min-h-9 items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-2.5 text-xs font-medium text-amber-100 transition-colors hover:bg-warning/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning sm:px-3"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning shadow-soft"
             >
-              <LayoutDashboard aria-hidden="true" className="size-4" />
+              <LayoutDashboard aria-hidden="true" className="size-3.5" />
               <span className="hidden md:inline">Dashboard GV</span>
             </Link>
           )
         )}
 
         {user ? (
-          <div className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-canvas px-2 sm:gap-2.5 sm:px-3" title={displayName}>
-            <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-raised text-[10px] font-semibold text-slate-200">
+          <div className="flex min-h-9 items-center gap-2 rounded-full border border-border/80 bg-surface-raised px-2.5 py-1 shadow-soft" title={displayName}>
+            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-950 text-[10px] font-bold text-white dark:bg-emerald-500">
               {initials}
             </span>
-            <span className="hidden max-w-44 truncate text-xs font-medium text-slate-200 lg:inline">{displayName}</span>
-            <Badge variant={user.role === 'instructor' ? 'warning' : 'success'} className="min-h-5 px-2 py-0.5 text-[10px]">
+            <span className="hidden max-w-36 truncate text-xs font-semibold text-foreground lg:inline">{displayName}</span>
+            <Badge variant={user.role === 'instructor' ? 'warning' : 'neutral'} className="min-h-5 px-2 py-0 text-[10px]">
               <UserRound aria-hidden="true" className="size-3 sm:hidden" />
               <span className="hidden sm:inline">{user.role === 'instructor' ? 'Giảng viên' : 'Sinh viên'}</span>
             </Badge>
@@ -131,13 +113,13 @@ export default function Header({
         ) : (
           <Link
             to="/login"
-            className="inline-flex min-h-9 items-center rounded-xl bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            className="inline-flex min-h-8 items-center rounded-full bg-emerald-500 px-4 text-xs font-semibold text-white transition-colors hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary shadow-soft"
           >
             Đăng nhập
           </Link>
         )}
 
-        <ThemeToggle className="size-9" />
+        <ThemeToggle />
       </nav>
     </header>
   );

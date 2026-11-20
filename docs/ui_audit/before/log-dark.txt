@@ -1,0 +1,21 @@
+student-portal@1440: overflowX=0 small<44=40 lowContrast=10 unnamed=0
+student-portal@768: overflowX=0 small<44=40 lowContrast=10 unnamed=0
+student-portal@390: overflowX=0 small<44=31 lowContrast=9 unnamed=0
+student-class@1440: overflowX=0 small<44=11 lowContrast=32 unnamed=0
+student-class@768: overflowX=0 small<44=11 lowContrast=32 unnamed=0
+student-class@390: overflowX=0 small<44=11 lowContrast=32 unnamed=0
+student-ide@1440: overflowX=0 small<44=14 lowContrast=12 unnamed=0
+student-ide@768: overflowX=0 small<44=14 lowContrast=12 unnamed=0
+student-ide@390: overflowX=0 small<44=14 lowContrast=10 unnamed=0
+instructor-dashboard@1440: overflowX=0 small<44=29 lowContrast=20 unnamed=0
+instructor-dashboard@768: overflowX=0 small<44=29 lowContrast=19 unnamed=0
+instructor-dashboard@390: overflowX=0 small<44=28 lowContrast=18 unnamed=0
+instructor-class@1440: overflowX=0 small<44=27 lowContrast=8 unnamed=0
+instructor-class@768: overflowX=0 small<44=27 lowContrast=7 unnamed=0
+instructor-class@390: overflowX=0 small<44=27 lowContrast=7 unnamed=0
+instructor-exercise-form@1440: overflowX=0 small<44=10 lowContrast=1 unnamed=0
+instructor-exercise-form@768: overflowX=0 small<44=10 lowContrast=1 unnamed=0
+instructor-exercise-form@390: overflowX=0 small<44=8 lowContrast=1 unnamed=0
+login@1440: overflowX=0 small<44=1 lowContrast=0 unnamed=0
+login@768: overflowX=0 small<44=1 lowContrast=0 unnamed=0
+login@390: overflowX=53 small<44=1 lowContrast=0 unnamed=0 offenders=SECTION.flex min-h-screen items-center justify-center px-4 py-8 sm:px-8 lg:col-span-5 lg:p | SECTION.rounded-xl border border-border bg-surface w-full max-w-lg p-6 sm:p-8

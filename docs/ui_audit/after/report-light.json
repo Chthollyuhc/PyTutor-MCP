@@ -1,0 +1,127 @@
+{
+  "student-portal@1440": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 37,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40",
+      "Mở hồ sơ học tập 145x36",
+      "Đăng xuất 40x40",
+      "Làm mới danh sách lớp 40x40",
+      "Hiển thị dạng lưới 113x36",
+      "Hiển thị dạng danh sách 155x36",
+      "Vào lớp học phần 274x36",
+      "Rút khỏi lớp Cơ sở lập trình 76x36",
+      "Vào lớp học phần 274x36",
+      "Rút khỏi lớp Lập trình hướng đối tượng 76x36",
+      "Vào lớp học phần 274x36",
+      "Rút khỏi lớp Hệ quản trị cơ sở dữ liệu 76x36",
+      "Vào lớp học phần 274x36",
+      "Rút khỏi lớp Điện toán đám mây 76x36",
+      "Vào lớp học phần 274x36"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1646
+  },
+  "student-portal@768": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 2215
+  },
+  "student-portal@390": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 3008
+  },
+  "instructor-exercise-form@1440": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 7,
+    "smallSample": [
+      "PyTutor - Trang chủ 40x40",
+      "PyTutor 53x40",
+      "Mở IDE làm bài 127x40",
+      "Chuyển sang giao diện tối 40x40",
+      "Dashboard giảng viên 171x36",
+      "Xóa test case 1 76x36",
+      "Xóa test case 2 76x36"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "instructor-exercise-form@768": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "instructor-exercise-form@390": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 844
+  },
+  "login@1440": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 1,
+    "smallSample": [
+      "Chuyển sang giao diện tối 40x40"
+    ],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 900
+  },
+  "login@768": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 1024
+  },
+  "login@390": {
+    "motion": "color, background-color, border-color, text-decoration-color, fill, stroke",
+    "overflowX": 0,
+    "offenders": [],
+    "smallTargets": 0,
+    "smallSample": [],
+    "unnamed": 0,
+    "lowContrast": 0,
+    "lowSample": [],
+    "height": 914
+  }
+}

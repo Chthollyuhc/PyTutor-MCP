@@ -13,6 +13,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { requestPythonicReview } from '../services/api';
+import TutorFeedbackButtons from './TutorFeedbackButtons';
 
 export default function PythonicReviewModal({
   isOpen,
@@ -20,7 +21,7 @@ export default function PythonicReviewModal({
   exerciseId,
   code,
   username = 'student',
-  starsEarned = 3,
+  starsEarned = null,
 }) {
   const [review, setReview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,24 +73,24 @@ export default function PythonicReviewModal({
   const badgeInfo = getScoreBadge(cleanScore);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/55 select-text animate-fade-in">
-      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm select-text animate-fade-in">
+      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-bento overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-500 font-bold shadow-soft">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm sm:text-base font-bold text-white tracking-wide">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-wide">
                   🚀 Thử thách Tối ưu Code Chuẩn Pythonic
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 font-medium">
                   Senior Review
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Nâng tầm phong cách lập trình từ code chạy được thành code thanh lịch, tối ưu (PEP 8)
               </p>
             </div>
@@ -98,7 +99,7 @@ export default function PythonicReviewModal({
           <button
             onClick={onClose}
             type="button"
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             title="Đóng cửa sổ"
           >
             <X className="w-5 h-5" />
@@ -108,91 +109,93 @@ export default function PythonicReviewModal({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {isLoading ? (
-            <div className="h-72 flex flex-col items-center justify-center space-y-3 text-slate-400">
-              <RefreshCw className="w-8 h-8 animate-spin text-emerald-400" />
-              <p className="text-sm font-medium text-slate-300">
+            <div className="h-72 flex flex-col items-center justify-center space-y-3 text-slate-500">
+              <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Senior Python Architect đang phân tích mã nguồn của bạn...
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Đánh giá cấu trúc AST, đối chiếu tiêu chuẩn PEP 8 và các thành ngữ Pythonic
               </p>
             </div>
           ) : error ? (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-sm text-center">
+            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-600 dark:text-rose-300 text-sm text-center">
               {error}
             </div>
           ) : review ? (
             <>
               {/* Score & Stars Banner */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-soft">
                 <div className="flex items-center space-x-4">
                   {/* Circular Score Gauge */}
-                  <div className="w-16 h-16 rounded-full bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center shrink-0 shadow-lg shadow-emerald-950/50">
-                    <span className="text-xl font-extrabold text-emerald-400 leading-none">
+                  <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border-2 border-emerald-500 flex flex-col items-center justify-center shrink-0 shadow-soft">
+                    <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 leading-none">
                       {cleanScore}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-mono">/ 100</span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">/ 100</span>
                   </div>
 
                   <div>
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeInfo.color} mb-1`}>
                       {badgeInfo.label}
                     </span>
-                    <p className="text-xs text-slate-300 font-medium">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
                       Điểm phong cách Clean Code & Tính thanh lịch
                     </p>
                   </div>
                 </div>
 
-                {/* Stars earned badge */}
-                <div className="flex items-center space-x-2 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-xl">
-                  <span className="text-xs text-slate-400 font-medium">Đánh giá tự lực:</span>
-                  <div className="flex items-center space-x-1 text-base">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <span key={i} className={i < starsEarned ? 'text-amber-400' : 'text-slate-600'}>
-                        ★
-                      </span>
-                    ))}
+                {/* Sao tự lực: chỉ hiện khi vừa có lượt "Nộp bài" đạt trong phiên này (không hiện 3 sao mặc định). */}
+                {Number.isFinite(starsEarned) && starsEarned > 0 && (
+                  <div className="flex items-center space-x-2 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl shadow-soft" aria-label={`Sao tự lực lượt nộp gần nhất: ${starsEarned} trên 3`}>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Sao tự lực lượt nộp gần nhất:</span>
+                    <div className="flex items-center space-x-1 text-base" aria-hidden="true">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <span key={i} className={i < starsEarned ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600'}>
+                          ★
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Strengths & Improvements 2-Column Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {/* Strengths */}
-                <div className="p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 flex flex-col">
-                  <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 mb-2">
+                <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/30 flex flex-col shadow-soft">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>ĐIỂM SÁNG TRONG CODE CỦA BẠN</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-800 dark:text-slate-300 leading-relaxed">
                     {review.strengths}
                   </p>
                 </div>
 
                 {/* Improvements */}
-                <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col">
-                  <div className="flex items-center space-x-2 text-xs font-bold text-amber-400 mb-2">
+                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 flex flex-col shadow-soft">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-amber-700 dark:text-amber-400 mb-2">
                     <Lightbulb className="w-4 h-4 shrink-0" />
                     <span>CƠ HỘI NÂNG TẦM PYTHONIC</span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-800 dark:text-slate-300 leading-relaxed">
                     {review.improvements}
                   </p>
                 </div>
               </div>
 
               {/* Code Comparison Section */}
-              <div className="border border-slate-800 rounded-xl bg-slate-950 overflow-hidden">
-                <div className="px-4 py-2.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between text-xs">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950 overflow-hidden shadow-soft">
+                <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setActiveTab('pythonic')}
                       type="button"
                       className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                         activeTab === 'pythonic'
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       🐍 Code Chuẩn Pythonic (Đề xuất)
@@ -202,8 +205,8 @@ export default function PythonicReviewModal({
                       type="button"
                       className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                         activeTab === 'student'
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                          : 'text-slate-400 hover:text-white'
+                          ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/40 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       📝 Code Của Bạn
@@ -214,24 +217,24 @@ export default function PythonicReviewModal({
                     <button
                       onClick={handleCopy}
                       type="button"
-                      className="flex items-center space-x-1 px-2.5 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
+                      className="flex items-center space-x-1 px-2.5 py-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                     >
                       {copied ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-[11px] text-emerald-400">Đã sao chép!</span>
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Đã sao chép!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5" />
-                          <span className="text-[11px]">Sao chép code</span>
+                          <span className="text-[11px] font-medium">Sao chép code</span>
                         </>
                       )}
                     </button>
                   )}
                 </div>
 
-                <div className="p-3.5 overflow-x-auto font-mono text-xs leading-6 text-slate-200">
+                <div className="p-4 overflow-x-auto font-mono text-xs leading-6 text-slate-800 dark:text-slate-200 bg-slate-50/50 dark:bg-transparent">
                   <pre className="select-text whitespace-pre-wrap">
                     {activeTab === 'pythonic' ? review.pythonic_code : code}
                   </pre>
@@ -239,14 +242,23 @@ export default function PythonicReviewModal({
               </div>
 
               {/* Explanation Card */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-                <span className="font-bold text-cyan-400 flex items-center space-x-1.5 mb-1.5">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs shadow-soft">
+                <span className="font-bold text-sky-700 dark:text-cyan-400 flex items-center space-x-1.5 mb-1.5">
                   <TrendingUp className="w-4 h-4" />
                   <span>TẠI SAO ĐOẠN CODE NÀY LẠI TỐI ƯU HƠN?</span>
                 </span>
-                <p className="text-slate-300 leading-relaxed">
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
                   {review.explanation}
                 </p>
+              </div>
+
+              {/* v5.3 (S1.2): đánh giá bản review + ghi rõ đây là nhận xét tham khảo */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2 shadow-soft">
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Điểm Clean Code và đoạn code đề xuất là nhận xét tham khảo về phong cách viết mã
+                  {review.llm_source ? ` (nguồn: ${review.llm_source})` : ''}; không ảnh hưởng tới kết quả chấm bài hay số sao tự lực.
+                </p>
+                <TutorFeedbackButtons interactionId={review.interaction_id} prompt="Bản review này có giúp bạn không?" />
               </div>
 
             </>

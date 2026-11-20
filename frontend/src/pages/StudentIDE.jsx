@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Sparkles, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowLeft, CheckCircle2, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Header from '../components/Header';
 import ProblemPanel from '../components/ProblemPanel';
 import EditorPanel from '../components/EditorPanel';
 import TutorPanel from '../components/TutorPanel';
-import MCPInspectorModal from '../components/MCPInspectorModal';
 import StudentProfileModal from '../components/StudentProfileModal';
 import ExecutionVisualizerModal from '../components/ExecutionVisualizerModal';
 import PythonicReviewModal from '../components/PythonicReviewModal';
+import { isBlankCode } from '../utils/blankCode';
 import { 
-  checkHealth, 
   fetchExercises, 
   fetchExerciseDetail, 
   runTestOnly, 
@@ -21,8 +20,15 @@ import {
   fetchClasses,
   fetchMyClasses,
   fetchClassCurriculum,
-  fetchExamSessions
+  fetchExamSessions,
+  fetchStudentJourney
 } from '../services/api';
+
+const STAR_MEANING = {
+  3: 'Bạn tự làm, không cần gợi ý lớn.',
+  2: 'Bạn có dùng gợi ý mức 2.',
+  1: 'Bạn có dùng gợi ý mức 3.',
+};
 
 export default function StudentIDE() {
   const { exerciseId: paramExerciseId } = useParams();
@@ -31,18 +37,17 @@ export default function StudentIDE() {
   const sessionIdParam = searchParams.get('sessionId');
   const navigate = useNavigate();
 
-  const [health, setHealth] = useState(null);
   const [exercises, setExercises] = useState([]);
   const [selectedExerciseId, setSelectedExerciseId] = useState(paramExerciseId || '');
   const [exerciseDetail, setExerciseDetail] = useState(null);
   const [code, setCode] = useState('');
+  const [codeBeforeInsert, setCodeBeforeInsert] = useState(null); // bản code trước khi dán khung mẫu, để hoàn tác
   const [hintLevel, setHintLevel] = useState(1);
   const [testResults, setTestResults] = useState(null);
   const [astAnalysis, setAstAnalysis] = useState(null);
   const [tutorHint, setTutorHint] = useState('');
   const [adaptiveStrategy, setAdaptiveStrategy] = useState(null);
   const [llmSource, setLlmSource] = useState('');
-  const [mcpTrace, setMcpTrace] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAskingAI, setIsAskingAI] = useState(false);
   const [isRunningTest, setIsRunningTest] = useState(false);
@@ -53,20 +58,27 @@ export default function StudentIDE() {
   const [creditClasses, setCreditClasses] = useState([]);
   const [currentClass, setCurrentClass] = useState(null);
   const [examSessions, setExamSessions] = useState([]);
+  const [allExamSessions, setAllExamSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState(sessionIdParam || '');
   const [remainingSeconds, setRemainingSeconds] = useState(45 * 60);
 
   // Modal States
-  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isVisualizerOpen, setIsVisualizerOpen] = useState(false);
   const [isPythonicReviewOpen, setIsPythonicReviewOpen] = useState(false);
-  const [starsEarned, setStarsEarned] = useState(3);
+  // null = chưa có lượt "Nộp bài" đạt trong phiên này ở bài đang mở (không mặc định 3 sao).
+  const [starsEarned, setStarsEarned] = useState(null);
+  // v5.3: ID phản hồi AI của gợi ý hiện tại (để đánh giá 👍/👎) và lý do số sao của lượt nộp chính thức gần nhất.
+  const [hintInteractionId, setHintInteractionId] = useState(null);
+  const [starRationale, setStarRationale] = useState(null);
+  // Đã có lượt "Nộp bài" đạt ở bài này (từ API chi tiết bài hoặc vừa nộp đạt) → chat mở phạm vi code đã nộp.
+  const [hasPassedExercise, setHasPassedExercise] = useState(false);
 
   const { user } = useAuth();
   // Khởi tạo session_id: Ưu tiên tài khoản đang đăng nhập (student) để đồng bộ dữ liệu lớp học phần và bảng vàng
   const sessionId = user?.username || localStorage.getItem('pytutor_session_id') || 'student';
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
+  const [successMoment, setSuccessMoment] = useState(null);
 
   // Đồng bộ paramExerciseId khi đổi URL
   useEffect(() => {
@@ -79,28 +91,38 @@ export default function StudentIDE() {
   useEffect(() => {
     const initData = async () => {
       try {
-        const [healthData, exList, myClsList, allClsList, sessList] = await Promise.all([
-          checkHealth(),
+        const [exList, myClsList, allClsList, sessList] = await Promise.all([
           fetchExercises(),
           fetchMyClasses().catch(() => []),
           fetchClasses().catch(() => []),
           fetchExamSessions()
         ]);
-        setHealth(healthData);
         setExercises(exList || []);
 
         const activeClasses = (myClsList && myClsList.length > 0) ? myClsList : (allClsList || []);
         setCreditClasses(activeClasses);
+        setAllExamSessions(sessList || []);
 
         // Xác định class active: ưu tiên classIdParam nếu có
         let activeCls = null;
         if (classIdParam) {
           activeCls = activeClasses.find(c => c.id === classIdParam) || null;
         }
-        if (!activeCls && activeClasses.length > 0) {
+        if (!activeCls && !paramExerciseId && activeClasses.length > 0) {
           activeCls = activeClasses[0];
         }
-        setCurrentClass(activeCls);
+        if (activeCls) {
+          setCurrentClass(activeCls);
+        } else if (paramExerciseId) {
+          // Nếu loadExercise đã chạy xong và set currentClass, đối chiếu để lấy object đầy đủ từ activeClasses
+          setCurrentClass((prev) => {
+            if (prev?.id) {
+              const full = activeClasses.find((c) => c.id === prev.id);
+              if (full) return full;
+            }
+            return prev;
+          });
+        }
 
         // Lọc sessions theo class
         if (activeCls) {
@@ -123,6 +145,16 @@ export default function StudentIDE() {
 
     initData();
   }, [classIdParam]);
+
+  // Tự động lọc examSessions khi currentClass thay đổi
+  useEffect(() => {
+    if (!currentClass) {
+      setExamSessions(allExamSessions);
+      return;
+    }
+    const classSess = allExamSessions.filter(s => !s.class_id || s.class_id === currentClass.id);
+    setExamSessions(classSess.length > 0 ? classSess : allExamSessions);
+  }, [currentClass?.id, allExamSessions]);
 
   const handleSelectExercise = (exId) => {
     setSelectedExerciseId(exId);
@@ -185,8 +217,24 @@ export default function StudentIDE() {
     const loadExercise = async () => {
       setIsLoadingExercise(true);
       try {
-        const detail = await fetchExerciseDetail(selectedExerciseId);
+        const detail = await fetchExerciseDetail(selectedExerciseId, classIdParam);
         setExerciseDetail(detail);
+
+        // Đồng bộ lớp học phần khớp với bài tập đang mở
+        if (detail?.class_id) {
+          setCurrentClass((prev) => {
+            if (prev?.id === detail.class_id) {
+              return prev;
+            }
+            const matchingCls = (creditClasses || []).find((c) => c.id === detail.class_id);
+            return matchingCls || {
+              id: detail.class_id,
+              class_code: detail.class_code || detail.class_id,
+              class_name: detail.class_name,
+              semester: detail.semester || '',
+            };
+          });
+        }
 
         // Khôi phục code nháp đã lưu tự động nếu có
         const savedDraft = localStorage.getItem(`pytutor_draft_${selectedExerciseId}`);
@@ -202,6 +250,10 @@ export default function StudentIDE() {
         setTutorHint('');
         setAdaptiveStrategy(null);
         setLlmSource('');
+        setHintInteractionId(null);
+        setStarRationale(null);
+        setHasPassedExercise(Boolean(detail.has_passed));
+        setStarsEarned(null);
       } catch (err) {
         console.error('Lỗi tải chi tiết bài tập:', err);
       } finally {
@@ -215,6 +267,7 @@ export default function StudentIDE() {
   // 3. Tự động lưu nháp khi sinh viên chỉnh sửa code
   const handleCodeChange = (newCode) => {
     setCode(newCode);
+    setCodeBeforeInsert(null); // gõ tiếp thì thôi cho hoàn tác khung mẫu
     if (selectedExerciseId) {
       localStorage.setItem(`pytutor_draft_${selectedExerciseId}`, newCode);
     }
@@ -243,15 +296,15 @@ export default function StudentIDE() {
 
       setTestResults(res.test_results);
       setAstAnalysis(res.ast_analysis);
-      if (res.mcp_trace) {
-        setMcpTrace(res.mcp_trace);
-      }
+      // Chạy thử không phải lượt nộp chính thức: bỏ thẻ lý do sao của lần nộp trước để không hiện nhầm.
+      setStarRationale(null);
 
       if (res.test_results?.all_passed) {
         confetti({
           particleCount: 80,
           spread: 70,
           origin: { y: 0.6 },
+          disableForReducedMotion: true,
         });
       }
     } catch (err) {
@@ -262,9 +315,27 @@ export default function StudentIDE() {
     }
   };
 
+  // Dán khung code Mức 3 vào editor; có code sẵn thì hỏi xác nhận và cho hoàn tác.
+  const handleInsertSkeleton = (skeleton) => {
+    if (!skeleton || !selectedExerciseId) return;
+    const hasWork = !isBlankCode(code, exerciseDetail?.starter_code);
+    if (hasWork && !window.confirm('Thay code hiện tại bằng khung mẫu này? Bạn có thể hoàn tác ngay sau đó.')) return;
+    const previous = code;
+    setCode(skeleton);
+    localStorage.setItem(`pytutor_draft_${selectedExerciseId}`, skeleton);
+    setCodeBeforeInsert(hasWork ? previous : null);
+  };
+
+  const handleUndoInsert = () => {
+    if (codeBeforeInsert === null) return;
+    handleCodeChange(codeBeforeInsert);
+  };
+
   // 6. Hỏi Gia sư AI (Chỉ xin gợi ý sư phạm, không lưu sao, không mở modal chúc mừng)
+  // Chưa có code vẫn được xin gợi ý: backend chuyển sang gợi ý giúp hiểu đề.
   const handleAskAI = async (overrideHintLevel = null) => {
-    if (!selectedExerciseId || !code.trim() || isAskingAI || isSubmitting || isRunningTest) return;
+    if (!selectedExerciseId || isAskingAI || isSubmitting || isRunningTest) return;
+    const noCodeYet = isBlankCode(code, exerciseDetail?.starter_code);
 
     const targetLevel = overrideHintLevel !== null ? overrideHintLevel : hintLevel;
     setIsAskingAI(true);
@@ -276,16 +347,18 @@ export default function StudentIDE() {
         session_id: sessionId,
         exam_session_id: currentSession?.id || null,
         action_type: 'ask_ai',
+        class_id: currentClass?.id || null,
       });
 
-      setTestResults(res.test_results);
-      setAstAnalysis(res.ast_analysis);
+      if (!noCodeYet) { // chưa có code thì kết quả kiểm thử vô nghĩa, không hiện bảng "trượt hết"
+        setTestResults(res.test_results);
+        setAstAnalysis(res.ast_analysis);
+      }
       setTutorHint(res.tutor_hint);
       setAdaptiveStrategy(res.adaptive_strategy || null);
       setLlmSource(res.llm_source);
-      if (res.mcp_trace) {
-        setMcpTrace(res.mcp_trace);
-      }
+      setHintInteractionId(res.interaction_id || null);
+      setStarRationale(null); // hỏi AI không sinh sao: không giữ thẻ lý do sao của lần nộp trước
     } catch (err) {
       console.error('Lỗi khi hỏi Gia sư AI:', err);
       alert('Có lỗi xảy ra khi xin gợi ý từ Gia sư AI. Vui lòng kiểm tra kết nối Backend.');
@@ -307,6 +380,7 @@ export default function StudentIDE() {
         session_id: sessionId,
         exam_session_id: currentSession?.id || null,
         action_type: 'submit',
+        class_id: currentClass?.id || null,
       });
 
       setTestResults(res.test_results);
@@ -314,24 +388,29 @@ export default function StudentIDE() {
       setTutorHint(res.tutor_hint);
       setAdaptiveStrategy(res.adaptive_strategy || null);
       setLlmSource(res.llm_source);
-      if (res.mcp_trace) {
-        setMcpTrace(res.mcp_trace);
-      }
+      setHintInteractionId(res.interaction_id || null);
+      setStarRationale(res.star_rationale || null);
       if (res.stars_earned !== undefined && res.stars_earned > 0) {
         setStarsEarned(res.stars_earned);
       }
 
       // Bắn pháo hoa chúc mừng nếu đạt 100% test cases
       if (res.test_results?.all_passed) {
+        setHasPassedExercise(true);
         confetti({
           particleCount: 100,
           spread: 80,
           origin: { y: 0.6 },
+          disableForReducedMotion: true,
         });
         setSubmissionSuccess({
           allPassed: true,
           starsEarned: res.stars_earned || 3,
         });
+        setSuccessMoment(null);
+        fetchStudentJourney(currentClass?.id || null, selectedExerciseId)
+          .then((d) => setSuccessMoment(d?.today?.moments?.[0]?.text_vi || null))
+          .catch(() => {});
       }
     } catch (err) {
       console.error('Lỗi khi nộp bài:', err);
@@ -347,39 +426,27 @@ export default function StudentIDE() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-950 font-sans">
+    <div className="flex h-screen w-full flex-col bg-canvas text-foreground">
       {/* Header */}
       <Header
-        health={health}
-        onOpenInspector={() => setIsInspectorOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
-        mcpTraceCount={mcpTrace.length}
         backUrl={(classIdParam || currentClass?.id) ? `/student/classes/${classIdParam || currentClass?.id}` : '/student'}
         backLabel="Quay lại Lớp học phần"
       />
 
       {/* EXAM Mode Countdown Banner */}
       {isExamMode && currentSession && (
-        <div className="bg-gradient-to-r from-rose-950 via-slate-900 to-amber-950 border-b border-rose-500/40 px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-rose-200 shrink-0 gap-2 shadow-lg">
-          <div className="flex items-center space-x-2">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-            </span>
-            <span className="font-bold text-rose-300">
-              ⏱️ ĐANG TRONG KỲ THI: {currentSession.title} ({currentSession.duration_minutes} phút)
-            </span>
-            <span className="text-slate-500 hidden md:inline">•</span>
-            <span className="text-slate-400 hidden md:inline">
-              Chế độ chấm điểm độc lập qua Sandbox (Gia sư AI bị khóa để đảm bảo công bằng)
-            </span>
-          </div>
-          <div className="flex items-center space-x-3 self-end sm:self-auto font-mono">
-            <span className="text-slate-400">Thời gian còn lại:</span>
-            <span className="px-2.5 py-0.5 rounded-lg bg-rose-950 border border-rose-500/50 font-bold text-rose-400 text-sm tracking-wider shadow-inner">
+        <div role="status" className="flex shrink-0 flex-col gap-2 border-b border-destructive/40 bg-destructive/10 px-4 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="font-semibold text-danger">Đang trong kỳ thi: {currentSession.title} ({currentSession.duration_minutes} phút)</span>
+            <span className="hidden text-muted md:inline">· Gia sư AI bị khóa để đảm bảo công bằng</span>
+          </p>
+          <p className="flex items-center gap-2 self-end sm:self-auto">
+            <span className="text-muted">Thời gian còn lại</span>
+            <span className="rounded-md border border-destructive/40 bg-surface px-2.5 py-0.5 font-mono text-base font-semibold tabular-nums text-danger">
               {formatTimer(remainingSeconds)}
             </span>
-          </div>
+          </p>
         </div>
       )}
 
@@ -411,6 +478,7 @@ export default function StudentIDE() {
             onRunTest={handleRunTest}
             isRunningTest={isRunningTest}
             onAskAI={() => handleAskAI()}
+            askAiLabel={isBlankCode(code, exerciseDetail?.starter_code) ? 'Mình chưa biết bắt đầu' : 'Hỏi gia sư AI'}
             isAskingAI={isAskingAI}
             onSubmit={() => handleSubmit()}
             isSubmitting={isSubmitting}
@@ -424,6 +492,7 @@ export default function StudentIDE() {
         {/* Column 3: AI Tutor Panel (~26%) */}
         <section className="min-w-0 min-h-[60vh] xl:col-span-3 xl:h-full overflow-hidden">
           <TutorPanel
+            classId={currentClass?.id || classIdParam || null}
             hintLevel={hintLevel}
             setHintLevel={setHintLevel}
             astAnalysis={astAnalysis}
@@ -435,26 +504,24 @@ export default function StudentIDE() {
             testResults={testResults}
             onAskAI={handleAskAI}
             onEscalate={handleEscalate}
+            onInsertSkeleton={handleInsertSkeleton}
+            canUndoInsert={codeBeforeInsert !== null}
+            onUndoInsert={handleUndoInsert}
             exerciseId={selectedExerciseId}
             code={code}
             sessionId={sessionId}
             onOpenPythonicReview={() => setIsPythonicReviewOpen(true)}
             starsEarned={starsEarned}
+            hintInteractionId={hintInteractionId}
+            starRationale={starRationale}
             isExamMode={isExamMode}
             currentSession={currentSession}
+            hasPassedBefore={hasPassedExercise}
           />
         </section>
       </main>
 
-      {/* Modal 1: MCP Protocol Inspector */}
-      <MCPInspectorModal
-        isOpen={isInspectorOpen}
-        onClose={() => setIsInspectorOpen(false)}
-        discoveredTools={health?.discovered_tools || []}
-        mcpTrace={mcpTrace}
-      />
-
-      {/* Modal 2: Student Profile / Nhật ký học tập & Chẩn đoán 4D */}
+      {/* Modal 2: Student Profile / Nhật ký học tập & Hồ sơ học tập */}
       <StudentProfileModal
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
@@ -484,39 +551,51 @@ export default function StudentIDE() {
 
       {/* Modal 5: Thông báo nộp bài thành công & Điều hướng */}
       {submissionSuccess && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-emerald-500/60 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 mx-auto flex items-center justify-center text-white shadow-lg shadow-emerald-900/50">
-              <Sparkles className="w-8 h-8" />
-            </div>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onKeyDown={(e) => { if (e.key === 'Escape') setSubmissionSuccess(null); }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="submit-success-title"
+            aria-describedby="submit-success-desc"
+            className="w-full max-w-md space-y-5 rounded-xl border border-border bg-surface p-6 text-center"
+          >
+            <CheckCircle2 aria-hidden="true" className="mx-auto size-10 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <h3 className="text-xl font-bold text-white">Nộp Bài Thành Công! 🎉</h3>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                Xin chúc mừng! Hệ thống đã ghi nhận <strong>{submissionSuccess.starsEarned} ⭐</strong> tự lực vào Hồ sơ năng lực và cập nhật Cây lộ trình kỹ năng của bạn.
+              <h2 id="submit-success-title" className="text-xl font-semibold">Đúng hết rồi!</h2>
+              <p id="submit-success-desc" className="mt-2 text-sm leading-relaxed text-muted">
+                Bạn làm đúng hết bài này và có <strong className="font-semibold text-foreground">{submissionSuccess.starsEarned} sao</strong>. {STAR_MEANING[submissionSuccess.starsEarned] || ''}
               </p>
             </div>
-
-            <div className="flex items-center justify-center space-x-1.5 py-1">
+            {successMoment && (
+              <p className="rounded-2xl border border-success-line bg-success-soft px-3 py-2 text-sm text-success-strong">{successMoment}</p>
+            )}
+            <p aria-hidden="true" className="flex items-center justify-center gap-1">
               {[...Array(submissionSuccess.starsEarned)].map((_, i) => (
-                <span key={i} className="text-2xl drop-shadow-md">⭐</span>
+                <Star key={i} className="size-6 fill-amber-400 text-amber-500" />
               ))}
-            </div>
-
-            <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
               {currentClass && (
                 <button
+                  type="button"
+                  autoFocus
                   onClick={() => navigate(`/student/classes/${currentClass.id}`)}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950 flex items-center justify-center space-x-1.5 cursor-pointer"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Về Lớp Học Phần</span>
+                  <ArrowLeft aria-hidden="true" className="size-4" />
+                  Về lớp học phần
                 </button>
               )}
               <button
+                type="button"
+                autoFocus={!currentClass}
                 onClick={() => setSubmissionSuccess(null)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-all border border-slate-700 cursor-pointer"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold hover:bg-surface-raised"
               >
-                Tiếp Tục Ở Lại IDE
+                Ở lại IDE
               </button>
             </div>
           </div>

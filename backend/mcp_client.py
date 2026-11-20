@@ -154,7 +154,8 @@ async def run_test_only_pipeline(exercise_id: str, code: str) -> dict:
             }
 
 
-async def execute_submission_pipeline(exercise_id: str, code: str, session_id: str = "default_session") -> dict:
+async def execute_submission_pipeline(exercise_id: str, code: str, session_id: str = "default_session",
+                                      class_id: str | None = None) -> dict:
     """
     [Pipeline Nộp bài & Thích ứng Sư phạm - Ghi nhận MCP Trace]
     1 phiên kết nối MCP duy nhất:
@@ -232,10 +233,10 @@ async def execute_submission_pipeline(exercise_id: str, code: str, session_id: s
             if "get_student_model" in discovered:
                 t0 = time.time()
                 try:
-                    sm_res = await session.call_tool(
-                        "get_student_model",
-                        arguments={"session_id": session_id}
-                    )
+                    sm_args = {"session_id": session_id}
+                    if class_id:
+                        sm_args["class_id"] = class_id
+                    sm_res = await session.call_tool("get_student_model", arguments=sm_args)
                     student_model = json.loads(sm_res.content[0].text)
                     t_ms = round((time.time() - t0) * 1000, 2)
                     mcp_trace.append({
@@ -301,9 +302,10 @@ async def save_learning_event_via_mcp(
     all_passed: bool,
     llm_source: str,
     tutor_hint: str,
-    action_type: str = "submit"
+    action_type: str = "submit",
+    attempt_features: dict | None = None
 ) -> dict:
-    """Lưu sự kiện học tập thông qua MCP Tool save_learning_event."""
+    """Lưu sự kiện học tập thông qua MCP Tool save_learning_event (kèm đặc trưng lượt nếu có)."""
     params = get_server_params()
     async with stdio_client(params) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -320,7 +322,8 @@ async def save_learning_event_via_mcp(
                     "all_passed": all_passed,
                     "llm_source": llm_source,
                     "tutor_hint": tutor_hint,
-                    "action_type": action_type
+                    "action_type": action_type,
+                    **({"attempt_features": attempt_features} if attempt_features else {})
                 }
             )
             return json.loads(res.content[0].text)
@@ -382,16 +385,29 @@ async def run_custom_test_pipeline(code: str, custom_input: str) -> dict:
                     "error_message": r.get("error_message", None)
                 }
     except Exception as e:
-        logger.warning(f"Lỗi khi gọi custom test qua MCP, sử dụng fallback sandbox: {e}")
-        from mcp_server.sandbox import execute_single_test
-        res = execute_single_test(code, custom_input, timeout_seconds=5.0)
-        return {
-            "stdout": res.get("stdout", ""),
-            "stderr": res.get("stderr", ""),
-            "execution_time_ms": res.get("elapsed_ms", 0.0),
-            "status": res.get("status", "SUCCESS"),
-            "error_message": res.get("error_message", None)
-        }
+        # Backend không import mcp_server (luật kiến trúc): lỗi MCP được báo lên endpoint (HTTP 500).
+        logger.error(f"Lỗi khi gọi custom test qua MCP: {e}")
+        raise
+
+
+async def get_code_structure_summary(code: str) -> str:
+    """Tóm tắt cấu trúc (AST) của một đoạn code qua MCP tool analyze_code_ast; trả "" nếu MCP lỗi.
+
+    Dùng cho chat `code_review` (S8a): chỉ lấy `structural_summary` (số vòng lặp, biến tích lũy, đệ quy, số dòng),
+    không chứa mã nguồn.
+    """
+    if not (code or "").strip():
+        return ""
+    try:
+        async with stdio_client(get_server_params()) as (read_stream, write_stream):
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+                res = await session.call_tool("analyze_code_ast", arguments={"code": code})
+                data = json.loads(res.content[0].text)
+                return str(data.get("structural_summary") or "") if data.get("valid", True) else ""
+    except Exception as e:
+        logger.warning(f"Không lấy được tóm tắt AST qua MCP cho chat code_review: {e}")
+        return ""
 
 
 async def execute_trace_pipeline(code: str, stdin_input: str = "", max_steps: int = 150) -> dict:
@@ -410,8 +426,8 @@ async def execute_trace_pipeline(code: str, stdin_input: str = "", max_steps: in
                 )
                 return json.loads(res.content[0].text)
     except Exception as e:
-        logger.warning(f"Lỗi khi gọi trace_code_execution qua MCP, sử dụng fallback tracer: {e}")
-        from mcp_server.tracer import trace_code_execution
-        return trace_code_execution(code=code, stdin_input=stdin_input, max_steps=max_steps)
+        # Backend không import mcp_server (luật kiến trúc): lỗi MCP được báo lên endpoint (HTTP 500).
+        logger.error(f"Lỗi khi gọi trace_code_execution qua MCP: {e}")
+        raise
 
 

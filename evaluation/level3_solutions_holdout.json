@@ -1,0 +1,22 @@
+{
+  "version": "1.0-holdout",
+  "note": "Tập GIỮ RIÊNG cho bước che khung mã Mức 3. Soạn ngày 13/11/2026 SAU khi đóng băng bộ luật che (sau lần chỉnh theo level3_solutions.json). KHÔNG dùng để chỉnh luật; nếu sau này vá luật theo các ca ở đây thì tập này mất tư cách giữ riêng và phải soạn tập mới. Cùng một tác giả với tập phát triển nên vẫn có thiên lệch.",
+  "solutions": [
+    {"id": "HL01", "exercise": "ex_01_sum_1_to_n", "style": "fstring_print", "code": "n = int(input())\nprint(f\"{n * (n + 1) // 2}\")\n"},
+    {"id": "HL02", "exercise": "ex_01_sum_1_to_n", "style": "semicolon_joined", "code": "n = int(input()); t = 0\nfor i in range(n + 1): t += i\nprint(t)\n"},
+    {"id": "HL03", "exercise": "ex_01_sum_1_to_n", "style": "while_true_break", "code": "n = int(input())\ntong = 0\nwhile True:\n    if n == 0:\n        break\n    tong += n\n    n -= 1\nprint(tong)\n"},
+    {"id": "HL04", "exercise": "ex_02_prime_check", "style": "walrus_any", "code": "print(\"NO\" if (n := int(input())) < 2 or any(n % d == 0 for d in range(2, n)) else \"YES\")\n"},
+    {"id": "HL05", "exercise": "ex_02_prime_check", "style": "count_divisors", "code": "n = int(input())\nuoc = 0\nfor i in range(1, n + 1):\n    if n % i == 0:\n        uoc += 1\nkq = [\"NO\", \"YES\"][uoc == 2]\nprint(kq)\n"},
+    {"id": "HL06", "exercise": "ex_02_prime_check", "style": "try_except_wrapper", "code": "try:\n    n = int(input())\n    dung = n > 1\n    i = 2\n    while dung and i * i <= n:\n        dung = n % i != 0\n        i += 1\n    print(\"YES\" if dung else \"NO\")\nexcept ValueError:\n    print(\"NO\")\n"},
+    {"id": "HL07", "exercise": "ex_03_factorial", "style": "lambda_reduce", "code": "from functools import reduce\nn = int(input())\ngt = reduce(lambda a, b: a * b, range(1, n + 1), 1)\nprint(gt)\n"},
+    {"id": "HL08", "exercise": "ex_03_factorial", "style": "tuple_assignment", "code": "n = int(input())\nkq, i = 1, 1\nwhile i <= n:\n    kq, i = kq * i, i + 1\nprint(kq)\n"},
+    {"id": "HL09", "exercise": "ex_03_factorial", "style": "nested_function_print_call", "code": "def main():\n    def gt(k):\n        return 1 if k < 2 else k * gt(k - 1)\n    n = int(input())\n    print(gt(n))\n\nmain()\n"},
+    {"id": "HL10", "exercise": "ex_04_reverse_string", "style": "list_reverse_join", "code": "s = input()\nky_tu = list(s)\nky_tu.reverse()\nprint(\"\".join(ky_tu))\n"},
+    {"id": "HL11", "exercise": "ex_04_reverse_string", "style": "print_end_loop", "code": "s = input()\nfor i in range(len(s) - 1, -1, -1):\n    print(s[i], end=\"\")\nprint()\n"},
+    {"id": "HL12", "exercise": "ex_04_reverse_string", "style": "star_print", "code": "s = input()\nprint(*reversed(s), sep=\"\")\n"},
+    {"id": "HL13", "exercise": "ex_05_count_vowels", "style": "dict_counter", "code": "s = input()\ndem = {\"a\": 0, \"e\": 0, \"i\": 0, \"o\": 0, \"u\": 0}\nfor ch in s.lower():\n    if ch in dem:\n        dem[ch] += 1\ntong = sum(dem.values())\nprint(tong)\n"},
+    {"id": "HL14", "exercise": "ex_05_count_vowels", "style": "filter_len", "code": "s = input()\nprint(len(list(filter(lambda c: c in \"aeiouAEIOU\", s))))\n"},
+    {"id": "HL15", "exercise": "ex_05_count_vowels", "style": "str_translate", "code": "s = input().strip()\ncon_lai = s.lower().translate(str.maketrans(\"\", \"\", \"aeiou\"))\nprint(len(s) - len(con_lai))\n"},
+    {"id": "HL16", "exercise": "ex_05_count_vowels", "style": "match_bool_sum", "code": "s = input()\ndem = 0\nfor ch in s:\n    dem += ch in \"aeiouAEIOU\"\nprint(dem)\n"}
+  ]
+}

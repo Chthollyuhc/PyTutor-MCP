@@ -1,149 +1,106 @@
 ---
-name: PyTutor-MCP
-description: A clear, practical learning workspace for Python programming at NEU.
+name: PyTutor Minimalist Bento
+description: A sleek, modern soft-minimalist Bento UI with iOS / Dynamic Island aesthetic for PyTutor NEU.
 colors:
-  primary-dark: "#066e44"
-  primary-light: "#13633e"
-  canvas-dark: "#020617"
-  surface-dark: "#0f172a"
-  canvas-light: "#f5f7f4"
-  surface-light: "#ffffff"
-  foreground-dark: "#f8fafc"
-  foreground-light: "#1f2923"
-  muted-dark: "#a7b4c7"
-  muted-light: "#4c5b51"
-  border-light: "#d3dcd5"
+  primary: "#10B981"
+  primary-hover: "#059669"
+  canvas-light: "#F4F5F7"
+  surface-light: "#FFFFFF"
+  surface-raised-light: "#F8F9FA"
+  border-light: "#E5E7EB"
+  foreground-light: "#0F172A"
+  muted-light: "#64748B"
+  canvas-dark: "#090D16"
+  surface-dark: "#131926"
+  surface-raised-dark: "#1C2436"
+  border-dark: "#263248"
+  foreground-dark: "#F8FAFC"
+  muted-dark: "#94A3B8"
+  dark-island: "#0B0F17"
 typography:
-  body:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
-    fontSize: "0.9375rem"
-    fontWeight: 500
-    lineHeight: 1.25
+  display: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif"
+  body: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif"
+  code: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
 rounded:
-  lg: "8px"
-  xl: "10px"
-  2xl: "12px"
-  3xl: "16px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary-light}"
-    textColor: "#ffffff"
-    rounded: "{rounded.lg}"
-    height: "44px"
-  card:
-    backgroundColor: "{colors.surface-light}"
-    rounded: "{rounded.xl}"
+  pill: "9999px"
+  card: "24px"
+  card-sm: "18px"
+  circle: "9999px"
 ---
 
-# Design System: PyTutor-MCP
+# Design System: PyTutor Minimalist Bento
 
-## Overview
+## 1. Overview & North Star
 
-**Creative North Star: The Practical Learning Desk**
+**Creative North Star: Sleek Bento Minimalism (iOS / Dynamic Island Aesthetic)**
 
-PyTutor-MCP should feel like a dependable course workspace: clear, practical, grounded, and focused on helping NEU students work through Python exercises. The interface preserves the PyTutor-MCP and NEU identity while making assignments, code, test results, and instructor information easy to scan. Light and dark themes share the same hierarchy and semantic color roles.
+PyTutor's interface embraces the clean, airy, high-contrast aesthetic of modern Bento grids:
+- **Soft Canvas & Pure White Surfaces:** Generous spacing, soft off-white canvas (`#F4F5F7`), pure white cards (`#FFFFFF`) with subtle hairline boundaries (`border-slate-200/80`).
+- **High-Contrast Dark Island Accents:** Designated focus widgets (e.g. Autonomy Stars, voice notes, action widgets) utilize rich pitch-black surfaces (`#0B0F17`) with vibrant emerald (`#10B981`) and amber accents.
+- **Pill Geometry:** Buttons, status badges, segmented tab capsules, and search inputs are shaped as elegant pills (`rounded-full`).
+- **Soft Bento Elevation:** Subtle multi-layer ambient shadows (`shadow-bento`, `shadow-soft`) giving tactile physical depth without harsh outlines.
 
-Prefer direct labels and useful status over decoration. The desired direction is quieter and less “AI-generated”: restrained surfaces, purposeful color, and minimal visual effects.
+---
 
-**Key Characteristics:**
-- Learning-task-first hierarchy with readable labels and actionable controls.
-- NEU green as the primary action color, supported by semantic status colors.
-- Consistent light and dark themes, with preference following the device until manually changed.
-- Flat, bordered surfaces rather than repeated decorative cards and glow effects.
+## 2. Color Palette
 
-## Colors
+### Primary & Accent
+- **Radiant Emerald** (`#10B981` / hover `#059669`): Primary interactive actions, successful runs, high mastery indicators.
+- **Dynamic Dark Island** (`#0B0F17`): High-contrast focus cards and primary action pills.
+- **Amber Gold** (`#F59E0B`): Autonomy stars, gamification achievements, caution alerts.
+- **Sky Blue** (`#0EA5E9`): Course module info, informative indicators.
+- **Violet / AI** (`#8B5CF6`): AI Socratic tutor hints and pythonic reviews.
 
-The palette pairs a dark slate workspace with a soft neutral light theme; green identifies primary actions and the NEU learning context.
+### Neutrals
+- **Canvas:** `#F4F5F7` (Light) / `#090D16` (Dark)
+- **Surface:** `#FFFFFF` (Light) / `#131926` (Dark)
+- **Surface Raised:** `#F8F9FA` (Light) / `#1C2436` (Dark)
+- **Borders:** `#E5E7EB` (Light) / `#263248` (Dark)
+- **Foreground:** `#0F172A` (Light) / `#F8FAFC` (Dark)
+- **Muted:** `#64748B` (Light) / `#94A3B8` (Dark)
 
-### Primary
-- **Forest Green** (`#066e44` dark / `#13633e` light): Main actions, focus, and branded emphasis. The light-theme value is darkened for contrast on white text.
+---
 
-### Neutral
-- **Night Canvas** (`#020617`): Dark page background.
-- **Night Surface** (`#0f172a`): Dark panels and controls.
-- **Paper Canvas** (`#f5f7f4`): Light page background.
-- **White Surface** (`#ffffff`): Light cards, menus, and panels.
-- **Ink** (`#1f2923`): Light-theme primary text.
-- **Slate White** (`#f8fafc`): Dark-theme primary text.
-- **Quiet Green-Gray** (`#4c5b51` light / `#a7b4c7` dark): Secondary text and supporting labels.
-- **Soft Divider** (`#d3dcd5`): Light-theme borders and dividers.
+## 3. Typography & Hierarchy
 
-Success, warning, destructive, and informational colors are reserved for statuses and outcomes, not decoration.
+- **Font Family:** Apple SF Pro / Segoe UI modern system stack.
+- **Headings:** Bold to extra-bold (`font-bold`, `tracking-tight`), crisp contrast against card surfaces.
+- **Numbers & Counters:** Large, confident numbers (`text-2xl` / `text-3xl font-bold tracking-tight tabular-nums`).
+- **Badges & Labels:** `text-xs font-semibold tracking-tight`.
 
-## Typography
+---
 
-**Display Font:** System UI sans-serif stack  
-**Body Font:** System UI sans-serif stack  
-**Label/Mono Font:** Monaco's configured editor font for code; system UI for interface labels.
+## 4. Components & Geometry
 
-**Character:** Neutral and familiar, with clear differences in size and weight rather than a decorative display face.
+### Cards (`<Card>` / Bento Widgets)
+- **Border Radius:** `rounded-3xl` (24px) for main containers and class cards; `rounded-2xl` (18px) for list items.
+- **Elevation:** `shadow-bento` (`0 4px 20px -2px rgba(0,0,0,0.04)`) with smooth hover lift `hover:shadow-bento-hover`.
+- **Dark Island Card:** `keep-dark bg-slate-950 text-white rounded-3xl p-5 border border-slate-800/80 shadow-bento`.
 
-### Hierarchy
-- **Headline:** Use the page's established larger heading utilities for the current task or page title.
-- **Title:** Medium-to-semibold system text for sections, classes, and exercise names.
-- **Body** (400, 16px, 1.5): Instructions, explanations, and readable supporting content.
-- **Label** (500, 15px, 1.25): Form labels, navigation, and compact controls. Light theme raises text-sm to 15px, text-xs to 13px, and legacy 9–11px utility text to 11–12px for readability.
-- **Code:** Preserve monospace typography in the editor and code/result blocks.
+### Buttons (`<Button>`)
+- **Pill Shape:** `rounded-full font-semibold transition-all duration-200 active:scale-[0.98]`.
+- **Primary:** `bg-emerald-500 hover:bg-emerald-600 text-white shadow-soft`.
+- **Black Pill:** `bg-slate-950 hover:bg-black text-white dark:bg-white dark:text-slate-950 shadow-soft`.
+- **Secondary:** `border border-border/80 bg-surface text-foreground hover:bg-surface-raised`.
 
-## Layout
+### Badges (`<Badge>`)
+- **Capsule Pill:** `rounded-full px-2.5 py-0.5 text-xs font-medium tracking-tight`.
+- Clean translucent fills with matching hairline border rings.
 
-Use a task-oriented workspace: navigation frames the content, while the active assignment, editor, results, or class data receives the strongest area. Keep related controls close and separate major sections with space and simple borders. On narrow screens, retain the primary action and content; collapse secondary labels or move side navigation into a compact layout rather than allowing horizontal overflow. The document minimum width is 320px.
+### Segmented Controls (Tab Capsules)
+- Capsule container: `p-1 bg-surface-raised rounded-full border border-border/80 inline-flex gap-1`.
+- Active segment: Pure white pill with subtle drop shadow `bg-surface text-foreground shadow-sm rounded-full px-3.5 py-1.5 text-xs font-semibold`.
+- Inactive segment: Quiet muted text with smooth hover.
 
-## Elevation & Depth
+### Inputs & Chat Fields (`<Input>`)
+- Pill input: `rounded-full border border-border/80 bg-surface px-4 py-2.5 text-sm shadow-soft focus:border-primary focus:ring-2 focus:ring-primary/20`.
+- Integrated circular action button: `size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-soft`.
 
-Depth is conveyed primarily with tonal surface changes and borders. Keep surfaces flat at rest; avoid ambient glow and heavy stacked shadows. Use overlays only to distinguish an active modal from the page behind it, and retain a clearly visible focus ring for keyboard interaction.
+---
 
-**The Flat-By-Default Rule.** Surfaces do not need a shadow to read as separate; use a surface tone and border first.
+## 5. Quality Checklist & Verification
 
-## Shapes
-
-The shape language is compact and restrained: controls use modest corners (8px), cards and grouped panels use 10–12px, and larger enclosing regions may use 16px. Borders define boundaries; avoid wrapping every label or item in a pill.
-
-## Components
-
-### Buttons
-- **Shape:** 8px corners.
-- **Primary:** NEU green with white text; medium controls are at least 44px tall.
-- **Hover / Focus:** Shift to the darker green hover token; provide a visible keyboard focus ring. Disabled and loading states remain legible and non-interactive.
-- **Secondary / Ghost:** Neutral surface/border or quiet text treatment; do not compete with the primary action.
-
-### Chips
-- Use compact chips only for meaningful status or category; keep state colors semantic and avoid decorative tags.
-
-### Cards / Containers
-- **Corner Style:** 10–12px.
-- **Background:** Theme surface token.
-- **Shadow Strategy:** Flat by default; use borders and tonal contrast.
-- **Border:** Semantic theme border.
-- **Internal Padding:** Follow existing spacing utilities and maintain more separation between sections than within a control group.
-
-### Inputs / Fields
-- **Style:** Theme-aware canvas, semantic border, 6px input corners.
-- **Focus:** Green border and subtle ring, plus the global visible focus outline for keyboard use.
-- **Error / Disabled:** Use destructive color and explicit error copy; preserve readable contrast and disabled distinction.
-
-### Navigation
-- Keep role, class, and page context explicit. Active items use a clear state rather than decoration alone; on mobile, hide secondary text only when an accessible label remains.
-
-### Theme Toggle
-- Expose the current theme in the accessible name and pressed state. Persist a manual choice globally; without one, follow the device preference.
-
-## Do's and Don'ts
-
-### Do:
-- **Do** use semantic theme tokens for new surfaces, text, borders, focus, and state colors.
-- **Do** reserve green for primary actions and meaningful branded emphasis.
-- **Do** keep labels, error messages, loading states, and empty states explicit.
-- **Do** preserve the existing routes, role behavior, API calls, submission flow, and exam-mode restrictions when changing presentation.
-- **Do** check both themes and narrow layouts whenever a page-level visual change is made.
-
-### Don't:
-- **Don't** add decorative gradients, glows, or large blurred effects to make a screen feel “AI.”
-- **Don't** nest repeated cards or turn ordinary labels into badge/pill collections.
-- **Don't** use color as the only indicator of status or active navigation.
-- **Don't** change business behavior or backend contracts as part of a visual-only update.
+1. **Light / Dark Parity:** Light mode is clean, bright, and legible; Dark mode maintains identical contrast and visual weight.
+2. **Accessible Contrast:** Text on badges, pills, and surfaces strictly adheres to WCAG AA contrast standards.
+3. **No Destructive Overrides:** Zero blanket `!important` color wipes in `index.css`. Gradients, backdrop filters, and shadows remain active and controlled.
+4. **All Tests & Builds Passing:** `npm run test:theme` (3/3 passed) and `npm run build` (zero errors).

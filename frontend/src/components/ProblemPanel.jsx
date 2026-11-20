@@ -1,4 +1,6 @@
 import React from 'react';
+import { Badge } from './ui';
+import { difficultyVariant } from '../utils/tone';
 import { BookOpen, Tag, Award, CheckCircle, Code2, ListOrdered, School, GraduationCap, ShieldAlert, Sparkles } from 'lucide-react';
 
 export default function ProblemPanel({
@@ -14,99 +16,63 @@ export default function ProblemPanel({
   isExamMode = false
 }) {
   const activeExamSession = examSessions.find(s => s.id === selectedSessionId) || null;
-  const getDifficultyColor = (diff) => {
-    switch (diff) {
-      case 'Dễ':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'Trung bình':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'Khó':
-        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-      default:
-        return 'bg-slate-700/50 text-slate-300 border-slate-600';
-    }
-  };
-
   return (
-    <div className="h-full flex flex-col bg-slate-900 border-r border-slate-800 text-slate-200 select-text overflow-hidden">
-      {/* Header & Classroom / Session Context (Vị trí duy nhất hiển thị Lớp học phần) */}
-      <div className="p-3 border-b border-slate-800 shrink-0 bg-slate-900/90 space-y-2">
-        {/* Class Badge */}
+    <div className="flex h-full select-text flex-col overflow-hidden border-r border-border bg-surface text-foreground">
+      {/* Header: lớp, chế độ làm bài, độ khó */}
+      <div className="shrink-0 space-y-2 border-b border-border bg-surface-raised/60 p-3">
         {currentClass && (
-          <div className="flex items-center justify-between bg-slate-950/70 border border-slate-800 px-2.5 py-1.5 rounded-lg text-xs">
-            <div className="flex items-center space-x-1.5 truncate">
-              <School className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-              <span className="font-semibold text-slate-300 truncate">
-                Lớp: <span className="text-cyan-400 font-mono">{currentClass.class_code}</span>
-                {currentClass.class_name && (
-                  <span className="text-slate-400 font-normal text-[11px] ml-1.5 hidden sm:inline">
-                    • {currentClass.class_name}
-                  </span>
-                )}
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-500/20 bg-sky-500/10 px-3.5 py-2 text-xs font-semibold text-sky-600 dark:text-sky-400">
+            <span className="flex min-w-0 items-center gap-2">
+              <School aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate">
+                <span className="font-mono">{currentClass.class_code}</span>
+                {currentClass.class_name && <span className="ml-1.5 hidden font-normal sm:inline">· {currentClass.class_name}</span>}
               </span>
-            </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 font-mono shrink-0 ml-1 border border-cyan-800/40">
-              {currentClass.semester}
             </span>
+            {currentClass.semester && (
+              <span className="shrink-0 rounded-full bg-sky-500 px-2 py-0.5 font-mono text-[10px] text-white font-semibold">{currentClass.semester}</span>
+            )}
           </div>
         )}
 
-        {/* Chế độ làm bài Indicator (Static context badge) */}
         {activeExamSession ? (
-          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs">
-            <span className="flex items-center space-x-1.5 text-amber-300 font-medium truncate">
-              <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">
-                {activeExamSession.session_type === 'EXAM' ? '📝 Kỳ thi:' : '🎓 Đợt thực hành:'} {activeExamSession.title}
-              </span>
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+            <span className="flex min-w-0 items-center gap-2">
+              <GraduationCap aria-hidden="true" className="size-4 shrink-0" />
+              <span className="truncate">{activeExamSession.session_type === 'EXAM' ? 'Kỳ thi' : 'Đợt thực hành'}: {activeExamSession.title}</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono shrink-0 ml-1">
-              {activeExamSession.session_type}
-            </span>
+            <span className="shrink-0 rounded-full bg-amber-500 px-2 py-0.5 font-mono text-[10px] text-white font-semibold">{activeExamSession.session_type}</span>
           </div>
         ) : (
-          <div className="flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">
-            <span className="flex items-center space-x-1.5 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Chế độ Luyện tập Thích ứng</span>
-            </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-              PRACTICE
-            </span>
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <Sparkles aria-hidden="true" className="size-4 shrink-0" />
+            Chế độ luyện tập thích ứng
           </div>
         )}
 
-        {/* Metadata Bài tập (Độ khó, Chủ đề, Test cases) */}
         {exerciseDetail && (
-          <div className="flex items-center space-x-1.5 pt-0.5 flex-wrap gap-y-1 text-xs">
-            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${getDifficultyColor(exerciseDetail.difficulty)}`}>
-              {exerciseDetail.difficulty}
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] flex items-center space-x-1">
-              <Tag className="w-2.5 h-2.5 text-slate-400" />
-              <span>{exerciseDetail.category}</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-slate-800/60 text-slate-400 text-[10px]">
-              {exerciseDetail.test_cases?.length || 0} Test cases
-            </span>
-          </div>
+          <p className="flex flex-wrap items-center gap-1.5">
+            <Badge variant={difficultyVariant(exerciseDetail.difficulty)}>{exerciseDetail.difficulty}</Badge>
+            <Badge variant="info"><Tag aria-hidden="true" className="size-3" />{exerciseDetail.category}</Badge>
+            <Badge variant="ai">{exerciseDetail.test_cases?.length || 0} test cases</Badge>
+          </p>
         )}
       </div>
 
       {/* Body: Problem Description & Instructions */}
-      <div className="flex-1 min-h-0 p-4 overflow-y-auto space-y-5 text-[13px] leading-6">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 text-sm leading-6">
         {isLoading ? (
           <div className="space-y-4 py-2" role="status" aria-label="Đang tải đề bài">
-            <span className="block h-6 w-3/4 rounded bg-slate-800 animate-pulse" />
-            <span className="block h-3 w-full rounded bg-slate-800/80 animate-pulse" />
-            <span className="block h-3 w-5/6 rounded bg-slate-800/80 animate-pulse" />
-            <span className="block h-3 w-2/3 rounded bg-slate-800/80 animate-pulse" />
+            <span className="block h-6 w-3/4 animate-pulse rounded bg-surface-raised" />
+            <span className="block h-3 w-full animate-pulse rounded bg-surface-raised" />
+            <span className="block h-3 w-5/6 animate-pulse rounded bg-surface-raised" />
+            <span className="block h-3 w-2/3 animate-pulse rounded bg-surface-raised" />
           </div>
         ) : exerciseDetail ? (
           <>
             <div>
-              <h2 className="text-xl font-semibold leading-snug text-white mb-3">{exerciseDetail.title}</h2>
-              <div className="prose prose-invert prose-sm max-w-none text-slate-300 space-y-3">
+              <h2 className="mb-3 text-xl font-semibold leading-snug text-foreground">{exerciseDetail.title}</h2>
+              <div className="max-w-none space-y-3 text-foreground">
                 {/* Parse Markdown-like sections cleanly */}
                 {renderFormattedContent(exerciseDetail.description)}
               </div>
@@ -114,31 +80,31 @@ export default function ProblemPanel({
 
             {/* Test Cases Preview */}
             {exerciseDetail.test_cases && exerciseDetail.test_cases.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-800">
-                <h3 className="text-xs font-semibold text-slate-400 flex items-center space-x-1.5 mb-2.5">
-                  <ListOrdered className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Ví dụ kiểm thử mẫu:</span>
+              <div className="mt-4 border-t border-border pt-4">
+                <h3 className="mb-2.5 flex items-center gap-1.5 text-base font-semibold">
+                  <ListOrdered aria-hidden="true" className="size-4 text-muted" />
+                  Ví dụ kiểm thử mẫu
                 </h3>
                 <div className="space-y-2">
                   {exerciseDetail.test_cases.slice(0, 3).map((tc, idx) => (
-                    <div key={idx} className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 text-xs font-mono">
-                      <div className="text-slate-400 text-[11px] mb-1 font-sans">
+                    <div key={idx} className="rounded-2xl border border-border/80 bg-surface-raised p-3 text-xs font-mono shadow-soft">
+                      <div className="mb-1.5 font-sans text-xs font-semibold text-muted">
                         {tc.description || `Ví dụ #${idx + 1}`}
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-slate-300">
+                      <div className="grid grid-cols-2 gap-2">
                         <div className="min-w-0">
-                          <span className="text-slate-500 text-[10px] uppercase font-sans">Đầu vào (Input):</span>
-                          <div className="bg-slate-900 px-2 py-1.5 rounded text-emerald-300 text-xs whitespace-pre-wrap break-words overflow-x-auto">{tc.input.trim() || '""'}</div>
+                          <span className="font-sans text-[11px] text-muted">Đầu vào</span>
+                          <div className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1.5 text-xs font-semibold border border-emerald-500/20">{tc.input.trim() || '""'}</div>
                         </div>
                         <div className="min-w-0">
-                          <span className="text-slate-500 text-[10px] uppercase font-sans">Kết quả mong đợi (Output):</span>
-                          <div className="bg-slate-900 px-2 py-1.5 rounded text-cyan-200 text-xs whitespace-pre-wrap break-words overflow-x-auto">{tc.expected_output.trim()}</div>
+                          <span className="font-sans text-[11px] text-muted">Kết quả mong đợi</span>
+                          <div className="overflow-x-auto whitespace-pre-wrap break-words rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 px-2.5 py-1.5 text-xs font-semibold border border-sky-500/20">{tc.expected_output.trim()}</div>
                         </div>
                       </div>
                     </div>
                   ))}
                   {exerciseDetail.test_cases.length > 3 && (
-                    <p className="text-[11px] text-slate-500 italic text-center">
+                    <p className="text-center text-[0.8125rem] text-muted">
                       + {exerciseDetail.test_cases.length - 3} trường hợp kiểm thử kiểm tra toàn diện khác...
                     </p>
                   )}
@@ -147,7 +113,7 @@ export default function ProblemPanel({
             )}
           </>
         ) : (
-          <div className="text-slate-500 text-center py-10">Không tìm thấy thông tin bài tập.</div>
+          <div className="py-10 text-center text-muted">Không tìm thấy thông tin bài tập.</div>
         )}
       </div>
     </div>
@@ -178,9 +144,9 @@ function renderFormattedContent(text) {
     } else if (inTable) {
       if (tableRows.length > 0) {
         elements.push(
-          <div key={`tbl-${i}`} className="my-2.5 overflow-x-auto rounded border border-slate-800">
+          <div key={`tbl-${i}`} className="my-2.5 overflow-x-auto rounded border border-primary-line">
             <table className="min-w-full text-xs font-mono text-left">
-              <thead className="bg-slate-800/80 text-slate-300 border-b border-slate-700">
+              <thead className="border-b border-primary-line bg-primary-soft text-primary-strong">
                 <tr>
                   {tableRows[0].map((th, thIdx) => (
                     <th key={thIdx} className="px-3 py-1.5 font-semibold">
@@ -189,11 +155,11 @@ function renderFormattedContent(text) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/40">
+              <tbody className="divide-y divide-border bg-surface">
                 {tableRows.slice(1).map((row, rIdx) => (
                   <tr key={rIdx}>
                     {row.map((cell, cIdx) => (
-                      <td key={cIdx} className="px-3 py-1.5 text-slate-300">
+                      <td key={cIdx} className="px-3 py-1.5 text-foreground">
                         {cell}
                       </td>
                     ))}
@@ -210,14 +176,14 @@ function renderFormattedContent(text) {
 
     if (trimmed.startsWith('### ')) {
       elements.push(
-        <h4 key={i} className="text-sm font-bold text-emerald-400 mt-3 mb-1 uppercase tracking-wide">
+        <h3 key={i} className="mb-1 mt-4 text-base font-bold text-primary-strong">
           {trimmed.replace('### ', '')}
-        </h4>
+        </h3>
       );
     } else if (trimmed.startsWith('- ')) {
       elements.push(
-        <div key={i} className="ml-4 flex items-start space-x-2 text-slate-300 text-xs leading-relaxed">
-          <span className="text-emerald-400 font-bold">•</span>
+        <div key={i} className="ml-1 flex items-start gap-2 text-sm leading-6 text-foreground">
+          <span aria-hidden="true" className="text-muted">•</span>
           <span>{trimmed.replace('- ', '')}</span>
         </div>
       );
@@ -225,7 +191,7 @@ function renderFormattedContent(text) {
       // Empty line
     } else {
       elements.push(
-        <p key={i} className="text-[13px] text-slate-200 leading-6">
+        <p key={i} className="text-sm leading-6 text-foreground">
           {trimmed}
         </p>
       );
@@ -235,9 +201,9 @@ function renderFormattedContent(text) {
   // Flush table nếu bảng nằm ở cuối cùng của đề bài
   if (inTable && tableRows.length > 0) {
     elements.push(
-      <div key="tbl-end" className="my-2.5 overflow-x-auto rounded border border-slate-800">
+      <div key="tbl-end" className="my-2.5 overflow-x-auto rounded border border-primary-line">
         <table className="min-w-full text-xs font-mono text-left">
-          <thead className="bg-slate-800/80 text-slate-300 border-b border-slate-700">
+          <thead className="border-b border-primary-line bg-primary-soft text-primary-strong">
             <tr>
               {tableRows[0].map((th, thIdx) => (
                 <th key={thIdx} className="px-3 py-1.5 font-semibold">
@@ -246,11 +212,11 @@ function renderFormattedContent(text) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800 bg-slate-950/40">
+          <tbody className="divide-y divide-border bg-surface">
             {tableRows.slice(1).map((row, rIdx) => (
               <tr key={rIdx}>
                 {row.map((cell, cIdx) => (
-                  <td key={cIdx} className="px-3 py-1.5 text-slate-300">
+                  <td key={cIdx} className="px-3 py-1.5 text-foreground">
                     {cell}
                   </td>
                 ))}

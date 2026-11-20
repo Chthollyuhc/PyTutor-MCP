@@ -18,6 +18,11 @@ if sys.platform == "win32":
 
 from backend.main import app
 from backend.auth import create_token
+from backend.database import init_db
+
+# httpx.ASGITransport không chạy lifespan của FastAPI → tự tạo schema để kịch bản chạy được trên DB tạm cô lập
+# (PYTUTOR_DB_PATH). Trên DB đã có sẵn bảng, init_db() chỉ là thao tác idempotent.
+init_db()
 
 
 async def run_backend_e2e_tests():
