@@ -686,7 +686,7 @@ function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
 
 function renderBold(str) {
   if (!str) return null;
-  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`|\*[^*\s][^*]*\*)/g);
+  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`|(?<![\w*])\*[^*\s][^*]*\*(?![\w*]))/g);
   return parts.map((part, i) => {
     if (part.length > 2 && part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
       return <em key={i} className="italic text-muted">{part.slice(1, -1)}</em>;

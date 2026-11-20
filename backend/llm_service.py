@@ -207,13 +207,13 @@ def _level_instruction(hint_level: int, all_passed: bool) -> str:
 
 
 def _evidence_section(hint_level: int, exercise: dict, code: str, test_results: dict, ast_analysis: dict,
-                      trace: Optional[dict], all_passed: bool) -> str:
+                      trace: Optional[dict], all_passed: bool, no_code: bool = False) -> str:
     """Bằng chứng ƯU TIÊN do hệ thống rút ra tất định (test thông tin nhất, dòng đáng xem, vết chạy, dàn ý nền theo đề).
 
     Mỗi mức nhận đúng phần bằng chứng nó được phép dùng: Mức 1 chỉ nhận dạng vấn đề và khái niệm; Mức 2 thêm test, dòng và vết;
     Mức 3 thêm đầu vào mẫu và dàn ý nền. Dòng đáng xem là điều QUAN SÁT được, không phải kết luận dòng đó sai.
     """
-    if all_passed:
+    if all_passed or no_code:  # chưa viết code: kết quả kiểm thử không mang thông tin, không mô tả như lỗi cú pháp
         return ""
     failure = hint_evidence.pick_failure(test_results)
     kind = hint_rules.classify(failure, ast_analysis, test_results)
@@ -285,7 +285,8 @@ def build_scaffolding_prompt(
     strategy = adaptive_strategy or {}
     strategy_section = _strategy_section(strategy, hint_level)
     learner_section = _learner_section(strategy, hint_level)
-    evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed)
+    no_code = any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", []))
+    evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed, no_code)
     formative_section = _FORMATIVE_SECTION
     level_instruction = _level_instruction(hint_level, all_passed)
 
@@ -612,7 +613,7 @@ async def generate_tutor_hint(
         )
         # Chẩn đoán được phép trích lại dòng code của chính người học (không tính là lời giải).
         safe, reason = check_student_output(sanitized_hint, quoted_context=code or "")
-        if not all_passed and hint_evidence.echoes_student_comment(sanitized_hint, code or "", (exercise or {}).get("starter_code", "") or ""):
+        if not all_passed and hint_evidence.echoes_student_comment(sanitized_hint, code or "", (exercise or {}).get("starter_code", "") or "", n=6, only_suspicious=True):
             # Chú thích của người học là dữ liệu không tin cậy (có thể chứa lệnh chèn): không chép lại vào gợi ý.
             safe, reason = False, "comment_echo"
             if hint_level == 3:

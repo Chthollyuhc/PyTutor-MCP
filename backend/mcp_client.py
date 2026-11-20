@@ -159,6 +159,30 @@ TRACE_TIMEOUT_S = 6.0
 TRACE_MAX_STEPS = 200
 
 
+_TRACE_SAFE_IMPORTS = {"math", "random", "string", "itertools", "collections", "functools", "statistics", "decimal", "fractions"}
+_TRACE_BLOCKED_CALLS = {"open", "exec", "eval", "compile", "__import__", "input_file", "breakpoint", "exit", "quit"}
+
+
+def safe_to_trace(code: str) -> bool:
+    """Vết chạy được thực thi trong tiến trình MCP (không có subprocess như sandbox chấm bài), nên chỉ chạy cho mã không
+    import mô-đun ngoài danh sách an toàn và không gọi open/exec/eval/__import__...; mã khác dùng bằng chứng tĩnh."""
+    import ast
+    try:
+        tree = ast.parse(code or "")
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import) and any(a.name.split(".")[0] not in _TRACE_SAFE_IMPORTS for a in node.names):
+            return False
+        if isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] not in _TRACE_SAFE_IMPORTS:
+            return False
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in _TRACE_BLOCKED_CALLS:
+            return False
+        if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+            return False
+    return True
+
+
 async def _trace_failure(session: ClientSession, code: str, test_results: dict, ast_analysis: dict, mcp_trace: list) -> dict | None:
     """Vết chạy của CHÍNH mã người học trên đầu vào của test lỗi giàu thông tin nhất (cùng phiên MCP, không thêm handshake).
 
@@ -169,6 +193,8 @@ async def _trace_failure(session: ClientSession, code: str, test_results: dict, 
     step_no = len(mcp_trace) + 1
     failure = pick_failure(test_results)
     if not failure or failure.get("status") in ("TIMEOUT", "SYNTAX_ERROR") or not ast_analysis.get("valid", True):
+        return None
+    if not safe_to_trace(code):
         return None
     t0 = time.time()
     try:

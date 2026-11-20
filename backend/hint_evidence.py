@@ -199,9 +199,9 @@ def suspect_line(code: str, failure: Optional[dict], expect_kind: str, ast_analy
         return None
     if expect_kind == "timeout":
         whiles = [b for b in facts.blocks if b.kind == "while"]
-        for b in whiles:
-            stuck = sorted(b.test_names - b.assigned_in_body)
-            if stuck and b.test_names:
+        # Ưu tiên vòng while mà thân KHÔNG gán lại biến nào trong điều kiện; chỉ khi không có mới xét vòng còn lại.
+        for b in sorted(whiles, key=lambda x: bool(x.test_names & x.assigned_in_body)):
+            if b.test_names:
                 names = ", ".join(f"`{n}`" for n in sorted(b.test_names))
                 kept = ", ".join(f"`{n}`" for n in sorted(b.test_names & b.assigned_in_body)) or ""
                 note = f"điều kiện của vòng lặp `while` phụ thuộc vào {names}"
@@ -431,13 +431,25 @@ def student_comment_texts(code: str, starter: str = "") -> list[str]:
             tail = raw[len(strip_comment(raw)):].lstrip("# ").strip()
             if tail:
                 out.append(tail)
-        out += [m.strip() for m in re.findall(r'(?:"""|\'\'\')(.*?)(?:"""|\'\'\')', src or "", flags=re.DOTALL) if m.strip()]
+        out += [m.strip() for m in re.findall(r'(?ms)^[ \t]*(?:"""|\'\'\')(.*?)(?:"""|\'\'\')[ \t]*$', src or "") if m.strip()]  # chỉ chuỗi đứng riêng một câu lệnh
         return out
     known = set(extract(starter))
     return [c for c in extract(code) if c not in known]
 
 
-def echoes_student_comment(reply: str, code: str, starter: str = "", n: int = 4) -> bool:
-    """True nếu phản hồi chép lại n từ liên tiếp trở lên của một chú thích do người học viết."""
+_INSTRUCTION_LIKE = re.compile(
+    r"(bỏ qua|quên (?:hết|mọi)|đáp án|lời giải|in ra toàn bộ|toàn bộ (?:code|mã)|ignore|disregard|system|hệ thống cho phép|giảng viên|"
+    r"cho (?:tôi|mình)|xin (?:hãy|bạn)|reveal|solution|answer|jailbreak|từng dòng|dòng cuối)", flags=re.IGNORECASE)
+
+
+def echoes_student_comment(reply: str, code: str, starter: str = "", n: int = 4, only_suspicious: bool = False) -> bool:
+    """True nếu phản hồi chép lại n từ liên tiếp trở lên của một chú thích do người học viết.
+
+    `only_suspicious=True` (dùng trong sản phẩm): chỉ xét chú thích trông như chỉ dẫn/ra lệnh (từ khóa xin đáp án, bỏ qua quy tắc...)
+    hoặc dài từ 10 từ trở lên, để chú thích bình thường ("# tính tổng") không làm gợi ý tốt bị thay.
+    """
     grams = _word_ngrams(reply, n)
-    return any(_word_ngrams(c, n) & grams for c in student_comment_texts(code, starter))
+    comments = student_comment_texts(code, starter)
+    if only_suspicious:
+        comments = [c for c in comments if _INSTRUCTION_LIKE.search(c) or len(re.findall(r"\w+", c)) >= 10]
+    return any(_word_ngrams(c, n) & grams for c in comments)
