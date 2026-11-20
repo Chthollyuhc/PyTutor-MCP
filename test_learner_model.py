@@ -444,7 +444,8 @@ class PromptAndFallbackTests(unittest.TestCase):
     def test_level3_prompt_still_requires_skeleton(self):
         strategy = select_hint_strategy(3, FAIL, [], self.fine_model, exercise_id=EX3)
         prompt = build_scaffolding_prompt(EXERCISE, "x", FAIL, AST, 3, adaptive_strategy=strategy, student_model=self.fine_model)
-        self.assertIn("KHUNG CODE MẪU", prompt)
+        self.assertIn("KHUNG MÃ", prompt)  # v5.10: tiêu đề Mức 3 là "DÀN Ý THEO ĐỀ & KHUNG MÃ"
+        self.assertIn("DÀN Ý NỀN THEO ĐỀ", prompt)
         self.assertIn("Level 3", prompt)
 
 

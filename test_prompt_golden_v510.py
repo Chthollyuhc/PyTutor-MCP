@@ -27,6 +27,7 @@ class PromptGoldenTests(unittest.TestCase):
         for lvl in (1, 2, 3):
             self.assertTrue(any(n.endswith(f"_L{lvl}") for n in names))
         self.assertIn("VAR_model_L2", names)
+        self.assertIn("VAR_trace_L2", names)
         self.assertTrue(any(n.startswith("D09") for n in names), "ca có lịch sử gợi ý")
         self.assertTrue(any(n.startswith("D10") for n in names), "ca đã đạt")
         self.assertTrue(any(n.startswith("D01") for n in names), "ca chưa viết code")
@@ -38,7 +39,7 @@ class PromptGoldenTests(unittest.TestCase):
             got = build_scaffolding_prompt(
                 exercise=EX[c["exercise_id"]], code=c["code"], test_results=c["test_results"], ast_analysis=c["ast_analysis"],
                 hint_level=c["hint_level"], attempt_history=c["attempt_history"], student_model=c["student_model"],
-                adaptive_strategy=c["adaptive_strategy"])
+                adaptive_strategy=c["adaptive_strategy"], trace=c.get("trace"))
             if got != c["expected_prompt"]:
                 mismatches.append(c["name"])
         self.assertEqual(mismatches, [], f"Prompt đổi so với tệp vàng ở các ca: {mismatches}")

@@ -24,7 +24,7 @@ LEVEL_HEAD = {
     2: "🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**",
     3: "📘 **[MỨC 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**",
 }
-_KIND_VI = {
+KIND_VI = {
     "syntax": "chương trình chưa chạy được vì lỗi cú pháp",
     "runtime": "chương trình dừng giữa chừng với một lỗi khi chạy",
     "timeout": "chương trình chạy quá thời gian cho phép",
@@ -129,7 +129,7 @@ def _level1(ev: dict, adaptive_strategy: Optional[dict], repeats: int, extra: st
     if repeats:
         head.append(f"↻ Bạn đã xin gợi ý Mức 1 cho bài này trước đó, nên lần này đi tiếp một bước nhỏ, vẫn về **{c['name']}**.")
     parts = [head[0] + ("\n\n" + head[1] if repeats else ""), ev["progress"],
-             f"🔎 **Bằng chứng (tổng quát):** {_KIND_VI.get(kind, 'chưa có kiểm thử cụ thể nào được ghi nhận là lỗi, nên dữ liệu chưa đủ để khoanh vùng')}."]
+             f"🔎 **Bằng chứng (tổng quát):** {KIND_VI.get(kind, 'chưa có kiểm thử cụ thể nào được ghi nhận là lỗi, nên dữ liệu chưa đủ để khoanh vùng')}."]
     if repeats:
         if c.get("example"):
             parts.append(f"📖 **Ví dụ minh họa (dữ kiện khác bài của bạn):** {c['example']}.")
@@ -307,7 +307,7 @@ def _level3(ev: dict, exercise: dict, code: str, adaptive_strategy: Optional[dic
     return "\n\n".join(parts) + extra
 
 
-def _trace_note(code: str, trace: Optional[dict]) -> str:
+def trace_note(code: str, trace: Optional[dict]) -> str:
     """Một câu từ vết chạy: giá trị các biến của người học ngay trước lệnh cuối cùng được chạy với đầu vào lỗi."""
     locals_ = (trace or {}).get("final_locals") or {}
     if not locals_:
@@ -339,7 +339,7 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
           "syntax_error": ast_analysis.get("syntax_error"),
           "progress": (f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào; đây là khung để bắt đầu." if no_code
                        else _progress_line(title, test_results, kind)),
-          "trace_note": _trace_note(code, trace), "all_results": (test_results or {}).get("results", [])}
+          "trace_note": trace_note(code, trace), "all_results": (test_results or {}).get("results", [])}
     repeats = repeat_count(attempt_history, hint_level)
 
     extra = ""

@@ -110,8 +110,12 @@ class Level1BoundaryTests(unittest.TestCase):
 
     def test_level1_forbids_quoting_test_io_and_names_the_boundary(self):
         prompt = self._prompt(1)
-        self.assertIn("Ranh giới với Mức 2", prompt)
-        self.assertIn("KHÔNG nêu đầu vào, đầu ra thực tế hay đầu ra kỳ vọng", prompt)
+        self.assertIn("Mức 1 không được làm việc của Mức 2", prompt)
+        self.assertIn("KHÔNG nêu đầu vào, đầu ra kỳ vọng hay thực tế của kiểm thử", prompt)
+        # v5.10: rào chắn thông tin: Mức 1 không được CUNG CẤP giá trị kiểm thử cho mô hình (không thể làm lộ thứ không thấy).
+        self.assertNotIn("Input='3'", prompt)
+        self.assertNotIn("Kỳ vọng='6'", prompt)
+        self.assertNotIn("Dòng đáng xem", prompt)
 
     def test_level2_quotes_only_one_student_line(self):
         prompt = self._prompt(2)
@@ -121,13 +125,17 @@ class Level1BoundaryTests(unittest.TestCase):
     def test_level2_diagnoses_but_does_not_state_the_fix(self):
         prompt = self._prompt(2)
         self.assertIn("KHÔNG nêu cách sửa", prompt)
-        self.assertIn("đúng MỘT câu hỏi để sinh viên tự đưa ra cách sửa", prompt)
+        self.assertIn("đúng MỘT câu hỏi để sinh viên tự tìm cách sửa", prompt)
+        self.assertIn("cấm các cụm \"đổi thành\"", prompt)
         self.assertNotIn("Nêu rõ cần sửa điều kiện/biểu thức đó như thế nào", prompt)  # cách cũ chỉ thẳng cách sửa
 
     def test_level2_still_requires_test_evidence(self):
         prompt = self._prompt(2)
-        self.assertNotIn("Ranh giới với Mức 2", prompt)
-        self.assertIn("Expected Output", prompt)
+        self.assertNotIn("Mức 1 không được làm việc của Mức 2", prompt)
+        self.assertIn("BẰNG CHỨNG ƯU TIÊN", prompt)
+        self.assertIn("Đầu vào: `3`", prompt)
+        self.assertIn("Kỳ vọng: `6`", prompt)
+        self.assertIn("Thực tế: `3`", prompt)
 
 
 class QuotedContextGuardTests(unittest.TestCase):
