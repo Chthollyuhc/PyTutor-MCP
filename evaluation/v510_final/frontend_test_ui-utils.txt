@@ -1,0 +1,29 @@
+﻿
+> pytutor-frontend@2.0.0 test:ui-utils
+> node --test src/utils/share.test.js src/utils/path.test.js src/utils/plainCopy.test.js src/utils/blankCode.test.js src/utils/hintMarkdown.test.js
+
+✔ rỗng, chỉ bình luận, pass hoặc ... là chưa có code (1.0909ms)
+✔ y hệt khung mẫu là chưa có code (0.203ms)
+✔ có thêm dòng thật thì không còn trống (0.1148ms)
+✔ groupTableLines gom dòng bảng liên tiếp và giữ nguyên dòng thường (0.7945ms)
+✔ groupTableLines không coi dòng chỉ có một dấu | hoặc văn bản có | giữa dòng là bảng (0.232ms)
+✔ parseTable tách tiêu đề, bỏ dòng ngăn cách và giữ ô trống (0.9075ms)
+✔ parseTable xử lý bảng không có dòng ngăn cách (0.1932ms)
+✔ nhóm hai bảng cách nhau bằng dòng thường thành hai mục (0.1468ms)
+✔ ít trạm thì hiện hết (1.3565ms)
+✔ nhiều trạm thì giữ bài đang làm trong cửa sổ (0.2849ms)
+✔ bài đang làm ở cuối danh sách (0.1191ms)
+✔ không có bài đang làm thì lấy bài đầu tiên chưa xong (0.1004ms)
+✔ xong hết thì hiện các trạm cuối (0.7858ms)
+✔ các màn lời thường không chứa từ chuyên môn (2.2001ms)
+✔ mẫu nhỏ chỉ hiện k/n, không có phần trăm (0.4963ms)
+✔ n >= 10 thêm phần trăm làm tròn (0.1142ms)
+✔ mẫu rỗng và đầu vào lạ không lỗi (0.1146ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.6266

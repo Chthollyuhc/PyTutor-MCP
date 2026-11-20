@@ -1,0 +1,25 @@
+﻿
+> pytutor-frontend@2.0.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 1711 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.41 kB │ gzip:   0.73 kB
+dist/assets/index-DRR9prXj.css   80.42 kB │ gzip:  13.75 kB
+dist/assets/index-CaxVyhLj.js   590.77 kB │ gzip: 167.06 kB
+npm.cmd : 
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:50 char:5
++     npm.cmd run $s 2>&1 | Out-File (Join-Path ("..\" + $OutDir) ("fro ...
++     ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: 
+https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.02s

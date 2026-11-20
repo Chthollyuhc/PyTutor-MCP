@@ -1,0 +1,30 @@
+﻿Che khung mã Mức 3 — corpus v1.0, 24 lời giải đạt kiểm thử gốc (loại: không)
+  ok  L01 ex_01_sum_1_to_n       for_accumulator          che 2/5 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L02 ex_01_sum_1_to_n       while_loop               che 3/7 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L03 ex_01_sum_1_to_n       formula_in_print         che 1/2 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L04 ex_01_sum_1_to_n       one_liner                che 1/1 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L05 ex_01_sum_1_to_n       function                 che 4/7 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L06 ex_02_prime_check      flag_loop                che 4/13 dòng · còn đạt 3/6 kiểm thử · hợp lệ=True
+  ok  L07 ex_02_prime_check      while_sqrt               che 4/10 dòng · còn đạt 0/6 kiểm thử · hợp lệ=True
+  ok  L08 ex_02_prime_check      conditional_in_print     che 1/2 dòng · còn đạt 0/6 kiểm thử · hợp lệ=True
+  ok  L09 ex_02_prime_check      function                 che 7/12 dòng · còn đạt 3/6 kiểm thử · hợp lệ=True
+  ok  L10 ex_02_prime_check      for_else                 che 3/10 dòng · còn đạt 3/6 kiểm thử · hợp lệ=True
+  ok  L11 ex_03_factorial        for_accumulator          che 2/5 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L12 ex_03_factorial        while_countdown          che 3/6 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L13 ex_03_factorial        recursion                che 4/5 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L14 ex_03_factorial        library                  che 1/3 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L15 ex_04_reverse_string   slice_in_print           che 1/2 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L16 ex_04_reverse_string   loop_prepend             che 2/5 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L17 ex_04_reverse_string   join_reversed            che 1/3 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L18 ex_04_reverse_string   one_liner                che 1/1 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L19 ex_04_reverse_string   index_loop               che 4/7 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L20 ex_05_count_vowels     for_counter              che 3/6 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L21 ex_05_count_vowels     sum_generator_in_print   che 1/2 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L22 ex_05_count_vowels     input_chained            che 3/5 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L23 ex_05_count_vowels     comprehension_len        che 2/3 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+  ok  L24 ex_05_count_vowels     function                 che 5/7 dòng · còn đạt 0/5 kiểm thử · hợp lệ=True
+
+Lời giải lọt nguyên vẹn sau khi che: 0/24 []
+Khung còn là Python hợp lệ: 24/24
+Kiểm thử còn đạt sau khi che: 9/125
+Dòng lệnh bị che: 63/129

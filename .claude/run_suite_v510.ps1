@@ -28,7 +28,7 @@ py -m compileall -q backend mcp_server pytutor_shared 2>&1 | Out-File (Join-Path
 
 $unit = "test_phase16_ai_upgrade test_phase17_adaptive_analytics test_qa_authorization test_thesis_upgrade test_level3_scaffold test_pedagogy_v55 test_learner_model test_passwords test_no_code_hint test_user_uploaded_kb test_data_capture_v57 test_class_overview_v57 test_visual_views_v58 test_plain_language_v59 test_phase5_backend test_phase8_chat test_phase9_visualizer test_phase10_gamification test_phase12_classroom_exam test_phase13_14_neu_lms test_phase15_3_qa_audit test_phase15_4_action_buttons".Split(" ")
 # Các module bổ sung (v5.10) nếu có
-foreach ($extra in @("test_hint_quality_v510", "test_prompt_golden_v510", "test_hint_resilience_v510")) { if (Test-Path "$extra.py") { $unit += $extra } }
+foreach ($extra in @("test_hint_quality_v510", "test_hint_evidence_v510", "test_prompt_golden_v510", "test_hint_resilience_v510")) { if (Test-Path "$extra.py") { $unit += $extra } }
 $scripts = "test_phase5_backend test_phase8_chat test_phase9_visualizer test_phase10_gamification test_phase12_classroom_exam test_phase13_14_neu_lms test_phase15_3_qa_audit test_phase15_4_action_buttons".Split(" ")
 foreach ($m in $unit) {
   if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  # kịch bản: chạy trực tiếp, không phải unittest
