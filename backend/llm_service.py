@@ -612,6 +612,16 @@ async def generate_tutor_hint(
         )
         # Chẩn đoán được phép trích lại dòng code của chính người học (không tính là lời giải).
         safe, reason = check_student_output(sanitized_hint, quoted_context=code or "")
+        if safe and not all_passed and hint_evidence.echoes_student_comment(sanitized_hint, code or "", (exercise or {}).get("starter_code", "") or ""):
+            # Chú thích của người học là dữ liệu không tin cậy (có thể chứa lệnh chèn): không chép lại vào gợi ý.
+            safe, reason = False, "comment_echo"
+            if hint_level == 3:
+                fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level,
+                                                        adaptive_strategy=adaptive_strategy, attempt_history=attempt_history, trace=trace)
+                return fallback, "Pedagogical-Rule-Engine (Output Guard Fallback)", {
+                    "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                    "model_name": model_name, **usage, "input_guard": "allowed",
+                    "output_guard": reason, "status": "blocked_fallback"}
         if not safe and hint_level in (1, 2) and not all_passed:
             fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level,
                                                     adaptive_strategy=adaptive_strategy, attempt_history=attempt_history,

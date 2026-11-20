@@ -413,3 +413,31 @@ def trace_table(code: str, sample_input: str, starter: str = "") -> str:
     rows = [f"| {label} | " + " | ".join(" " for _ in names) + " |   |" for label in ("Sau khi đọc dữ liệu", "Sau lần lặp/bước 1", "Sau lần lặp/bước 2", "Kết quả cuối")]
     return (f"Chạy tay với đầu vào `{inline_value(sample_input)}`: tự điền từng ô theo thứ tự chương trình thực hiện, rồi so với kết quả kiểm thử.\n\n"
             + "\n".join([header, sep] + rows))
+
+
+# ----------------------------------------------------------------------------------------------
+# Chống chép lại chú thích của người học (dữ liệu không tin cậy, có thể chứa lệnh chèn)
+# ----------------------------------------------------------------------------------------------
+def _word_ngrams(text: str, n: int = 4) -> set:
+    toks = re.findall(r"\w+", (text or "").lower())
+    return {tuple(toks[i:i + n]) for i in range(len(toks) - n + 1)}
+
+
+def student_comment_texts(code: str, starter: str = "") -> list[str]:
+    """Chú thích `# ...` và chuỗi nhiều dòng của người học, trừ những gì đã có sẵn trong khung mẫu của bài."""
+    def extract(src: str) -> list[str]:
+        out = []
+        for raw in (src or "").splitlines():
+            tail = raw[len(strip_comment(raw)):].lstrip("# ").strip()
+            if tail:
+                out.append(tail)
+        out += [m.strip() for m in re.findall(r'(?:"""|\'\'\')(.*?)(?:"""|\'\'\')', src or "", flags=re.DOTALL) if m.strip()]
+        return out
+    known = set(extract(starter))
+    return [c for c in extract(code) if c not in known]
+
+
+def echoes_student_comment(reply: str, code: str, starter: str = "", n: int = 4) -> bool:
+    """True nếu phản hồi chép lại n từ liên tiếp trở lên của một chú thích do người học viết."""
+    grams = _word_ngrams(reply, n)
+    return any(_word_ngrams(c, n) & grams for c in student_comment_texts(code, starter))
