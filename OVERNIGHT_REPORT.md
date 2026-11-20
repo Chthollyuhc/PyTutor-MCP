@@ -64,7 +64,7 @@ Bộ đếm `evaluation/v510_gemini_calls.json`: 275 lượt do `evaluate_hint_l
 
 ## 5. Tài liệu đã cập nhật, chỗ cần mắt người
 - Đã cập nhật: `PLAN.md` (dòng v5.10), `AI_HANDOFF_CONTEXT.md` §22, `CLAUDE.md` §11, `docs/THESIS_CHAPTER3_DRAFT.md` (3.2.2, 3.4.2, 3.4.3), `docs/THESIS_CHAPTER4_DRAFT.md` (mục 4.5.7), `docs/THESIS_OUTLINE_AND_DEFENSE.md` (Phần 6: kịch bản demo 3 mức và 8 câu phản biện, có câu "Gợi ý sâu hơn có làm sinh viên ỷ lại không?").
-- **`docs/REPORT_UPDATES_V510.md`**: từng chỗ cần đổi trong `bao_cao_final.docx` (số mục, câu để Ctrl+F, đoạn thay thế). Chèn hay không là quyết định của anh (báo cáo đã qua Turnitin 19/11). Phát hiện không khớp mã: báo cáo ghi lời nhắc gợi ý dùng mẫu Jinja2 (chỉ chat dùng); "156 ca / tám mô-đun" thành 209 / mười hai; hai ngày chạy khác nhau (18/11 và 19/11) ở Bảng 4.3.
+- **`docs/REPORT_UPDATES_V510.md`**: từng chỗ cần đổi trong `bao_cao_final.docx` (số mục, câu để Ctrl+F, đoạn thay thế). Chèn hay không là quyết định của anh (báo cáo đã qua Turnitin 19/11). Phát hiện không khớp mã: báo cáo ghi lời nhắc gợi ý dùng mẫu Jinja2 (chỉ chat dùng); "156 ca / tám mô-đun" thành 211 / mười ba; hai ngày chạy khác nhau (18/11 và 19/11) ở Bảng 4.3.
 - Cần mắt người: các điểm 0–5 đề xuất (cần anh hoặc người chấm độc lập chấm), nguyên văn ca xấu (H01, H06, D03 Mức 1/3) và đoạn "Điều không cải thiện" trong 4.5.7.
 
 ## 6. Cần anh quyết định
