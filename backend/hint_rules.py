@@ -168,6 +168,8 @@ def _level2_question(ev: dict) -> str:
         return f"Với đầu vào `{inp}`, lệnh in này chạy mấy lần, còn đề bài yêu cầu in mấy lần và trên mấy dòng?"
     if basis == "echo_output":
         return "Giữa lúc đọc dữ liệu và lúc in ra, chương trình đã thực hiện bước biến đổi nào mà đề yêu cầu?"
+    if basis == "no_input":
+        return "Dữ liệu mà đề bài đưa vào chương trình ở mỗi lần chạy đi vào chương trình bằng cách nào?"
     if basis == "output_variable":
         exp = he.inline_value(failure.get("expected_output", ""))
         return (f"Với đầu vào `{inp}`, giá trị của `{sus.variable}` sau mỗi lần dòng này chạy là gì, "

@@ -97,6 +97,7 @@ def score_reply(rec: dict, sc: dict, profile: dict, exercise: dict) -> dict:
     c: dict = {}
     c["do_dai"] = hq.check_length(reply, level, passed=(expect == "PASS"))
     c["khong_nhan_xet_nang_luc"] = hq.check_no_ability_remark(reply)
+    c["khong_chep_lai_chu_thich"] = hq.check_no_comment_echo(reply, code, starter)
     c["khung_muc_tieu_bang_chung_buoc"] = hq.check_frame(reply)
     c["dung_mot_buoc_ke_tiep"] = hq.check_single_next_step(reply)
     err_text = " ".join(f"{t.get('error_message') or ''} {t.get('stderr') or ''}" for t in hq.first_failures(tr))
@@ -223,6 +224,7 @@ def main() -> int:
     ap.add_argument("--offline", action="store_true")
     ap.add_argument("--real", action="store_true")
     ap.add_argument("--holdout", action="store_true")
+    ap.add_argument("--redteam", action="store_true", help="Tập tấn công (thuộc tập phát triển): evaluation/hint_scenarios_redteam.json")
     ap.add_argument("--quiet", action="store_true", help="Chỉ lưu tệp, không in nguyên văn phản hồi")
     ap.add_argument("--tag", required=False, default="adhoc")
     ap.add_argument("--delay", type=float, default=1.5)
@@ -237,12 +239,13 @@ def main() -> int:
 
     from mcp_server.exercises_data import EXERCISES
     exercises = {e["id"]: e for e in EXERCISES}
-    sc_file = EVAL / ("hint_scenarios_holdout.json" if args.holdout else "hint_scenarios.json")
+    sc_file = EVAL / ("hint_scenarios_holdout.json" if args.holdout else "hint_scenarios_redteam.json" if args.redteam else "hint_scenarios.json")
 
     if args.rescore:
         path = ROOT / args.rescore
         out = json.loads(path.read_text(encoding="utf-8"))
-        corpus = json.loads((EVAL / ("hint_scenarios_holdout.json" if out["meta"]["set"] == "holdout" else "hint_scenarios.json")).read_text(encoding="utf-8"))
+        set_file = {"holdout": "hint_scenarios_holdout.json", "redteam": "hint_scenarios_redteam.json"}.get(out["meta"]["set"], "hint_scenarios.json")
+        corpus = json.loads((EVAL / set_file).read_text(encoding="utf-8"))
         scs = {s["id"]: s for s in corpus["scenarios"]}
         score_all(out["results"], corpus["exercise_profiles"], exercises, scs)
         out["summary"] = summarize(out["results"])
@@ -397,7 +400,7 @@ def main() -> int:
     hash_after = sha256(real_db)
     gem_ok = sum(1 for r in ok_results if str(r.get("llm_source", "")).startswith("Google"))
     out = {
-        "meta": {"tag": args.tag, "mode": "real" if args.real else "offline", "set": "holdout" if args.holdout else "dev",
+        "meta": {"tag": args.tag, "mode": "real" if args.real else "offline", "set": "holdout" if args.holdout else "redteam" if args.redteam else "dev",
                  "started": started, "finished": datetime.now().isoformat(timespec="seconds"), "git_head": git_head(),
                  "model_configured": llm_service.PRIMARY_MODEL if args.real else None, "scenarios": len(scenarios),
                  "replies": len(ok_results), "gemini_calls_this_run": state["used"], "gemini_success_replies": gem_ok,

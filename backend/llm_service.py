@@ -601,6 +601,8 @@ async def generate_tutor_hint(
     # 1. Ưu tiên hàng đầu: Gọi Google Gemini AI
     started = asyncio.get_running_loop().time()
     gemini_res, usage = await call_gemini_with_usage(prompt)
+    if gemini_res and len((gemini_res[0] or "").strip()) < 20:
+        gemini_res = None  # phản hồi rỗng/quá ngắn không được phép tới tay người học: coi như nhà cung cấp không trả lời
     if gemini_res:
         raw_hint, model_name = gemini_res
         sanitized_hint = sanitize_spoil_code(
@@ -629,7 +631,7 @@ async def generate_tutor_hint(
 
     # 2. Dự phòng: Thử Qwen2.5-14B (nếu server trường mở)
     qwen_response = await call_qwen_api(prompt, timeout_seconds=15.0)
-    if qwen_response and len(qwen_response) > 20:
+    if qwen_response and len(qwen_response.strip()) > 20:
         sanitized_hint = sanitize_spoil_code(
             response_text=qwen_response,
             hint_level=hint_level,

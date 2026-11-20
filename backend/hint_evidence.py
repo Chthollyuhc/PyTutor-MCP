@@ -106,11 +106,13 @@ class CodeFacts:
         self.prints: list[tuple[int, int, bool, list[str]]] = []  # (dòng, độ sâu, trong vòng lặp, tên biến in)
         self.assigned_names: list[str] = []
         self.valid = True
+        self.reads_input = False
         try:
             tree = ast.parse(code or "")
         except SyntaxError:
             self.valid = False
             return
+        self.reads_input = any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "input" for n in ast.walk(tree))
         self._walk(tree.body, 0, False)
 
     def text(self, lineno: int) -> str:
@@ -212,7 +214,18 @@ def suspect_line(code: str, failure: Optional[dict], expect_kind: str, ast_analy
         return Suspect(loop.lineno, facts.text(loop.lineno), "loop_control", "đây là dòng điều khiển vòng lặp") if loop else None
 
     # wrong_output
-    counts = {int(k): v for k, v in ((trace or {}).get("line_counts") or {}).items()}
+    if not facts.reads_input and (failure.get("input") or "").strip() and facts.lines:
+        first = next((i for i, ln in enumerate(facts.lines, 1) if facts.text(i)), None)
+        if first:
+            return Suspect(first, facts.text(first), "no_input",
+                           "chương trình không có lệnh `input()` nào để đọc dữ liệu, trong khi kiểm thử cung cấp đầu vào; "
+                           "đây là dòng lệnh đầu tiên của chương trình")
+    counts: dict[int, int] = {}
+    for k, v in ((trace or {}).get("line_counts") or {}).items():  # vết hỏng/không đúng dạng thì bỏ qua từng mục
+        try:
+            counts[int(k)] = int(v)
+        except (TypeError, ValueError):
+            continue
     if counts:
         for b in sorted(facts.blocks, key=lambda x: x.lineno):
             if counts.get(b.lineno, 0) > 0 and b.body_lines and all(counts.get(ln, 0) == 0 for ln in b.body_lines):
@@ -305,6 +318,11 @@ def concept_for(kind: str, failure: Optional[dict], suspect: Optional[Suspect], 
                 "probe": "Viết ra giấy giá trị của các biến điều khiển qua ba lần lặp đầu rồi xem điều kiện có tiến tới sai không.",
                 "example": "`while k < 3:` chỉ dừng nếu `k` tăng sau mỗi lần lặp"}
     basis = suspect.basis if suspect else ""
+    if basis == "no_input":
+        return {"name": "Đọc dữ liệu đầu vào",
+                "explain": "Mỗi lần chấm, dữ liệu được đưa vào chương trình qua `input()`; một chương trình không đọc dữ liệu thì cho cùng một kết quả với mọi đầu vào.",
+                "question": "Dữ liệu mà đề bài đưa vào chương trình ở mỗi lần chạy đi vào bằng cách nào?",
+                "probe": generic_probe, "example": "`x = input()` đọc một dòng thành chuỗi"}
     if basis == "block_not_run":
         header = (suspect.text if suspect else "")
         if "range(" in header:
