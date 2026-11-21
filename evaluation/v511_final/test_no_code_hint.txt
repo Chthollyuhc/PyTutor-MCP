@@ -1,0 +1,17 @@
+﻿py : test_blank_detection (test_no_code_hint.NoCodeTests.test_blank_detection) ... ok
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
++   else { Invoke-Isolated $m { py -m unittest $m -v } }
++                               ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_blank_dete...tection) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_default_unchanged (test_no_code_hint.NoCodeTests.test_default_unchanged) ... ok
+test_offline_replies (test_no_code_hint.NoCodeTests.test_offline_replies) ... ok
+test_passed_wins_over_no_code (test_no_code_hint.NoCodeTests.test_passed_wins_over_no_code) ... ok
+test_strategy_ignores_failed_tests_and_keeps_level 
+(test_no_code_hint.NoCodeTests.test_strategy_ignores_failed_tests_and_keeps_level) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK

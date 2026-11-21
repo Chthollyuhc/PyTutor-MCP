@@ -1,0 +1,43 @@
+﻿py : 2026-11-21 07:36:23,690 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
++ ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 07:3...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 07:36:25,334 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 07:36:30,524 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/pythonic-review "HTTP/1.1 200 OK"
+2026-11-21 07:36:30,536 [INFO] httpx2: HTTP Request: GET http://testserver/api/leaderboard?limit=10 "HTTP/1.1 200 OK"
+2026-11-21 07:36:30,545 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/achievements "HTTP/1.1 200 OK"
+2026-11-21 07:36:35,272 [INFO] httpx2: HTTP Request: POST http://testserver/api/submit "HTTP/1.1 200 OK"
+===========================================================================
+🧪 [PHASE 10] BẮT ĐẦU KIỂM THỬ GAMIFICATION & PYTHONIC CODE REVIEW
+===========================================================================
+
+[1] Kiểm tra Thuật toán Đánh giá Sao Tự Làm (Autonomy Stars)...
+    ✅ PASS: Thuật toán tính sao tự làm đạt chuẩn 100% (0, 1, 2, 3 sao).
+
+[2] Kiểm tra không cấp huy hiệu mới và vẫn ghi nhận sao tự làm...
+    ✅ PASS: Sao được ghi nhận; không có huy hiệu mới được cấp.
+
+[3] Kiểm tra POST /api/tutor/pythonic-review (Senior Python Reviewer)...
+    ✅ PASS: Clean Code Score: 85/100 | Pythonic Code:
+    n = int(input())
+tong = 0
+for i in range(1, n + 1):
+    tong += i
+print(tong)
+
+[4] Kiểm tra GET /api/leaderboard (Bảng Vàng Lớp Học)...
+    ✅ PASS: Quán quân hiện tại: gamer_1795221385 (gamer_1795221385) - 9 ⭐
+
+[5] Kiểm tra GET /api/student/achievements (Hồ sơ Thành tích)...
+    ✅ PASS: Học viên gamer_1795221385 đạt 9 ⭐; không có huy hiệu mới.
+
+[6] Kiểm tra POST /api/submit tích hợp tính sao tự động khi giải đúng...
+    ✅ PASS: Nộp bài đúng 100% tự động nhận được 3 ⭐.
+
+===========================================================================
+🎉 TẤT CẢ 6 BÀI KIỂM THỬ TỰ ĐỘNG CỦA PHASE 10 ĐỀU ĐẠT 100% (ALL PASSED)!
+===========================================================================

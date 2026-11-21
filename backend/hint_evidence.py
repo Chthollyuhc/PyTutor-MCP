@@ -396,7 +396,13 @@ def build_outline(exercise: dict, ast_analysis: Optional[dict] = None) -> list[s
     else:
         how = "xác định đối tượng cần duyệt hoặc điều kiện cần xét, rồi cập nhật kết quả cho từng phần tử"
     step3 = f"Xử lý chính của «{goal}»: {how}; ghi vào chú thích bạn định dùng cấu trúc nào."
-    step4 = "In kết quả" + (f" theo mô tả của đề: {out}" if out else " đúng định dạng đề yêu cầu") + " bằng `print()`."
+    # Bám bộ kiểm thử của giảng viên: các trường hợp mà kiểm thử nhắc tới (mô tả đã hiển thị cho sinh viên) cần được bao phủ.
+    from backend.exercise_brief import notable_cases
+    cases = [d if len(d) <= 42 else d[:42].rsplit(" ", 1)[0] + "…" for d in notable_cases(exercise, 2)
+             if re.search(r"[A-Za-zÀ-ỹ]{3}", d)]
+    if cases:
+        step3 = step3.replace("; ghi vào chú thích bạn định dùng cấu trúc nào.", ".") + " Kiểm thử của giảng viên có: " + "; ".join(cases) + "."
+    step4 ="In kết quả" + (f" theo mô tả của đề: {out}" if out else " đúng định dạng đề yêu cầu") + " bằng `print()`."
     return [step1, step2, step3, step4]
 
 

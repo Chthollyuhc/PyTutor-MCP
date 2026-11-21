@@ -403,3 +403,22 @@ def check_no_comment_echo(reply: str, code: str, starter: str = "", n: int = 4) 
         return None
     reply_grams = ngram_set(reply, n)
     return not any(ngram_set(c, n) & reply_grams for c in comments)
+
+
+# ----------------------------------------------------------------------------------------------
+# Gợi ý bám đề bài và bộ kiểm thử của giảng viên (v5.11)
+# ----------------------------------------------------------------------------------------------
+_BRIEF_STOP = {"một", "dòng", "duy", "nhất", "chứa", "theo", "trong", "của", "các", "những", "cách", "biết", "sử", "dụng", "với", "để",
+               "được", "không", "hoặc", "kết", "quả", "bài", "đầu", "vào", "dữ", "liệu", "xử", "lý", "python"}
+
+
+def check_uses_exercise_brief(reply: str, exercise: dict, min_terms: int = 3) -> Optional[bool]:
+    """Phản hồi nhắc tới ít nhất `min_terms` thuật ngữ riêng của đề (mục tiêu học tập, đầu vào, đầu ra do giảng viên viết).
+    None nếu đề không có các mục đó. Dùng cho ca chưa biết bắt đầu từ đâu."""
+    from backend.exercise_brief import parse_description, safe_objective
+    info = parse_description((exercise or {}).get("description"))
+    source = " ".join([safe_objective(o) for o in info["objectives"]] + info["inputs"] + info["outputs"])
+    terms = {w for w in (x.lower() for x in words(source)) if len(w) >= 3 and not w.isdigit()} - _BRIEF_STOP
+    if not terms:
+        return None
+    return len(terms & {w.lower() for w in words(reply)}) >= min_terms

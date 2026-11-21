@@ -20,7 +20,7 @@ from backend.prompt_templates import (
 from backend.rag.retriever import retrieve_knowledge
 from backend.guardrails import check_student_output, enforce_level3_skeleton
 from backend.adaptive_policy import ADAPTATION_INSTRUCTIONS
-from backend import hint_evidence, hint_rules
+from backend import exercise_brief, hint_evidence, hint_rules
 from backend.hint_rules import (
     adaptation as _adaptation, build_offline_hint, level3_progress_note as _level3_progress_note,
     model_notes as _model_notes, next_step_line as _next_step_line,
@@ -200,6 +200,31 @@ def _learner_section(strategy: dict, hint_level: int) -> str:
     return section
 
 
+_BRIEF_LEVEL_HINT = {
+    1: "Mức 1: chỉ dùng mục tiêu học tập và nhóm kiểm thử để chọn khái niệm; KHÔNG nêu giá trị đầu vào/đầu ra của bất kỳ kiểm thử hay ví dụ nào.",
+    2: "Mức 2: dùng mô tả kiểm thử để nói bài kiểm tra những trường hợp nào, và để chọn đúng bằng chứng.",
+    3: "Mức 3: dàn ý và khung mã phải bao phủ các trường hợp mà kiểm thử của giảng viên nhắc tới.",
+}
+
+
+def _brief_section(exercise: dict, hint_level: int, no_code: bool, all_passed: bool) -> str:
+    """Đề bài có cấu trúc và bộ kiểm thử của giảng viên (mục tiêu, đầu vào/ra, nhóm kiểm thử) để gợi ý bám sát ý đồ của bài."""
+    if all_passed:
+        return ""
+    brief = exercise_brief.brief_text(exercise, hint_level, no_code)
+    if not brief:
+        return ""
+    text = f"""
+[ĐỀ BÀI & KIỂM THỬ CỦA GIẢNG VIÊN - dùng để bám sát ý đồ của bài]
+{brief}
+* Chỉ dẫn: gợi ý phải bám vào mục tiêu học tập, đầu vào/đầu ra và các nhóm kiểm thử do giảng viên đặt ra. {_BRIEF_LEVEL_HINT.get(hint_level, _BRIEF_LEVEL_HINT[3])}
+"""
+    if no_code:
+        text += ("* Sinh viên chưa biết bắt đầu từ đâu: hướng dẫn cách đọc đề theo thứ tự mục tiêu học tập → đầu vào → đầu ra → "
+                 "(Mức 2 trở lên) ví dụ trong đề → bước đầu tiên nên làm; dùng đúng nội dung đề, không đưa lời giải.\n")
+    return text
+
+
 def _level_instruction(hint_level: int, all_passed: bool) -> str:
     if all_passed:
         return _LEVEL_PASSED
@@ -286,6 +311,7 @@ def build_scaffolding_prompt(
     strategy_section = _strategy_section(strategy, hint_level)
     learner_section = _learner_section(strategy, hint_level)
     no_code = any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", []))
+    brief_section = _brief_section(exercise, hint_level, any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])), all_passed)
     evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed, no_code)
     formative_section = _FORMATIVE_SECTION
     level_instruction = _level_instruction(hint_level, all_passed)
@@ -316,7 +342,7 @@ Tên bài: {title}
 
 [KẾT QUẢ PHÂN TÍCH CẤU TRÚC CÚ PHÁP TỪ MCP AST]:
 - {ast_summary}
-{history_section}{student_model_section}{strategy_section}{learner_section}{evidence_section}{formative_section}
+{brief_section}{history_section}{student_model_section}{strategy_section}{learner_section}{evidence_section}{formative_section}
 {level_instruction}
 
 [QUY TẮC BẮT BUỘC]:
@@ -381,38 +407,74 @@ def build_pass_feedback(exercise: dict, test_results: dict, ast_analysis: Option
     return "\n\n".join(lines)
 
 
-def _no_code_reply(exercise: dict, test_results: dict, hint_level: int, adaptive_strategy: Optional[dict]) -> str:
-    """Gợi ý Mức 1/2 khi sinh viên chưa viết code: giúp hiểu đề, không nói về test thất bại.
+def _short(text: str, limit: int = 110) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0].rstrip(",;: ") + "…"
 
-    Mức 1 nói về khái niệm "đầu vào → xử lý → đầu ra" và đặt MỘT câu hỏi; Mức 2 đưa một ví dụ lấy từ đề (đầu vào nhỏ nhất)
-    và yêu cầu tự viết ra các thao tác. Hai mức khác nhau về nội dung, không chỉ về số câu hỏi.
+
+def _no_code_reply(exercise: dict, test_results: dict, hint_level: int, adaptive_strategy: Optional[dict]) -> str:
+    """Gợi ý Mức 1/2 khi sinh viên chưa viết code ("chưa biết bắt đầu từ đâu"): đọc đề và bộ kiểm thử của giảng viên.
+
+    Mức 1: nêu mục tiêu học tập, đầu vào/đầu ra theo đề và nhóm kiểm thử, rồi MỘT câu hỏi; không nêu giá trị nào.
+    Mức 2: lấy ví dụ trong đề (kèm lời giải thích của đề nếu có) và yêu cầu tự viết các thao tác. Hai mức khác nhau về nội dung.
+    Đề không theo mẫu thì rơi về lời hướng dẫn chung (đầu vào → xử lý → đầu ra).
     """
     title = exercise.get("title", "Bài tập")
     goal = hint_evidence.exercise_goal(exercise)
+    info = exercise_brief.parse_description(exercise.get("description"))
+    tests = exercise_brief.test_overview(exercise)
     candidates = [r for r in test_results.get("results", []) if (r.get("expected_output") or "").strip()]
     example = min(candidates, key=lambda r: len((r.get("input") or "").strip()), default=None)
     where = f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào, bắt đầu từ việc hiểu đề là hợp lý."
-    evidence = ("🔎 **Bằng chứng:** chưa có dòng code nào nên chưa có kết quả kiểm thử nào để phân tích; "
-                "gợi ý lúc này chỉ dựa vào đề bài.")
+    evidence = "🔎 **Bằng chứng:** chưa có code nên chưa có kết quả kiểm thử; gợi ý dựa vào đề bài và bộ kiểm thử."
     if hint_level == 1:
         head = "💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**"
-        middle = ("📖 **Khái niệm cần xem lại — đầu vào, xử lý, đầu ra:** một chương trình Python thường đọc dữ liệu bằng `input()`, "
-                  "xử lý, rồi in kết quả bằng `print()`; trước khi viết lệnh hãy xác định dữ liệu vào, kết quả ra "
-                  "và quy tắc biến dữ liệu vào thành kết quả ra.\n\n"
-                  f"❓ **Câu hỏi để bắt đầu:** theo đề «{goal}», dữ liệu vào là gì và kết quả ra là gì? Thử nói bằng lời với một ví dụ nhỏ.")
-        step = ("ghi ra giấy ba ý trên bằng lời của bạn, rồi viết dòng đầu tiên đọc dữ liệu bằng `input()` và bấm Chạy thử. "
+        lines = []
+        if info["objectives"]:
+            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(exercise_brief.safe_objective(info['objectives'][0]), 100)}")
+        if info["inputs"] or info["outputs"]:
+            io = []
+            if info["inputs"]:
+                io.append(f"dữ liệu vào là {_short(info['inputs'][0][:1].lower() + info['inputs'][0][1:], 70).rstrip(" .")}")
+            if info["outputs"]:
+                io.append(f"kết quả ra là {_short(info['outputs'][0][:1].lower() + info['outputs'][0][1:], 70).rstrip(" .")}")
+            lines.append("📖 **Cách đọc đề:** " + "; ".join(io) + ".")
+        else:
+            lines.append("📖 **Khái niệm cần xem lại — đầu vào, xử lý, đầu ra:** một chương trình Python thường đọc dữ liệu bằng `input()`, "
+                         "xử lý, rồi in kết quả bằng `print()`; trước khi viết lệnh hãy xác định dữ liệu vào, kết quả ra "
+                         "và quy tắc biến dữ liệu vào thành kết quả ra.")
+        if tests["categories"]:
+            lines.append(f"🧪 **Giảng viên kiểm thử:** {tests['count']} kiểm thử, gồm các nhóm: {', '.join(tests['categories'][:3])}.")
+        lines.append(f"❓ **Câu hỏi để bắt đầu:** theo đề «{goal}», dữ liệu vào và kết quả ra là gì? "
+                     "Thử nói bằng lời với một ví dụ nhỏ.")
+        middle = "\n\n".join(lines)
+        step = ("ghi ra giấy ba ý trên, rồi viết dòng đầu tiên đọc dữ liệu bằng `input()` và bấm Chạy thử. "
                 "Cần ví dụ cụ thể từ đề thì xin gợi ý Mức 2.")
     else:
         head = "🔍 **[MỨC 2: HIỂU ĐỀ & XÁC ĐỊNH ĐẦU VÀO/ĐẦU RA]**"
-        sample = ""
-        if example:
-            sample = (f"🔎 **Một ví dụ từ đề:** với đầu vào `{(example.get('input') or '').strip() or '(không có)'}` "
-                      f"chương trình cần in `{(example.get('expected_output') or '').strip()}`.\n\n")
-        middle = (f"{sample}❓ **Câu hỏi để bắt đầu:** từ ví dụ trên, hãy tự viết ra từng thao tác bạn sẽ làm bằng tay "
-                  "để đi từ đầu vào tới kết quả, theo đúng thứ tự.")
+        ex = info["examples"][0] if info["examples"] else None
+        lines = []
+        if info["objectives"]:
+            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(exercise_brief.safe_objective(info['objectives'][0]), 100)}")
+        if ex:
+            lines.append(f"🔎 **Ví dụ trong đề:** với đầu vào `{ex['input']}` đề cho đầu ra `{ex['output']}`"
+                         + (f" ({_short(ex['explain'], 80)})." if ex["explain"] else "."))
+        elif example:
+            lines.append(f"🔎 **Một ví dụ từ đề:** với đầu vào `{(example.get('input') or '').strip() or '(không có)'}` "
+                         f"chương trình cần in `{(example.get('expected_output') or '').strip()}`.")
+        if tests["count"]:
+            lines.append(f"🧪 **Bộ kiểm thử của giảng viên:** {tests['count']} kiểm thử"
+                         + (f", gồm các nhóm: {', '.join(tests['categories'])}." if tests["categories"] else "."))
+        lines.append("❓ **Câu hỏi để bắt đầu:** từ ví dụ trên, hãy tự viết ra từng thao tác bạn sẽ làm bằng tay "
+                     "để đi từ đầu vào tới kết quả, theo đúng thứ tự.")
+        middle = "\n\n".join(lines)
         step = ("chuyển thao tác đầu tiên bạn vừa viết thành một dòng lệnh (ví dụ dòng đọc dữ liệu bằng `input()`) và bấm Chạy thử. "
                 "Cần dàn ý chi tiết hơn thì xin gợi ý Mức 3.")
-    return f"{head}\n\n{where}\n\n{evidence}\n\n{middle}\n\n{_next_step_line(step, adaptive_strategy)}"
+    if hint_level != 1:  # Mức 2 đã có bằng chứng riêng (ví dụ trong đề); tránh lặp lại nguyên văn câu của Mức 1
+        where = f"🎯 **Đang ở đâu:** bài **{title}**; bạn chưa viết dòng code nào."
+        evidence = ""
+    body = "\n\n".join(x for x in (where, evidence, middle) if x)
+    return f"{head}\n\n{body}\n\n{_next_step_line(step, adaptive_strategy)}"
 
 
 def generate_rule_based_fallback(

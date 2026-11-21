@@ -68,6 +68,15 @@ def _examples(lines: list[str]) -> list[dict]:
     return rows
 
 
+def safe_objective(text: str) -> str:
+    """Mục tiêu học tập đã bỏ phần trong ngoặc và đoạn trông như mã (ví dụ `[::-1]`, `+=`): giảng viên có thể ghi cả kỹ thuật
+    giải trong mục tiêu, nhưng gợi ý không được nhắc lại biểu thức đó."""
+    t = re.sub(r"\s\([^)]*\)", "", text or "")       # phần chú thích trong ngoặc (có dấu cách trước), vd "(+=)", "(n ≤ 1)"
+    t = re.sub(r"\S*[\[\]:+=<>]\S*", "", t)          # đoạn có ký tự của biểu thức
+    t = re.sub(r"\S*\.\w+\(\S*\)", "", t)            # lời gọi phương thức, vd ".lower()"
+    return re.sub(r"\s+", " ", t).strip(" .;,") + ("." if t.strip() else "")
+
+
 def parse_description(description: Optional[str]) -> dict:
     """{summary, inputs, outputs, examples, objectives}; trường nào không có thì rỗng."""
     sec = _sections(description or "")
@@ -97,13 +106,23 @@ def test_overview(exercise: Optional[dict]) -> dict:
     return {"count": len(cases), "descriptions": [d for d in descs if d], "categories": cats}
 
 
+def notable_cases(exercise: Optional[dict], limit: int = 2) -> list[str]:
+    """Mô tả kiểm thử đáng chú ý trước (biên, đặc biệt, số âm, lớn, rỗng, hoa/thường), rồi tới các kiểm thử còn lại."""
+    descs = test_overview(exercise)["descriptions"]
+    def notable(d: str) -> bool:
+        return any(re.search(p, d, flags=re.IGNORECASE) for _, p in _CATEGORY_RULES)
+    ordered = [d for d in descs if notable(d)] + [d for d in descs if not notable(d)]
+    return ordered[:limit]
+
+
 def brief_text(exercise: Optional[dict], hint_level: int, no_code: bool = False) -> str:
     """Khối văn bản đưa vào lời nhắc, theo giới hạn của từng mức. Rỗng nếu đề không có gì để tóm tắt."""
     info = parse_description((exercise or {}).get("description"))
     tests = test_overview(exercise)
     lines = []
     if info["objectives"]:
-        lines.append("- Mục tiêu học tập (giảng viên nêu trong đề): " + "; ".join(info["objectives"]))
+        lines.append("- Mục tiêu học tập (giảng viên nêu trong đề, đã bỏ chi tiết kỹ thuật giải): "
+                     + " ".join(safe_objective(o) for o in info["objectives"]))
     if info["inputs"]:
         lines.append("- Đầu vào theo đề: " + "; ".join(info["inputs"]))
     if info["outputs"]:
@@ -114,7 +133,7 @@ def brief_text(exercise: Optional[dict], hint_level: int, no_code: bool = False)
         if hint_level >= 2 and tests["descriptions"]:
             lines.append("- Mô tả từng kiểm thử (sinh viên cũng thấy trong giao diện): "
                          + "; ".join(f"#{i}: {d}" for i, d in enumerate(tests["descriptions"], 1)))
-    if no_code and info["examples"]:
+    if no_code and hint_level >= 2 and info["examples"]:  # Mức 1 không nêu giá trị, kể cả ví dụ của đề
         ex = info["examples"][0]
         lines.append(f"- Ví dụ trong đề: đầu vào `{ex['input']}` → đầu ra `{ex['output']}`"
                      + (f" ({ex['explain']})" if ex["explain"] else ""))

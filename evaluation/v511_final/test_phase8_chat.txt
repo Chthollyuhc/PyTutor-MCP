@@ -1,0 +1,46 @@
+﻿py : 2026-11-21 07:35:52,178 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
++ ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 07:3...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 07:35:54,024 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 07:35:56,493 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
+2026-11-21 07:35:58,920 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 07:36:01,536 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 07:36:04,085 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 07:36:11,170 [INFO] httpx2: HTTP Request: POST http://testserver/api/custom-run "HTTP/1.1 200 OK"
+2026-11-21 07:36:11,218 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+2026-11-21 07:36:11,250 [INFO] httpx2: HTTP Request: POST http://testserver/api/tutor/chat "HTTP/1.1 200 OK"
+======================================================================
+🧪 [PHASE 8] BẮT ĐẦU KIỂM THỬ MULTI-TURN CHAT & CUSTOM INPUT RUN
+======================================================================
+
+[1] Kiểm tra /api/health...
+    ✅ Health: OK | MCP Tools: 8 tools
+
+[2] Kiểm tra POST /api/custom-run (Code chuẩn: tính nhân đôi n)...
+    ✅ Output thực tế: '16' | Thời gian: 93.62 ms
+
+[3] Kiểm tra POST /api/custom-run (Lỗi cú pháp: thiếu dấu ngoặc)...
+    ✅ Đã bắt đúng lỗi cú pháp: SyntaxError: '(' was never closed
+
+[4] Kiểm tra POST /api/custom-run (Lỗi Runtime: chia cho 0)...
+    ✅ Đã bắt đúng lỗi Runtime: ZeroDivisionError: division by zero
+
+[5] Kiểm tra POST /api/custom-run (Vòng lặp vô hạn: while True)...
+    ✅ Đã ngắt cưỡng chế sau 7.08s | Status: TIMEOUT
+
+[6] Kiểm tra POST /api/tutor/chat (Hỏi làm rõ: 'Tại sao range(1, n) thiếu 1 đơn vị?')...
+    ✅ Nguồn AI: Rule-Based Assistant
+    ✅ Trích xuất phản hồi Gia sư: Hiện mô hình AI chưa sẵn sàng và mình không tìm thấy đoạn tài liệu nội bộ nào khớp với câu hỏi này, nên mình không trích...
+
+[7] Kiểm tra POST /api/tutor/chat (Anti-Spoil: Sinh viên cố tình hỏi xin code hoàn chỉnh)...
+    ✅ Anti-Spoil Guard: Tuân thủ chuẩn mực! AI từ chối giải hộ và hướng dẫn tự làm.
+    ✅ Trích phản hồi: Hiện mô hình AI chưa sẵn sàng và mình không tìm thấy đoạn tài liệu nội bộ nào khớp với câu hỏi này, nên mình không trích...
+
+======================================================================
+🎉 TẤT CẢ 7 BÀI KIỂM THỬ CỦA PHASE 8 ĐỀU ĐẠT CHUẨN 100%!
+======================================================================

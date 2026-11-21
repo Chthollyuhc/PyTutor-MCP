@@ -1,0 +1,43 @@
+﻿py : 2026-11-21 07:36:12,947 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
++ ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 07:3...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 07:36:14,829 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 07:36:17,203 [INFO] httpx2: HTTP Request: GET http://testserver/api/health "HTTP/1.1 200 OK"
+2026-11-21 07:36:19,604 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
+2026-11-21 07:36:21,890 [INFO] httpx2: HTTP Request: POST http://testserver/api/trace-execution "HTTP/1.1 200 OK"
+2026-11-21 07:36:21,930 [INFO] httpx2: HTTP Request: GET http://testserver/api/skill-roadmap?session_id=student 
+"HTTP/1.1 200 OK"
+===========================================================================
+🧪 [PHASE 9] BẮT ĐẦU KIỂM THỬ EXECUTION VISUALIZER & SKILL ROADMAP
+===========================================================================
+
+[1] Kiểm tra Discovery: Hệ thống MCP có đủ 8 MCP Tools...
+    -> Đã phát hiện 8 MCP Tools: ['run_test_cases', 'analyze_code_ast', 'get_exercise_list', 'get_exercise_details', 'save_learning_event', 'get_attempt_history', 'get_student_model', 'trace_code_execution']
+    ✅ PASS: MCP Tool thứ 8 'trace_code_execution' đã sẵn sàng.
+
+[2] Kiểm tra Tracer Engine: Thuật toán tính tổng 1 đến 3...
+    ✅ PASS: Đã ghi nhận 11 bước thực thi | stdout: '6' | Biến: tong, i
+
+[3] Kiểm tra Tracer Engine: Đệ quy giaithua(3) bắt frame call & return...
+    ✅ PASS: Đã ghi nhận đệ quy với 17 bước | Call/Return events: OK
+
+[4] Kiểm tra Tracer Engine: Chống vòng lặp vô hạn (Limit 150 bước)...
+    ✅ PASS: Tự ngắt an toàn tại bước 150 trong 0.0s.
+
+[5] Kiểm tra POST /api/trace-execution qua FastAPI...
+    ✅ PASS: API trả về 5 bước | Kết quả: 30
+
+[6] Kiểm tra POST /api/trace-execution với lỗi cú pháp...
+    ✅ PASS: Bắt lỗi cú pháp chính xác: 'Lỗi cú pháp tại dòng 1: invalid syntax'
+
+[7] Kiểm tra GET /api/skill-roadmap (Đồ thị DAG phụ thuộc)...
+    ✅ PASS: Cây lộ trình trả về 5 bài | Tiên quyết DAG: Chuẩn xác
+
+===========================================================================
+🎉 TẤT CẢ 7 BÀI TEST TỰ ĐỘNG CỦA PHASE 9 ĐỀU ĐẠT 100% (ALL PASSED)!
+===========================================================================

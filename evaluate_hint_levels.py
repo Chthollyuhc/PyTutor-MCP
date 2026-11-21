@@ -126,6 +126,8 @@ def score_reply(rec: dict, sc: dict, profile: dict, exercise: dict) -> dict:
         c["m3_co_khung_todo"] = hq.check_l3_has_skeleton(reply) if expect != "PASS" else None
         c["m3_khung_khong_dat_het_test"] = hq.check_l3_skeleton_not_passing(reply, tests) if expect != "PASS" else None
         c["m3_khung_la_python_hop_le"] = hq.check_l3_skeleton_valid_python(reply) if expect != "PASS" else None
+    if expect == "BLANK":  # chưa biết bắt đầu từ đâu: gợi ý phải bám mục tiêu/đầu vào/đầu ra do giảng viên viết trong đề
+        c["bam_de_bai_cua_giang_vien"] = hq.check_uses_exercise_brief(reply, exercise)
     # Thông tin tính năng (không tính vào đạt/không đạt)
     info = {"words": len(hq.words(reply)), "leaks": leaks}
     if level == 2:

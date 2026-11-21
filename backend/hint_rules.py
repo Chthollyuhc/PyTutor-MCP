@@ -15,6 +15,7 @@ import ast
 import re
 from typing import Optional
 
+from backend import exercise_brief
 from backend import hint_evidence as he
 from backend.guardrails import enforce_level3_skeleton
 from backend.hint_evidence import CodeFacts
@@ -139,6 +140,8 @@ def _level1(ev: dict, adaptive_strategy: Optional[dict], repeats: int, extra: st
         step = ("viết ra giấy bảng giá trị của các biến sau mỗi bước cho đầu vào nhỏ nhất, rồi so với kết quả chương trình in ra "
                 "khi bấm Chạy thử.")
     else:
+        if ev.get("objective"):
+            parts.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {ev['objective']}")
         parts.append(f"📖 **Khái niệm cần xem lại — {c['name']}:** {c['explain']}")
         parts.append(f"❓ **Câu hỏi để tự kiểm:** {c['question']}")
         step = c["probe"][:1].lower() + c["probe"][1:]
@@ -325,6 +328,15 @@ def trace_note(code: str, trace: Optional[dict]) -> str:
 # ----------------------------------------------------------------------------------------------
 # Điểm vào
 # ----------------------------------------------------------------------------------------------
+def _objective(exercise: Optional[dict]) -> str:
+    """Mục tiêu học tập đầu tiên mà giảng viên nêu trong đề (rút gọn); rỗng nếu đề không có."""
+    objectives = exercise_brief.parse_description((exercise or {}).get("description"))["objectives"]
+    if not objectives:
+        return ""
+    text = exercise_brief.safe_objective(objectives[0])
+    return text if len(text) <= 120 else text[:120].rsplit(" ", 1)[0].rstrip(",;: ") + "…"
+
+
 def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analysis: Optional[dict], hint_level: int,
                        adaptive_strategy: Optional[dict] = None, attempt_history: Optional[list] = None,
                        trace: Optional[dict] = None) -> str:
@@ -341,6 +353,7 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
           "syntax_error": ast_analysis.get("syntax_error"),
           "progress": (f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào; đây là khung để bắt đầu." if no_code
                        else _progress_line(title, test_results, kind)),
+          "objective": _objective(exercise),
           "trace_note": trace_note(code, trace), "all_results": (test_results or {}).get("results", [])}
     repeats = repeat_count(attempt_history, hint_level)
 

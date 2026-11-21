@@ -42,6 +42,17 @@ class ParseTests(unittest.TestCase):
         self.assertNotIn("số âm", eb.test_overview(EX["ex_05_count_vowels"])["categories"])  # "nguyên âm" không phải số âm
         self.assertEqual(eb.test_overview({"test_cases": [{"description": "Test case #3"}]})["descriptions"], [])
 
+    def test_safe_objective_drops_solution_technique_details(self):
+        """Giảng viên có thể ghi cả kỹ thuật giải trong mục tiêu; gợi ý không được nhắc lại biểu thức đó."""
+        self.assertEqual(eb.safe_objective("Thao tác với chuỗi (duyệt ngược hoặc dùng slice [::-1])"), "Thao tác với chuỗi.")
+        self.assertEqual(eb.safe_objective("Biến tích lũy cộng dồn (+=)"), "Biến tích lũy cộng dồn.")
+        self.assertEqual(eb.safe_objective("Dùng phương thức .lower() để chuẩn hóa"), "Dùng phương thức để chuẩn hóa.")
+        self.assertEqual(eb.safe_objective("Biết dùng int(input()) để nhận dữ liệu"), "Biết dùng int(input()) để nhận dữ liệu.")
+        self.assertEqual(eb.safe_objective(""), "")
+        for ex in EXERCISES:
+            for o in eb.parse_description(ex["description"])["objectives"]:
+                self.assertNotRegex(eb.safe_objective(o), r"\[|\]|\+=|::|\.lower")
+
     def test_odd_exercises_do_not_raise(self):
         for odd in (None, {}, {"description": None}, {"description": "chỉ một câu"}, {"description": "### Ví dụ\n| a |\n", "test_cases": [{}]}):
             for level in (1, 2, 3):
@@ -72,9 +83,11 @@ class PromptTests(unittest.TestCase):
         self.assertIn("#3: Trường hợp biên", self.prompt(2))
 
     def test_blank_attempt_prompt_tells_the_model_how_to_start_from_the_statement(self):
-        p = self.prompt(1, code="", tr=BLANK_TR, strategy=BLANK_STRATEGY)
-        self.assertIn("chưa biết bắt đầu", p)
-        self.assertIn("Ví dụ trong đề", p)
+        p1 = self.prompt(1, code="", tr=BLANK_TR, strategy=BLANK_STRATEGY)
+        self.assertIn("chưa biết bắt đầu", p1)
+        self.assertNotIn("Ví dụ trong đề: đầu vào", p1)   # Mức 1 không nêu giá trị, kể cả ví dụ của đề
+        p2 = self.prompt(2, code="", tr=BLANK_TR, strategy=BLANK_STRATEGY)
+        self.assertIn("Ví dụ trong đề: đầu vào `7` → đầu ra `YES`", p2)
 
 
 class OfflineTests(unittest.TestCase):
@@ -85,7 +98,7 @@ class OfflineTests(unittest.TestCase):
     def test_blank_level1_uses_objectives_and_statement(self):
         text = self.hint(1)
         self.assertIn("Xử lý các trường hợp biên", text)         # mục tiêu học tập của giảng viên
-        self.assertIn("Chuỗi YES hoặc NO", text)                  # đầu ra theo đề
+        self.assertIn("chuỗi YES hoặc NO", text)                  # đầu ra theo đề
         self.assertIn("chưa viết dòng code nào", text)
         self.assertNotIn("`YES`", text)                           # Mức 1: không lộ giá trị ví dụ/kiểm thử
         self.assertNotIn("`7`", text)

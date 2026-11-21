@@ -1,0 +1,70 @@
+﻿py : test_all_generated_text_is_plain (test_plain_language_v59.BannedWordsTests.test_all_generated_text_is_plain) ... 
+ok
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
++   else { Invoke-Isolated $m { py -m unittest $m -v } }
++                               ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_all_genera...s_plain) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_brief_and_skills (test_plain_language_v59.ClassPlainTests.test_brief_and_skills) ... ok
+test_exercises_and_hardest (test_plain_language_v59.ClassPlainTests.test_exercises_and_hardest) ... ok
+test_groups (test_plain_language_v59.ClassPlainTests.test_groups) ... ok
+test_how_it_works_uses_constants (test_plain_language_v59.ClassPlainTests.test_how_it_works_uses_constants) ... ok
+test_no_activity (test_plain_language_v59.ClassPlainTests.test_no_activity) ... ok
+test_wording_edge_cases (test_plain_language_v59.ClassPlainTests.test_wording_edge_cases) ... ok
+test_first_pass_keys (test_plain_language_v59.JourneyPointsKeysTests.test_first_pass_keys) ... ok
+test_classes_attention_brief (test_plain_language_v59.PlainIntegrationTests.test_classes_attention_brief) ... 
+C:\Users\Admin\AppData\Local\Programs\Python\Python314\Lib\site-packages\starlette\testclient.py:53: 
+DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+  _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+2026-11-21 07:35:29,845 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã nguồn. 
+Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+C:\Users\Admin\Downloads\PyTutor-Thesis\backend\schemas.py:563: PydanticDeprecatedSince20: `min_items` is deprecated 
+and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 
+Migration Guide at https://errors.pydantic.dev/2.13/migration/
+  keywords: list[str] = Field(..., min_items=1, description="Danh sách các từ khóa nhận diện")
+2026-11-21 07:35:31,284 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 07:35:31,310 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 07:35:31,461 [INFO] httpx2: HTTP Request: GET http://testserver/api/instructor/classes-attention "HTTP/1.1 
+200 OK"
+ok
+test_instructor_plain_view_consistent 
+(test_plain_language_v59.PlainIntegrationTests.test_instructor_plain_view_consistent) ... 2026-11-21 07:35:31,477 
+[INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 07:35:31,498 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 07:35:31,543 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/instructor/classes/v58_demo/insights?days=30 "HTTP/1.1 200 OK"
+ok
+test_instructor_story_has_no_code (test_plain_language_v59.PlainIntegrationTests.test_instructor_story_has_no_code) 
+... 2026-11-21 07:35:31,560 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 07:35:31,574 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 07:35:31,617 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/instructor/classes/v58_demo/insights?days=30 "HTTP/1.1 200 OK"
+2026-11-21 07:35:31,640 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/instructor/classes/v58_demo/students/v58_dung/exercises/ex_03_factorial/journey?days=30 
+"HTTP/1.1 200 OK"
+ok
+test_student_today_story_and_path (test_plain_language_v59.PlainIntegrationTests.test_student_today_story_and_path) 
+... 2026-11-21 07:35:31,656 [INFO] pytutor.api: Cơ sở dữ liệu SQLite PyTutor đã sẵn sàng.
+2026-11-21 07:35:31,668 [INFO] pytutor.api: RAG knowledge base ready: 17 local chunks indexed.
+2026-11-21 07:35:33,871 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/student/journey?class_id=v58_demo&exercise_id=ex_01_sum_1_to_n "HTTP/1.1 200 OK"
+2026-11-21 07:35:36,208 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/journey "HTTP/1.1 200 OK"
+ok
+test_format_tag_visible_from_and_one_liner 
+(test_plain_language_v59.StoryTests.test_format_tag_visible_from_and_one_liner) ... ok
+test_other_branches (test_plain_language_v59.StoryTests.test_other_branches) ... ok
+test_passed_after_tries_and_steps (test_plain_language_v59.StoryTests.test_passed_after_tries_and_steps) ... ok
+test_stuck_and_condense (test_plain_language_v59.StoryTests.test_stuck_and_condense) ... ok
+test_course_path (test_plain_language_v59.TodayCardTests.test_course_path) ... ok
+test_headline_week_and_near (test_plain_language_v59.TodayCardTests.test_headline_week_and_near) ... ok
+test_moments (test_plain_language_v59.TodayCardTests.test_moments) ... ok
+test_names_and_time (test_plain_language_v59.TodayCardTests.test_names_and_time) ... ok
+test_next_step_branches (test_plain_language_v59.TodayCardTests.test_next_step_branches) ... ok
+test_no_activity (test_plain_language_v59.TodayCardTests.test_no_activity) ... ok
+test_skills_line (test_plain_language_v59.TodayCardTests.test_skills_line) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 8.068s
+
+OK
