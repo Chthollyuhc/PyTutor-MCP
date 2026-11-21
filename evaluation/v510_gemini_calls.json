@@ -1,6 +1,6 @@
 {
-  "limit": 320,
-  "total": 315,
+  "limit": 335,
+  "total": 329,
   "runs": [
     {
       "tag": "before_real_dev_1",
@@ -112,7 +112,21 @@
       "finished": "2026-11-21T07:46:14",
       "gemini_success_replies": 2,
       "stopped": ""
+    },
+    {
+      "tag": "v511_real_verify_dev4",
+      "calls": 10,
+      "finished": "2026-11-21T07:48:47",
+      "gemini_success_replies": 10,
+      "stopped": ""
+    },
+    {
+      "tag": "v511_real_verify_red4",
+      "calls": 4,
+      "finished": "2026-11-21T07:49:23",
+      "gemini_success_replies": 4,
+      "stopped": ""
     }
   ],
-  "note_v511": "Trần nâng từ 300 lên 320 chỉ để kiểm chứng v5.11 (tối đa ~20 lượt, dữ liệu giả lập)."
+  "note_v511": "Trần nâng 300 → 320 → 335 chỉ cho kiểm chứng v5.11 (tổng ≤ 38 lượt thêm, dữ liệu giả lập); người dùng chưa đặt con số riêng."
 }

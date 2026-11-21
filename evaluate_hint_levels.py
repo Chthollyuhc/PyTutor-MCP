@@ -33,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 EVAL = ROOT / "evaluation"
 CALLS_FILE = EVAL / "v510_gemini_calls.json"
-CALL_LIMIT = 320
+CALL_LIMIT = 335
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
