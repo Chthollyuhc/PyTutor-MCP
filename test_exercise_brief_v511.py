@@ -123,3 +123,27 @@ class OfflineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NoCodePromptLayoutTests(unittest.TestCase):
+    """Ca thật với Gemini (v5.11): code rỗng ở Mức 2 bị "chẩn đoán" một dòng vì bố cục Mức 2 bắt buộc trích dòng."""
+
+    def prompt(self, level):
+        return llm_service.build_scaffolding_prompt(PRIME, "", BLANK_TR, {"valid": False, "syntax_error": "Mã nguồn trống."}, level,
+                                                    adaptive_strategy=BLANK_STRATEGY)
+
+    def test_blank_attempt_uses_reading_layout_not_diagnosis(self):
+        for level in (1, 2):
+            p = self.prompt(level)
+            self.assertIn("SINH VIÊN CHƯA VIẾT CODE", p)
+            self.assertNotIn("Dòng cần xem (dòng N)", p)
+            self.assertNotIn("Input='7'", p)                       # không đưa test lỗi "giả" của mã trống cho mô hình
+            self.assertIn("không mang thông tin", p)
+        self.assertIn("ví dụ trong đề", self.prompt(2).lower())
+        self.assertIn("KHÔNG có mục \"Dòng cần xem\"", self.prompt(2))
+
+    def test_blank_level3_keeps_the_skeleton_layout_and_normal_attempts_are_unchanged(self):
+        self.assertIn("KHUNG MÃ", self.prompt(3))
+        normal = llm_service.build_scaffolding_prompt(PRIME, CODE, WRONG_TR, AST, 2)
+        self.assertIn("Dòng cần xem (dòng N)", normal)
+        self.assertNotIn("SINH VIÊN CHƯA VIẾT CODE", normal)

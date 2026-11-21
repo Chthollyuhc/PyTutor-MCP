@@ -225,9 +225,34 @@ def _brief_section(exercise: dict, hint_level: int, no_code: bool, all_passed: b
     return text
 
 
-def _level_instruction(hint_level: int, all_passed: bool) -> str:
+_LEVEL_NO_CODE_1 = """
+[CẤP ĐỘ GỢI Ý 1 - SINH VIÊN CHƯA VIẾT CODE: CÁCH ĐỌC ĐỀ]
+🎯 Mục tiêu: giúp sinh viên biết bắt đầu từ đâu bằng cách đọc đề; chưa có bài làm nào để nhận xét.
+📋 Bố cục bắt buộc (TỐI ĐA 90 từ, vào thẳng mục 1, KHÔNG chào hỏi):
+1. 🎯 **Đang ở đâu:** một câu: sinh viên chưa viết dòng code nào nên bắt đầu từ việc hiểu đề (không nói về số kiểm thử đạt).
+2. 📚 **Mục tiêu và cách đọc đề:** nêu mục tiêu học tập của giảng viên bằng lời của bạn, rồi chỉ ra đề cho dữ liệu vào là gì và yêu cầu kết quả ra là gì (theo [ĐỀ BÀI & KIỂM THỬ CỦA GIẢNG VIÊN]); có thể nhắc giảng viên kiểm thử những nhóm trường hợp nào, KHÔNG nêu giá trị cụ thể.
+3. ❓ **Câu hỏi để bắt đầu:** đúng MỘT câu hỏi giúp sinh viên tự diễn đạt lại đề bằng một ví dụ nhỏ do chính họ nghĩ ra.
+4. ➡️ **Bước kế tiếp:** đúng MỘT việc nhỏ làm ngay (ví dụ ghi ra giấy ba ý, hoặc viết dòng đầu tiên đọc dữ liệu).
+🚫 Ranh giới: KHÔNG trích hay nhận xét "dòng code" nào (không có bài làm; khung mẫu của đề không phải bài làm); KHÔNG nói chương trình bị lỗi hay kiểm thử thất bại; KHÔNG viết khối code; KHÔNG nêu cấu trúc lời giải (tên lệnh lặp, toán tử, hàm) dù mục tiêu học tập của giảng viên có nhắc; KHÔNG nêu giá trị đầu vào/đầu ra cụ thể.
+"""
+
+_LEVEL_NO_CODE_2 = """
+[CẤP ĐỘ GỢI Ý 2 - SINH VIÊN CHƯA VIẾT CODE: ĐI QUA VÍ DỤ CỦA ĐỀ]
+🎯 Mục tiêu: giúp sinh viên hiểu đề bằng ví dụ trong đề; chưa có bài làm nào để chẩn đoán.
+📋 Bố cục bắt buộc (khoảng 100-150 từ, vào thẳng mục 1, KHÔNG chào hỏi):
+1. 🎯 **Đang ở đâu:** một câu: sinh viên chưa viết dòng code nào (không nói về số kiểm thử đạt).
+2. 🔎 **Ví dụ trong đề:** nêu ví dụ ở [ĐỀ BÀI & KIỂM THỬ CỦA GIẢNG VIÊN] (đầu vào và đầu ra, kèm lời giải thích của đề nếu có), mỗi giá trị đặt trong backtick; nói giảng viên còn kiểm thử những nhóm trường hợp nào.
+3. ❓ **Câu hỏi để bắt đầu:** đúng MỘT câu hỏi yêu cầu sinh viên tự viết ra từng thao tác làm bằng tay để đi từ đầu vào tới đầu ra của ví dụ.
+4. ➡️ **Bước kế tiếp:** đúng MỘT việc: chuyển thao tác đầu tiên thành một dòng lệnh rồi bấm Chạy thử.
+🚫 Ranh giới: KHÔNG có mục "Dòng cần xem", KHÔNG trích bất kỳ dòng code hay khối code nào (kể cả khung mẫu của đề); KHÔNG nói chương trình lỗi hay kiểm thử thất bại; KHÔNG nêu cấu trúc lời giải hay biểu thức.
+"""
+
+
+def _level_instruction(hint_level: int, all_passed: bool, no_code: bool = False) -> str:
     if all_passed:
         return _LEVEL_PASSED
+    if no_code and hint_level in (1, 2):
+        return {1: _LEVEL_NO_CODE_1, 2: _LEVEL_NO_CODE_2}[hint_level]
     return {1: _LEVEL_1, 2: _LEVEL_2}.get(hint_level, _LEVEL_3)
 
 
@@ -311,10 +336,12 @@ def build_scaffolding_prompt(
     strategy_section = _strategy_section(strategy, hint_level)
     learner_section = _learner_section(strategy, hint_level)
     no_code = any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", []))
+    if no_code and not all_passed:
+        failed_text = "(Sinh viên chưa viết code: kết quả kiểm thử không mang thông tin nên không được cung cấp.)"
     brief_section = _brief_section(exercise, hint_level, any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])), all_passed)
     evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed, no_code)
     formative_section = _FORMATIVE_SECTION
-    level_instruction = _level_instruction(hint_level, all_passed)
+    level_instruction = _level_instruction(hint_level, all_passed, no_code)
 
     prompt = f"""Bạn là PyTutor - một Gia sư Trí tuệ Nhân tạo dạy lập trình Python thân thiện, thấu cảm và tuân thủ phương pháp sư phạm giàn giáo (Scaffolding Pedagogy).
 
