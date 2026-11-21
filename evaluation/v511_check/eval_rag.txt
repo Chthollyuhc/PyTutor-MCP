@@ -1,0 +1,29 @@
+﻿RAG retrieval benchmark — questions v1.0, 17 đoạn KB, top_k=3, min_score=0.16
+Phạm vi: retrieval-only benchmark on the internal project-authored knowledge base; not an answer-quality study
+
+Câu hỏi trong KB (38): hit@1 34/38 = 89.47% | hit@3 36/38 = 94.74% | MRR 0.9211 | có nguồn 37/38 = 97.37%
+  accumulator      hit@1 2/2   hit@3 2/2
+  arithmetic       hit@1 3/3   hit@3 3/3
+  builtins         hit@1 2/2   hit@3 2/2
+  comprehension    hit@1 2/2   hit@3 2/2
+  conditionals     hit@1 2/2   hit@3 2/2
+  debugging        hit@1 1/2   hit@3 1/2
+  dicts            hit@1 2/2   hit@3 2/2
+  errors           hit@1 3/3   hit@3 3/3
+  functions        hit@1 2/2   hit@3 2/2
+  input            hit@1 2/3   hit@3 3/3
+  lists            hit@1 2/3   hit@3 2/3
+  loops            hit@1 3/3   hit@3 3/3
+  output           hit@1 3/3   hit@3 3/3
+  strings          hit@1 2/2   hit@3 2/2
+  style            hit@1 1/2   hit@3 2/2
+  types            hit@1 2/2   hit@3 2/2
+  Không tìm đúng mục (top-3): Q28, Q36
+
+Câu hỏi ngoài KB (14): trả 'không có nguồn' đúng 13/14 = 92.86%
+  institutional        3/3
+  off_topic            3/3
+  python_not_covered   7/8
+  Gắn nguồn không phù hợp: O02→Hàm và giá trị trả về (0.2335)
+
+Độ trễ truy xuất (ms): median 2.8169 | p95 4.4591 | max 7.0723 (n=1092)

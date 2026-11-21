@@ -1,0 +1,22 @@
+﻿py : test_alter_idempotent_on_old_schema_and_save_run 
+(test_data_capture_v57.DbTests.test_alter_idempotent_on_old_schema_and_save_run) ... ok
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
++   else { Invoke-Isolated $m { py -m unittest $m -v } }
++                               ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_alter_idem...ave_run) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_old_run_without_features_still_saves (test_data_capture_v57.DbTests.test_old_run_without_features_still_saves) 
+... ok
+test_error_class_unchanged_by_format_label 
+(test_data_capture_v57.PureFeatureTests.test_error_class_unchanged_by_format_label) ... ok
+test_failed_and_format_mismatch (test_data_capture_v57.PureFeatureTests.test_failed_and_format_mismatch) ... ok
+test_format_only (test_data_capture_v57.PureFeatureTests.test_format_only) ... ok
+test_normalize (test_data_capture_v57.PureFeatureTests.test_normalize) ... ok
+test_passed_has_no_failures (test_data_capture_v57.PureFeatureTests.test_passed_has_no_failures) ... ok
+test_skipped_not_counted_as_failed (test_data_capture_v57.PureFeatureTests.test_skipped_not_counted_as_failed) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.473s
+
+OK

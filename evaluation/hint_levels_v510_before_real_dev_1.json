@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Gemini thật, mốc trước cải tiến, lần 1",
     "command": "py evaluate_hint_levels.py --real --quiet --tag before_real_dev_1 --note Gemini thật, mốc trước cải tiến, lần 1",
-    "rescored": "2026-11-21T05:03:37"
+    "rescored": "2026-11-21T07:07:29"
   },
   "summary": {
     "checks": {
@@ -136,6 +136,20 @@
         "1": [
           14,
           14
+        ]
+      },
+      "bam_de_bai_cua_giang_vien": {
+        "1": [
+          1,
+          1
+        ],
+        "2": [
+          1,
+          1
+        ],
+        "3": [
+          1,
+          1
         ]
       },
       "ten_co_that": {
@@ -402,6 +416,7 @@
         "m1_khong_khoi_code": true,
         "m1_neu_khai_niem": true,
         "m1_khong_chi_la_cau_hoi_suong": true,
+        "bam_de_bai_cua_giang_vien": true,
         "khong_lap_voi_luot_truoc": null,
         "tang_tien_so_voi_luot_truoc": null
       },
@@ -532,6 +547,7 @@
         "m2_dong_dung_cho_loi": null,
         "m2_co_bang_chung_thuc_thi": null,
         "m2_khong_khoi_code_3_dong": true,
+        "bam_de_bai_cua_giang_vien": true,
         "khong_lap_voi_luot_truoc": true,
         "tang_tien_so_voi_luot_truoc": null
       },
@@ -663,6 +679,7 @@
         "m3_co_khung_todo": true,
         "m3_khung_khong_dat_het_test": true,
         "m3_khung_la_python_hop_le": true,
+        "bam_de_bai_cua_giang_vien": true,
         "khong_lap_voi_luot_truoc": true,
         "tang_tien_so_voi_luot_truoc": true
       },

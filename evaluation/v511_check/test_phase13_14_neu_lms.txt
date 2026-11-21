@@ -1,0 +1,97 @@
+﻿py : 2026-11-21 06:32:15,177 [WARNING] pytutor.auth: JWT_SECRET_KEY chưa được đặt: đang dùng khóa mặc định trong mã 
+nguồn. Chỉ chấp nhận cho bản demo cục bộ; đặt biến môi trường JWT_SECRET_KEY trước khi triển khai.
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:34 char:53
++ ...  if ($scripts -contains $m) { Invoke-Isolated $m { py "$m.py" } }  #  ...
++                                                        ~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-21 06:3...khi triển khai.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-21 06:32:16,783 [INFO] pytutor.database: Đã seed thành công 5 bài tập mẫu vào SQLite.
+2026-11-21 06:32:16,946 [INFO] httpx2: HTTP Request: POST http://testserver/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,063 [INFO] httpx2: HTTP Request: POST http://testserver/api/auth/login "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,075 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,084 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/my-classes "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,102 [INFO] httpx2: HTTP Request: POST http://testserver/api/classes/enroll-by-code "HTTP/1.1 200 
+OK"
+2026-11-21 06:32:17,112 [INFO] httpx2: HTTP Request: GET http://testserver/api/student/my-classes "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,126 [INFO] httpx2: HTTP Request: DELETE http://testserver/api/classes/cls_neu_cntt1117_02/leave 
+"HTTP/1.1 200 OK"
+2026-11-21 06:32:17,143 [INFO] httpx2: HTTP Request: GET http://testserver/api/classes/cls_neu_cntt1128_02/curriculum 
+"HTTP/1.1 200 OK"
+2026-11-21 06:32:17,168 [INFO] httpx2: HTTP Request: POST http://testserver/api/instructor/exercises "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,194 [INFO] httpx2: HTTP Request: POST 
+http://testserver/api/instructor/classes/cls_neu_cntt1128_02/exercises "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,217 [INFO] httpx2: HTTP Request: PUT 
+http://testserver/api/instructor/classes/cls_neu_cntt1128_02/exercises/ex_test_curriculum "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,240 [INFO] httpx2: HTTP Request: DELETE 
+http://testserver/api/instructor/classes/cls_neu_cntt1128_02/exercises/ex_test_curriculum "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,259 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/instructor/classes/cls_neu_cntt1128_02/students "HTTP/1.1 200 OK"
+2026-11-21 06:32:17,286 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/skill-roadmap?class_id=cls_neu_cntt1128_02 "HTTP/1.1 200 OK"
+2026-11-21 06:32:19,002 [INFO] httpx2: HTTP Request: GET 
+http://testserver/api/student/profile?session_id=student&class_id=cls_neu_cntt1128_02 "HTTP/1.1 200 OK"
+================================================================================
+🧪 [PHASE 13 & 14] BẮT ĐẦU KIỂM THỬ HỆ THỐNG LMS NEU & PHÂN TÍCH NĂNG LỰC ĐỊNH LƯỢNG
+================================================================================
+
+[1] Xác thực tài khoản Giảng viên và Sinh viên Khoa CNTT - NEU...
+    ✅ PASS: Đăng nhập Giảng viên: Nguyễn Văn A (Giảng viên Khoa Công nghệ thông tin - NEU) (Role: instructor)
+    ✅ PASS: Đăng nhập Sinh viên: Trần Minh Khánh - SV K65 CNTT (MSV: 11236131)
+
+[2] Kiểm tra Danh sách Lớp học phần chuẩn NEU (GET /api/classes)...
+    • Lớp 1: CNTT1128(223)_02 - Cơ sở lập trình
+      Khoa: Khoa Công nghệ thông tin - NEU | Giảng viên: Nguyễn Văn A | Mã: NEU-CSLP
+      Đã ghi danh: True | Tiến độ: 0/5 bài
+    ✅ PASS: Chuẩn hóa Học phần NEU & Trạng thái ghi danh hiển thị chính xác.
+
+[3] Kiểm tra Cổng Lớp học phần của Tôi (GET /api/student/my-classes)...
+    • Sinh viên đã ghi danh 5 lớp: ['CNTT1128(223)_02', 'CNTT1131(124)_04', 'CNTT1152(125)_01', 'CNTT1167(225)_01', 'CNTT1187(225)_01']
+    ✅ PASS: Endpoint My NEU Classes trả về đúng danh sách lớp của sinh viên.
+
+[4] Kiểm tra Ghi danh bằng Mã (POST /api/classes/enroll-by-code) và Rời lớp (DELETE /api/classes/{id}/leave)...
+    • Kết quả ghi danh bằng mã NEU-PTTKHT: Đã ghi danh thành công vào lớp 'Phân tích và thiết kế hệ thống' (CNTT1117(125)_02)!
+    • Xác nhận lớp mới đã xuất hiện trong Cổng lớp học của sinh viên.
+    • Kết quả rời lớp: Đã hủy ghi danh khỏi lớp cls_neu_cntt1117_02 thành công.
+    ✅ PASS: Tính năng Ghi danh bằng Mã và Hủy ghi danh hoạt động hoàn hảo.
+
+[5] Kiểm tra Quản lý Danh sách Bài tập Học phần (Curriculum CRUD)...
+    • Lớp cls_neu_cntt1128_02 có 5 bài tập trong lộ trình:
+      - [Chương 1: Biến, Nhập xuất & Vòng lặp cơ bản] #1 ex_01_sum_1_to_n | Tiên quyết: None
+      - [Chương 2: Phép nhân tích lũy & Đệ quy cơ sở] #2 ex_03_factorial | Tiên quyết: ex_01_sum_1_to_n
+      - [Chương 3: Cấu trúc rẽ nhánh & Tối ưu thuật toán] #3 ex_02_prime_check | Tiên quyết: ex_01_sum_1_to_n
+      - [Chương 4: Xử lý Chuỗi & Kỹ thuật Slicing] #4 ex_04_reverse_string | Tiên quyết: ex_03_factorial
+      - [Chương 4: Duyệt Chuỗi & Tập hợp] #5 ex_05_count_vowels | Tiên quyết: ex_04_reverse_string
+    • Giảng viên gán bài mới thành công: Đã gán bài tập 'ex_test_curriculum' vào lớp cls_neu_cntt1128_02 thành công.
+    • Giảng viên cập nhật cấu hình bài tập thành công.
+    • Giảng viên gỡ bài tập kiểm thử khỏi lớp thành công.
+    ✅ PASS: API quản lý danh sách bài tập và bài tiên quyết hoạt động chính xác.
+
+[6] Kiểm tra Danh sách Sinh viên & Đo lường Tiến độ (GET /api/instructor/classes/{id}/students)...
+    • Sinh viên trong lớp: Trần Minh Khánh - SV K65 CNTT (MSV: 11236131) (@student)
+      Tiến độ: 0/5 (0%) | Tổng sao: 0 ⭐
+    ✅ PASS: Bảng tổng hợp tiến độ học viên của lớp phản ánh số liệu thực tế.
+
+[7] Kiểm tra tương thích endpoint tiến trình cũ theo lớp...
+    • Lộ trình lớp: CNTT1128(223)_02 - Cơ sở lập trình (0/5 làm chủ)
+      [AVAILABLE] ex_01_sum_1_to_n - Bài 01: Tính tổng từ 1 đến n (0 ⭐ tự làm) -> Sẵn sàng làm bài
+      [LOCKED] ex_03_factorial - Bài 03: Tính giai thừa n! (0 ⭐ tự làm) -> Khóa - Cần hoàn thành bài tiên quyết (ex_01_sum_1_to_n)
+      [LOCKED] ex_02_prime_check - Bài 02: Kiểm tra số nguyên tố (0 ⭐ tự làm) -> Khóa - Cần hoàn thành bài tiên quyết (ex_01_sum_1_to_n)
+      [LOCKED] ex_04_reverse_string - Bài 04: Đảo ngược chuỗi ký tự (0 ⭐ tự làm) -> Khóa - Cần hoàn thành bài tiên quyết (ex_03_factorial)
+      [LOCKED] ex_05_count_vowels - Bài 05: Đếm số lượng nguyên âm (0 ⭐ tự làm) -> Khóa - Cần hoàn thành bài tiên quyết (ex_04_reverse_string)
+    ✅ PASS: Endpoint cũ phản ánh trạng thái hoàn thành và quan hệ tiên quyết.
+
+[8] Kiểm tra Động cơ Phân tích Năng lực 4 Chiều & 3 Thẻ Chẩn đoán (GET /api/student/profile)...
+    • Điểm Tự làm Sư phạm (Autonomy Score): 0/100
+    • Tỷ lệ Pass Lần đầu (First-try Pass Rate): 0.0%
+    • Số lần nộp trung bình / bài: 0.0
+    • Phân tích Lỗi (Error Breakdown): {'total_runs': 0, 'passed_runs': 0, 'passed_percent': 0.0, 'logic_errors': 0, 'logic_error_percent': 0.0, 'syntax_or_runtime_errors': 0, 'syntax_error_percent': 0.0}
+    • Phân hạng Năng lực: 🎓 Chưa có dữ liệu thực hành (Bắt đầu làm bài tập đầu tiên)
+    • 1. Điểm mạnh Nổi bật: Học viên vừa tham gia hệ thống. Hãy chọn bài tập cơ sở đầu tiên trên Lộ trình để bắt đầu t...
+    • 2. Điểm nghẽn Cần khắc phục: Chưa ghi nhận điểm nghẽn nào....
+    • 3. Hành động Khuyến nghị Tiếp theo: Mở bài tập Chương 1 để bắt đầu thực hành viết mã nguồn Python đầu tiên....
+    ✅ PASS: Động cơ Phân tích 4D và 3 Thẻ Chẩn đoán Sư phạm trả về số liệu thực nghiệm đầy đủ.
+
+================================================================================
+🎉 TẤT CẢ 8 HẠNG MỤC KIỂM THỬ CỦA PHASE 13 & 14 ĐỀU ĐẠT CHUẨN 100%!
+================================================================================

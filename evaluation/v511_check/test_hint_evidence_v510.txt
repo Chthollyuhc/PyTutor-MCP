@@ -1,0 +1,37 @@
+﻿py : test_concepts_never_name_student_lines_or_values 
+(test_hint_evidence_v510.ConceptAndOutlineTests.test_concepts_never_name_student_lines_or_values) ... ok
+At C:\Users\Admin\Downloads\PyTutor-Thesis\.claude\run_suite_v510.ps1:35 char:31
++   else { Invoke-Isolated $m { py -m unittest $m -v } }
++                               ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_concepts_n..._values) ... ok:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_outline_follows_the_exercise_not_a_fixed_template 
+(test_hint_evidence_v510.ConceptAndOutlineTests.test_outline_follows_the_exercise_not_a_fixed_template) ... ok
+test_outline_tolerates_minimal_exercise 
+(test_hint_evidence_v510.ConceptAndOutlineTests.test_outline_tolerates_minimal_exercise) ... ok
+test_trace_table_uses_student_variables 
+(test_hint_evidence_v510.ConceptAndOutlineTests.test_trace_table_uses_student_variables) ... ok
+test_helpers (test_hint_evidence_v510.PickFailureTests.test_helpers) ... ok
+test_prefers_short_input_and_avoids_timeout 
+(test_hint_evidence_v510.PickFailureTests.test_prefers_short_input_and_avoids_timeout) ... ok
+test_block_not_run_needs_trace_and_points_at_header 
+(test_hint_evidence_v510.SuspectLineTests.test_block_not_run_needs_trace_and_points_at_header) ... ok
+test_program_that_never_reads_input_points_at_first_statement 
+(test_hint_evidence_v510.SuspectLineTests.test_program_that_never_reads_input_points_at_first_statement) ... ok
+test_quoted_line_never_carries_the_students_comment 
+(test_hint_evidence_v510.SuspectLineTests.test_quoted_line_never_carries_the_students_comment)
+Chú thích của người học là dữ liệu không tin cậy (có thể chứa lệnh chèn): không được chép lại vào gợi ý. ... ok
+test_repeated_print_and_echo (test_hint_evidence_v510.SuspectLineTests.test_repeated_print_and_echo) ... ok
+test_runtime_error_uses_traceback_line 
+(test_hint_evidence_v510.SuspectLineTests.test_runtime_error_uses_traceback_line) ... ok
+test_syntax_error_uses_parser_line (test_hint_evidence_v510.SuspectLineTests.test_syntax_error_uses_parser_line) ... ok
+test_timeout_names_loop_control_without_reassignment 
+(test_hint_evidence_v510.SuspectLineTests.test_timeout_names_loop_control_without_reassignment) ... ok
+test_unparseable_or_empty_returns_none 
+(test_hint_evidence_v510.SuspectLineTests.test_unparseable_or_empty_returns_none) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.072s
+
+OK

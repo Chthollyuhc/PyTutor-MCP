@@ -6,6 +6,7 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 
 | Kiểm tra | Mức 1 | Mức 2 | Mức 3 |
 |---|---|---|---|
+| bam_de_bai_cua_giang_vien | 1/1 | 1/1 | 1/1 |
 | do_dai | 13/15 | 12/14 | 15/15 |
 | dung_mot_buoc_ke_tiep | 0/15 | 2/14 | 0/15 |
 | khong_chep_lai_chu_thich | 2/2 | 2/2 | 2/2 |

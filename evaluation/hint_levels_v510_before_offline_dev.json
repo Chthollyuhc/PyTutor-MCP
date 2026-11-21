@@ -16,7 +16,7 @@
     "pytutor_db_unchanged": true,
     "note": "Mốc trước cải tiến, mã tại commit chứa bộ đo",
     "command": "py evaluate_hint_levels.py --offline --quiet --tag before_offline_dev --note Mốc trước cải tiến, mã tại commit chứa bộ đo",
-    "rescored": "2026-11-21T05:03:31"
+    "rescored": "2026-11-21T07:07:02"
   },
   "summary": {
     "checks": {
@@ -136,6 +136,20 @@
         "1": [
           13,
           14
+        ]
+      },
+      "bam_de_bai_cua_giang_vien": {
+        "1": [
+          0,
+          1
+        ],
+        "2": [
+          0,
+          1
+        ],
+        "3": [
+          1,
+          1
         ]
       },
       "ten_co_that": {
@@ -401,6 +415,7 @@
         "m1_khong_khoi_code": true,
         "m1_neu_khai_niem": true,
         "m1_khong_chi_la_cau_hoi_suong": true,
+        "bam_de_bai_cua_giang_vien": false,
         "khong_lap_voi_luot_truoc": null,
         "tang_tien_so_voi_luot_truoc": null
       },
@@ -531,6 +546,7 @@
         "m2_dong_dung_cho_loi": null,
         "m2_co_bang_chung_thuc_thi": null,
         "m2_khong_khoi_code_3_dong": true,
+        "bam_de_bai_cua_giang_vien": false,
         "khong_lap_voi_luot_truoc": false,
         "tang_tien_so_voi_luot_truoc": null
       },
@@ -662,6 +678,7 @@
         "m3_co_khung_todo": true,
         "m3_khung_khong_dat_het_test": true,
         "m3_khung_la_python_hop_le": true,
+        "bam_de_bai_cua_giang_vien": true,
         "khong_lap_voi_luot_truoc": true,
         "tang_tien_so_voi_luot_truoc": true
       },

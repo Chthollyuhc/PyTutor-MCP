@@ -6,6 +6,7 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 
 | Kiểm tra | Mức 1 | Mức 2 | Mức 3 |
 |---|---|---|---|
+| bam_de_bai_cua_giang_vien | 0/1 | 0/1 | 1/1 |
 | do_dai | 15/15 | 13/14 | 13/15 |
 | dung_mot_buoc_ke_tiep | 15/15 | 14/14 | 15/15 |
 | khong_chep_lai_chu_thich | 2/2 | 2/2 | 2/2 |
@@ -38,8 +39,8 @@ Kiểm tra tất định (so khớp quy tắc, **không phải điểm sư phạ
 
 ## Phản hồi chưa đạt (kiểm tra nào trượt)
 
-- D01 · Mức 1: khung_muc_tieu_bang_chung_buoc
-- D01 · Mức 2: khung_muc_tieu_bang_chung_buoc, khong_lap_voi_luot_truoc
+- D01 · Mức 1: khung_muc_tieu_bang_chung_buoc, bam_de_bai_cua_giang_vien
+- D01 · Mức 2: khung_muc_tieu_bang_chung_buoc, bam_de_bai_cua_giang_vien, khong_lap_voi_luot_truoc
 - D01 · Mức 3: m3_dan_y_4_buoc_khop_bai
 - D02 · Mức 2: do_dai, m2_dung_mot_dong_that, m2_dong_dung_cho_loi, khong_lap_voi_luot_truoc, tang_tien_so_voi_luot_truoc
 - D02 · Mức 3: do_dai, m3_dan_y_4_buoc_khop_bai, m3_co_khung_todo, khong_lap_voi_luot_truoc, tang_tien_so_voi_luot_truoc
