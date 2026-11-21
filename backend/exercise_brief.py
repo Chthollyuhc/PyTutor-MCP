@@ -115,14 +115,24 @@ def notable_cases(exercise: Optional[dict], limit: int = 2) -> list[str]:
     return ordered[:limit]
 
 
+_STRUCTURE_WORDS = re.compile(r"vòng lặp|for|while|range|tích lũy|cộng dồn|đệ quy|slice|cắt chuỗi|break|cờ hiệu|flag|rẽ nhánh|if", re.IGNORECASE)
+
+
+def blank_objectives(objectives: list[str]) -> list[str]:
+    """Mục tiêu dùng cho sinh viên CHƯA viết code (Mức 1-2): bỏ mục tiêu nêu cấu trúc/kỹ thuật giải (vòng lặp, biến tích lũy,
+    đệ quy...), vì nêu chúng là gợi ý cấu trúc lời giải, việc của Mức 3. Mục tiêu còn lại đã qua `safe_objective`."""
+    return [safe_objective(o) for o in objectives if not _STRUCTURE_WORDS.search(o)]
+
+
 def brief_text(exercise: Optional[dict], hint_level: int, no_code: bool = False) -> str:
     """Khối văn bản đưa vào lời nhắc, theo giới hạn của từng mức. Rỗng nếu đề không có gì để tóm tắt."""
     info = parse_description((exercise or {}).get("description"))
     tests = test_overview(exercise)
     lines = []
-    if info["objectives"]:
-        lines.append("- Mục tiêu học tập (giảng viên nêu trong đề, đã bỏ chi tiết kỹ thuật giải): "
-                     + " ".join(safe_objective(o) for o in info["objectives"]))
+    objectives = blank_objectives(info["objectives"]) if (no_code and hint_level <= 2) else [safe_objective(o) for o in info["objectives"]]
+    if objectives:
+        lines.append("- Mục tiêu học tập (giảng viên nêu trong đề, đã bỏ chi tiết kỹ thuật giải"
+                     + (" và các mục tiêu nêu cấu trúc lời giải" if (no_code and hint_level <= 2) else "") + "): " + " ".join(objectives))
     if info["inputs"]:
         lines.append("- Đầu vào theo đề: " + "; ".join(info["inputs"]))
     if info["outputs"]:

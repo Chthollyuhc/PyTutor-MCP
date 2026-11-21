@@ -459,3 +459,11 @@ def echoes_student_comment(reply: str, code: str, starter: str = "", n: int = 4,
     if only_suspicious:
         comments = [c for c in comments if _INSTRUCTION_LIKE.search(c) or len(re.findall(r"\w+", c)) >= 10]
     return any(_word_ngrams(c, n) & grams for c in comments)
+
+
+_BLANK_STRUCTURE = re.compile(r"range\s*\(|\+=|`[^`]*\b(?:for|while)\b[^`]*`|\bvòng lặp\s+`?(?:for|while)`?|\b(?:for|while)\s+\w+\s+in\b", re.IGNORECASE)
+
+
+def leaks_structure_for_blank(reply: str) -> bool:
+    """Gợi ý cho sinh viên CHƯA viết code (Mức 1-2) nêu cấu trúc lời giải (lệnh lặp, range(...), +=): đó là việc của Mức 3."""
+    return bool(_BLANK_STRUCTURE.search(reply or ""))

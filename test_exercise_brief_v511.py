@@ -147,3 +147,38 @@ class NoCodePromptLayoutTests(unittest.TestCase):
         normal = llm_service.build_scaffolding_prompt(PRIME, CODE, WRONG_TR, AST, 2)
         self.assertIn("Dòng cần xem (dòng N)", normal)
         self.assertNotIn("SINH VIÊN CHƯA VIẾT CODE", normal)
+
+
+class BlankAttemptStructureGuardTests(unittest.TestCase):
+    """Chưa viết code: Mức 1-2 không được nêu cấu trúc lời giải (ca thật: bước kế tiếp gợi `for`/`range()`)."""
+
+    def run_hint(self, level, reply):
+        import asyncio
+        from unittest import mock
+        async def fake(prompt):
+            return (reply, "Google test"), {"prompt_tokens": None, "completion_tokens": None}
+
+        async def no_qwen(*a, **k):
+            return None
+        with mock.patch.object(llm_service, "call_gemini_with_usage", fake), mock.patch.object(llm_service, "call_qwen_api", no_qwen):
+            return asyncio.run(llm_service.generate_tutor_hint(
+                PRIME, "", BLANK_TR, {"valid": False, "syntax_error": "Mã nguồn trống."}, level, adaptive_strategy=BLANK_STRATEGY))
+
+    def test_structure_leak_is_replaced_by_the_deterministic_reading_hint(self):
+        leaky = "1. 🎯 Bạn chưa viết dòng code nào. 4. ➡️ Hãy viết một vòng lặp `for` với `range()` để duyệt qua các số rồi bấm Chạy thử xem kết quả. " * 2
+        for level in (1, 2):
+            text, source, telemetry = self.run_hint(level, leaky)
+            self.assertEqual(telemetry["output_guard"], "blank_structure")
+            self.assertNotIn("range", text)
+            self.assertIn("chưa viết dòng code nào", text)
+
+    def test_reading_hint_without_structure_is_kept(self):
+        ok = "1. 🎯 Bạn chưa viết dòng code nào nên hãy đọc đề. 2. 📚 Đề yêu cầu nhận một số nguyên và in YES hoặc NO. 3. ❓ Em thử nói lại đề bằng một ví dụ nhỏ của mình? 4. ➡️ Ghi ba ý ra giấy."
+        text, _, telemetry = self.run_hint(1, ok)
+        self.assertEqual(text, ok)
+
+    def test_blank_objectives_drop_structure_naming_goals(self):
+        self.assertEqual(eb.blank_objectives(eb.parse_description(EX["ex_04_reverse_string"]["description"])["objectives"]), [])
+        self.assertEqual(eb.blank_objectives(eb.parse_description(SUM["description"])["objectives"]), ["Biết cách sử dụng int(input()) để nhận dữ liệu."])
+        self.assertNotIn("vòng lặp", eb.brief_text(SUM, 1, no_code=True))
+        self.assertIn("vòng lặp", eb.brief_text(SUM, 1, no_code=False))   # đã có code: mục tiêu đầy đủ

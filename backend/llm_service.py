@@ -457,8 +457,9 @@ def _no_code_reply(exercise: dict, test_results: dict, hint_level: int, adaptive
     if hint_level == 1:
         head = "💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**"
         lines = []
-        if info["objectives"]:
-            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(exercise_brief.safe_objective(info['objectives'][0]), 100)}")
+        blank_obj = exercise_brief.blank_objectives(info["objectives"])
+        if blank_obj:
+            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(blank_obj[0], 100)}")
         if info["inputs"] or info["outputs"]:
             io = []
             if info["inputs"]:
@@ -481,8 +482,9 @@ def _no_code_reply(exercise: dict, test_results: dict, hint_level: int, adaptive
         head = "🔍 **[MỨC 2: HIỂU ĐỀ & XÁC ĐỊNH ĐẦU VÀO/ĐẦU RA]**"
         ex = info["examples"][0] if info["examples"] else None
         lines = []
-        if info["objectives"]:
-            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(exercise_brief.safe_objective(info['objectives'][0]), 100)}")
+        blank_obj = exercise_brief.blank_objectives(info["objectives"])
+        if blank_obj:
+            lines.append(f"📚 **Mục tiêu của bài (theo đề của giảng viên):** {_short(blank_obj[0], 100)}")
         if ex:
             lines.append(f"🔎 **Ví dụ trong đề:** với đầu vào `{ex['input']}` đề cho đầu ra `{ex['output']}`"
                          + (f" ({_short(ex['explain'], 80)})." if ex["explain"] else "."))
@@ -702,6 +704,15 @@ async def generate_tutor_hint(
         )
         # Chẩn đoán được phép trích lại dòng code của chính người học (không tính là lời giải).
         safe, reason = check_student_output(sanitized_hint, quoted_context=code or "")
+        blank = any(a.get("code") == "no_code_yet" for a in (adaptive_strategy or {}).get("adaptations", []))
+        if blank and hint_level in (1, 2) and not all_passed and hint_evidence.leaks_structure_for_blank(sanitized_hint):
+            # Chưa viết code: Mức 1-2 chỉ giúp đọc đề; nêu lệnh lặp/range/+= là cho cấu trúc lời giải (việc của Mức 3).
+            fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level,
+                                                    adaptive_strategy=adaptive_strategy, attempt_history=attempt_history, trace=trace)
+            return fallback, "Pedagogical-Rule-Engine (Output Guard Fallback)", {
+                "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                "model_name": model_name, **usage, "input_guard": "allowed",
+                "output_guard": "blank_structure", "status": "blocked_fallback"}
         if not all_passed and hint_evidence.echoes_student_comment(sanitized_hint, code or "", (exercise or {}).get("starter_code", "") or "", n=6, only_suspicious=True):
             # Chú thích của người học là dữ liệu không tin cậy (có thể chứa lệnh chèn): không chép lại vào gợi ý.
             safe, reason = False, "comment_echo"
