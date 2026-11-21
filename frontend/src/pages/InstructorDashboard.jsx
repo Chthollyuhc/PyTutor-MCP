@@ -1147,7 +1147,7 @@ export default function InstructorDashboard() {
                                   <th className="py-2.5 px-3">Sinh Viên</th>
                                   <th className="py-2.5 px-3">Tài Khoản</th>
                                   <th className="py-2.5 px-3 text-center">Tiến Độ Giải Bài</th>
-                                  <th className="py-2.5 px-3 text-center">Sao tự làm</th>
+                                  <th className="py-2.5 px-3 text-center">Điểm nỗ lực</th>
                                   <th className="py-2.5 px-3 text-right">Thời Gian Tham Gia</th>
                                 </tr>
                               </thead>
@@ -1355,7 +1355,7 @@ export default function InstructorDashboard() {
                           <th className="py-2.5 px-3">Sinh Viên</th>
                           <th className="py-2.5 px-3">Bài Tập</th>
                           <th className="py-2.5 px-3 text-center">Kết quả chấm</th>
-                          <th className="py-2.5 px-3 text-center">Sao tự làm</th>
+                          <th className="py-2.5 px-3 text-center">Điểm nỗ lực</th>
                           <th className="py-2.5 px-3">Nguồn AI</th>
                           <th className="py-2.5 px-3 text-right">Chi Tiết</th>
                         </tr>
@@ -1432,7 +1432,7 @@ export default function InstructorDashboard() {
                   </div>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-soft">
-                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-medium">Sao tự làm</div>
+                  <div className="text-slate-500 dark:text-slate-400 text-[10px] font-medium">Điểm nỗ lực</div>
                   <div className="font-bold text-sm mt-0.5 text-amber-600 dark:text-amber-400">
                     {selectedSubmission.stars_earned || 0} ⭐
                   </div>

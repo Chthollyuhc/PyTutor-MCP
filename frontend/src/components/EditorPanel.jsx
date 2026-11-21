@@ -334,7 +334,7 @@ export default function EditorPanel({
             type="button"
             aria-label={isSubmitting ? 'Đang chấm và ghi nhận bài nộp' : 'Nộp bài chính thức (Ctrl + Shift + Enter)'}
             aria-busy={isSubmitting}
-            title="Nộp bài chính thức: chấm điểm, ghi nhận sao tự làm và mở khóa bài tiếp theo (Ctrl + Shift + Enter)"
+            title="Nộp bài chính thức: chấm điểm, ghi nhận điểm nỗ lực và mở khóa bài tiếp theo (Ctrl + Shift + Enter)"
             className={`${toolBtn} bg-emerald-500 hover:bg-emerald-600 text-white shadow-soft`}
           >
             {isSubmitting ? <Spinner /> : <Send aria-hidden="true" className="size-4" />}

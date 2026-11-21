@@ -63,7 +63,7 @@ export default function LeaderboardModal({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Xếp hạng dựa trên Tổng số Sao Tự làm (⭐), Số bài giải đúng và Điểm Clean Code
+                Xếp hạng dựa trên Tổng số Điểm Nỗ lực (⭐), Số bài giải đúng và Điểm Clean Code
               </p>
             </div>
           </div>

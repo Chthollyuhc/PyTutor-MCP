@@ -115,7 +115,7 @@ Ngoài các mục tiêu ban đầu, quá trình đánh giá mang lại hai nhậ
 4. **Độ trễ của mô hình thật cao** (trung vị khoảng 12 giây trong lần đo).
 5. **Hiệu năng mới đo ở quy mô nhỏ trên một máy;** mỗi lời gọi công cụ mở một tiến trình mới.
 6. **Chạy mã của người học chưa được cô lập về bảo mật** (tiến trình con chỉ có giới hạn thời gian, không giới hạn bộ nhớ, tệp, mạng). Mật khẩu của cơ sở dữ liệu mới đã được băm, nhưng cơ sở dữ liệu có từ trước vẫn có thể lưu dạng văn bản thường, và khóa ký JWT mặc định chỉ được cảnh báo chứ không bị chặn. Hệ thống ở mức bản mẫu nghiên cứu, chưa sẵn sàng triển khai.
-7. **Các ngưỡng** của trạng thái dữ liệu, điểm tự làm và nhóm quá trình học là quy ước, chưa hiệu chuẩn.
+7. **Các ngưỡng** của trạng thái dữ liệu, điểm nỗ lực và nhóm quá trình học là quy ước, chưa hiệu chuẩn.
 8. **Kho tri thức** là tài liệu nội bộ, chưa phải giáo trình chính thức; hệ thống chưa kiểm tra được câu trả lời có thật sự dựa vào tài liệu đã truy xuất hay không.
 9. **Phạm vi bài tập** giới hạn ở Python nhập môn với vào/ra chuẩn.
 

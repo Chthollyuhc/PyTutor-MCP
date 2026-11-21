@@ -10,7 +10,7 @@ const FILES = [
   ...readdirSync(join(components, 'plain')).filter((f) => f.endsWith('.jsx')).map((f) => join(components, 'plain', f)),
   join(components, 'StudentProfileModal.jsx'),
 ];
-const BANNED = ['khái niệm', 'trạng thái', 'bằng chứng', 'quy ước', 'hiệu chuẩn', 'trung vị', 'chỉ số tự làm',
+const BANNED = ['khái niệm', 'trạng thái', 'bằng chứng', 'quy ước', 'hiệu chuẩn', 'trung vị', 'chỉ số nỗ lực',
   'nhóm quá trình', 'mắc kẹt', 'đạt độc lập', 'thử–sửa', 'lượt', 'heuristic', 'xếp hạng'];
 
 test('các màn lời thường không chứa từ chuyên môn', () => {

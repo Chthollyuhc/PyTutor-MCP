@@ -221,7 +221,7 @@ export default function StudentClassDetailPage() {
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <p className="flex max-w-2xl items-start gap-2 rounded-lg border border-info-line bg-info-soft px-3 py-2 text-sm text-info-strong">
                     <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                    Hoàn thành bài tiên quyết để mở khóa bài tiếp theo. Sao tự làm ghi nhận mức độ độc lập khi giải bài, không ảnh hưởng đến quyền truy cập.
+                    Hoàn thành bài tiên quyết để mở khóa bài tiếp theo. Điểm nỗ lực ghi nhận mức độ độc lập khi giải bài, không ảnh hưởng đến quyền truy cập.
                   </p>
                   <div className="relative w-full md:w-80">
                     <label htmlFor="exercise-search" className="sr-only">Tìm bài tập trong lớp</label>
@@ -442,7 +442,7 @@ export default function StudentClassDetailPage() {
                   )}
 
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Stat tone={0} icon={Target} label="Mức tự làm" value={autonomyScore == null ? '—' : `${autonomyScore}/100`} note="Mức độ tự giải bài" />
+                    <Stat tone={0} icon={Target} label="Điểm nỗ lực" value={autonomyScore == null ? '—' : `${autonomyScore}/100`} note="Mức độ tự giải bài" />
                     <Stat tone={1} icon={CheckSquare} label="Đạt ngay lần nộp đầu" value={firstTryPassRate == null ? '—' : `${firstTryPassRate}%`} note="Tỷ lệ bài đạt ở lần nộp đầu" />
                     <Stat tone={2} icon={RefreshCw} label="Số lần thử trung bình" value={avgAttempts ?? '—'} note="Số lần nộp / bài đã giải" />
                     <Stat tone={4} icon={Star} label="Tổng sao của lớp" value={totalClassStars} note="Tích lũy từ bài tập" />
@@ -471,7 +471,7 @@ export default function StudentClassDetailPage() {
                         <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-lg bg-warning text-on-solid"><Trophy className="size-5" /></span>
                         Bảng xếp hạng lớp học phần
                       </h2>
-                      <p className="text-sm text-muted">Xếp theo sao tự làm và số bài đã giải</p>
+                      <p className="text-sm text-muted">Xếp theo điểm nỗ lực và số bài đã giải</p>
                     </div>
                     <div className="overflow-x-auto rounded-xl border border-tone-line bg-surface max-md:border-0 max-md:bg-transparent">
                       <table className="table-stack w-full text-left text-sm">
@@ -480,7 +480,7 @@ export default function StudentClassDetailPage() {
                             <th scope="col" className="px-4 py-3 font-bold">Hạng</th>
                             <th scope="col" className="px-4 py-3 font-bold">Sinh viên</th>
                             <th scope="col" className="px-4 py-3 text-right font-bold">Bài đã giải</th>
-                            <th scope="col" className="px-4 py-3 text-right font-bold">Sao tự làm</th>
+                            <th scope="col" className="px-4 py-3 text-right font-bold">Điểm nỗ lực</th>
                             <th scope="col" className="px-4 py-3 text-right font-bold">Điểm Clean Code</th>
                           </tr>
                         </thead>

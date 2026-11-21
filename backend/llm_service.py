@@ -883,7 +883,7 @@ async def generate_chat_followup(
 
 
 _STAR_RULE_QUESTION = re.compile(
-    r"sao tự làm|[123]\s*(?:⭐|sao)\b|mấy sao|bao nhiêu sao|số sao|tăng sao|cày sao|luật (?:tính )?sao|cách tính sao|⭐|(?:ba|3) nút",
+    r"điểm nỗ lực|[123]\s*(?:⭐|sao)\b|mấy sao|bao nhiêu sao|số sao|tăng sao|cày sao|luật (?:tính )?sao|cách tính sao|⭐|(?:ba|3) nút",
     flags=re.IGNORECASE)
 _DEBUG_MY_CODE_REQUEST = re.compile(
     r"(?:sửa|fix|gỡ|chữa|xem|kiểm tra|soát)\s+(?:giúp |hộ |giùm |lại |cho |em |mình |tôi |tớ )*(?:lỗi |bug )?(?:trong |ở |của )?"
@@ -898,7 +898,7 @@ def build_system_rule_reply(user_message: str, chat_scope: str = "legacy") -> Op
     """Câu trả lời tất định cho hai tình huống không cần LLM (S1.4); None nếu không thuộc hai tình huống này."""
     text = user_message or ""
     if _STAR_RULE_QUESTION.search(text):
-        return ("Luật của PyTutor về ba nút và Sao tự làm:\n\n" + SYSTEM_RULES_TEXT +
+        return ("Luật của PyTutor về ba nút và Điểm nỗ lực:\n\n" + SYSTEM_RULES_TEXT +
                 "\n\n❓ Với bài đang làm, bạn muốn thử tự giải tới đâu trước khi cần gợi ý?")
     if chat_scope == "concept_only" and _DEBUG_MY_CODE_REQUEST.search(text):
         return ("Ở khung trò chuyện này mình chỉ giải thích **khái niệm Python tổng quát** khi bạn chưa nộp bài đạt, "

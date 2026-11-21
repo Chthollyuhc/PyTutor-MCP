@@ -14,7 +14,7 @@ Vấn đề cần sửa:
 4. Một số chỉ số đi ngược sư phạm của chính hệ thống:
    - "Đạt ngay lần đầu" và "số lần nộp TB" ngược với luật sao (nộp nhiều lần không trừ sao).
    - "Mức gợi ý TB" lấy trung bình một thang thứ bậc. Khi chưa có dữ liệu, mã còn hiện mặc định `1.0` kèm nhãn "Độc lập tư duy cao" (`StudentProfileModal.jsx:235`).
-   - "Mức tự làm /100" là chỉ số gộp chưa hiệu chuẩn nhưng hiện như điểm chính xác.
+   - "Điểm nỗ lực /100" là chỉ số gộp chưa hiệu chuẩn nhưng hiện như điểm chính xác.
 5. Phần trăm trên mẫu nhỏ.
 
 Hướng đã chốt (theo bản phác thảo đã trao đổi):

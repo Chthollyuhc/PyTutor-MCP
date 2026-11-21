@@ -37,7 +37,7 @@ FEW_DATA_VI = "Lớp mới có ít hoạt động nên nhận xét có thể ch�
 # Từ cấm trong MỌI câu do module này sinh ra (test kiểm tra). Tên bài, tên sinh viên và mô tả test do giảng viên
 # viết được chèn nguyên văn nên không thuộc phạm vi kiểm tra.
 BANNED_WORDS = (
-    "khái niệm", "trạng thái", "bằng chứng", "quy ước", "hiệu chuẩn", "trung vị", "chỉ số tự làm", "nhóm quá trình",
+    "khái niệm", "trạng thái", "bằng chứng", "quy ước", "hiệu chuẩn", "trung vị", "chỉ số nỗ lực", "nhóm quá trình",
     "mắc kẹt", "đạt độc lập", "thử–sửa", "thử-sửa", "dữ liệu hạn chế", "mẫu nhỏ", "heuristic", "lượt", "xếp hạng",
     "kém", "yếu", "thất bại", "expected", "≥", "≤", "%", "#", "n=", " sv ", "kc", "test",
 )

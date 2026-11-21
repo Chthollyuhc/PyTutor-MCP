@@ -96,7 +96,7 @@ def init_db():
         )
     """)
 
-    # 4. Bảng đánh giá sao tự làm theo bài tập (user_exercise_stars)
+    # 4. Bảng đánh giá điểm nỗ lực theo bài tập (user_exercise_stars)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_exercise_stars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1359,7 +1359,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
         total_hint_sum += max_hint
         total_hint_count += 1
 
-        # Tính điểm tự làm cho bài này
+        # Tính điểm nỗ lực cho bài này
         if has_passed:
             mastered_exercises.append(eid)
             passed_sub = next(s for s in s_list if s["all_passed"] == 1)
@@ -1477,7 +1477,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     elif len(mastered_exercises) >= 4 and autonomy_score >= 80:
         level_classification = "Hoàn thành nhiều bài với mức hỗ trợ thấp"
         strengths_analysis = (
-            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập đã thử với chỉ số tự làm {autonomy_score}/100. "
+            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập đã thử với chỉ số nỗ lực {autonomy_score}/100. "
             f"Tỷ lệ hoàn thành ngay lần đầu đạt {first_try_pass_rate}%, trung bình chỉ mất {avg_attempts_to_solve} lần nộp/bài."
         )
         if struggling_exercises:
@@ -1490,7 +1490,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     elif len(mastered_exercises) >= 2 and autonomy_score >= 60:
         level_classification = "Hoàn thành ổn định, còn dùng gợi ý ở một số bài"
         strengths_analysis = (
-            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập với chỉ số tự làm {autonomy_score}/100. "
+            f"Đã hoàn thành {len(mastered_exercises)}/{distinct_count} bài tập với chỉ số nỗ lực {autonomy_score}/100. "
             f"Vượt qua bài tập với mức trợ giúp trung bình Level {avg_hint} (chủ yếu dùng Gợi ý nhẹ hoặc Chỉ chỗ sai)."
         )
         if struggling_exercises:
@@ -1636,7 +1636,7 @@ def get_instructor_stats(instructor_username: Optional[str] = None) -> dict:
 
 def calculate_autonomy_stars(attempt_count: int, max_hint_level_used: int, all_passed: bool) -> int:
     """
-    Quy tắc tính sao tự làm:
+    Quy tắc tính điểm nỗ lực:
     - Nếu chưa pass 100% test cases: 0 Sao
     - Nếu pass 100%:
         + Dùng gợi ý <= Mức 1 (hoặc không hỏi AI): 3 SAO (Tự làm Xuất sắc ⭐⭐⭐)
@@ -1707,7 +1707,7 @@ def save_exercise_stars(
 
 
 def get_user_achievements(username: str) -> dict:
-    """Lấy thống kê sao tự làm của học viên (tên hàm giữ lại để tương thích)."""
+    """Lấy thống kê điểm nỗ lực của học viên (tên hàm giữ lại để tương thích)."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -2785,7 +2785,7 @@ def get_tutor_feedback_summary(instructor_username: str, days: int = 30) -> dict
 
 
 def get_autonomy_hint_context(username: str, exercise_id: str) -> dict[str, Any]:
-    """Ngữ cảnh tính sao tự làm của một bài, đọc trên TOÀN BỘ lịch sử (không giới hạn N lượt gần nhất).
+    """Ngữ cảnh tính điểm nỗ lực của một bài, đọc trên TOÀN BỘ lịch sử (không giới hạn N lượt gần nhất).
 
     - `max_hint_level_used`: mức gợi ý cao nhất ở các lượt `ask_ai` cho tới lần `submit` pass đầu tiên
       (chưa từng pass thì tính mọi lượt `ask_ai`). `hint_level` của lượt `submit` không được gộp;
@@ -2871,7 +2871,7 @@ def explain_autonomy_stars(stars: int, max_hint_level_used: int, attempt_count: 
         "how_to_improve": improve,
         "note": ("Số lần nộp không làm giảm sao. Mức gợi ý được tính trên toàn bộ các lượt Hỏi Gia sư AI cho tới lần nộp đạt đầu tiên; "
                  "nộp lại sau đó không làm tăng sao. "
-                 "Sao tự làm là quy ước của PyTutor về mức hỗ trợ đã dùng, không phải điểm học phần hay thang đo năng lực đã kiểm chứng."),
+                 "Điểm nỗ lực là quy ước của PyTutor về mức hỗ trợ đã dùng, không phải điểm học phần hay thang đo năng lực đã kiểm chứng."),
     }
 
 

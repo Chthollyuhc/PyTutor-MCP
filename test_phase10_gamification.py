@@ -2,7 +2,7 @@
 Kịch bản Kiểm thử Tự động Phase 10: Gamification, 3-Star Autonomy & Senior Pythonic Code Review.
 Kiểm tra:
 1. calculate_autonomy_stars: Logic tính sao chính xác (0, 1, 2, 3 sao)
-2. Huy hiệu không còn được cấp; dữ liệu sao tự làm vẫn được ghi nhận
+2. Huy hiệu không còn được cấp; dữ liệu điểm nỗ lực vẫn được ghi nhận
 3. POST /api/tutor/pythonic-review: Senior Reviewer chấm điểm Clean Code (>= 70) và code Pythonic
 4. GET /api/leaderboard: Bảng xếp hạng lớp học sắp xếp theo tổng sao giảm dần
 5. GET /api/student/achievements: Truy xuất số sao và bài đã hoàn thành
@@ -43,10 +43,10 @@ def test_phase10_comprehensive():
     assert calculate_autonomy_stars(attempt_count=1, max_hint_level_used=1, all_passed=True) == 3, "Hint level 1 phải 3 sao!"
     assert calculate_autonomy_stars(attempt_count=3, max_hint_level_used=2, all_passed=True) == 2, "Hint level 2 phải 2 sao!"
     assert calculate_autonomy_stars(attempt_count=5, max_hint_level_used=3, all_passed=True) == 1, "Hint level 3 phải 1 sao!"
-    print("    ✅ PASS: Thuật toán tính sao tự làm đạt chuẩn 100% (0, 1, 2, 3 sao).")
+    print("    ✅ PASS: Thuật toán tính điểm nỗ lực đạt chuẩn 100% (0, 1, 2, 3 sao).")
 
-    # 2. Huy hiệu đã bị loại khỏi luồng cấp mới; sao tự làm vẫn được lưu.
-    print("\n[2] Kiểm tra không cấp huy hiệu mới và vẫn ghi nhận sao tự làm...")
+    # 2. Huy hiệu đã bị loại khỏi luồng cấp mới; điểm nỗ lực vẫn được lưu.
+    print("\n[2] Kiểm tra không cấp huy hiệu mới và vẫn ghi nhận điểm nỗ lực...")
     test_user = f"gamer_{int(time.time())}"
     test_headers = {"Authorization": f"Bearer {create_token(test_user, 'student', 'Gamer Test')}"}
     # Hoàn thành bài 1 -> mở FIRST_SOLVE

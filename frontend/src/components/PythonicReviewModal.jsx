@@ -145,10 +145,10 @@ export default function PythonicReviewModal({
                   </div>
                 </div>
 
-                {/* Sao tự làm: chỉ hiện khi vừa có lượt "Nộp bài" đạt trong phiên này (không hiện 3 sao mặc định). */}
+                {/* Điểm nỗ lực: chỉ hiện khi vừa có lượt "Nộp bài" đạt trong phiên này (không hiện 3 sao mặc định). */}
                 {Number.isFinite(starsEarned) && starsEarned > 0 && (
-                  <div className="flex items-center space-x-2 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl shadow-soft" aria-label={`Sao tự làm lượt nộp gần nhất: ${starsEarned} trên 3`}>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Sao tự làm lượt nộp gần nhất:</span>
+                  <div className="flex items-center space-x-2 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl shadow-soft" aria-label={`Điểm nỗ lực lượt nộp gần nhất: ${starsEarned} trên 3`}>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Điểm nỗ lực lượt nộp gần nhất:</span>
                     <div className="flex items-center space-x-1 text-base" aria-hidden="true">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <span key={i} className={i < starsEarned ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600'}>
@@ -256,7 +256,7 @@ export default function PythonicReviewModal({
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-2 shadow-soft">
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                   Điểm Clean Code và đoạn code đề xuất là nhận xét tham khảo về phong cách viết mã
-                  {review.llm_source ? ` (nguồn: ${review.llm_source})` : ''}; không ảnh hưởng tới kết quả chấm bài hay số sao tự làm.
+                  {review.llm_source ? ` (nguồn: ${review.llm_source})` : ''}; không ảnh hưởng tới kết quả chấm bài hay số điểm nỗ lực.
                 </p>
                 <TutorFeedbackButtons interactionId={review.interaction_id} prompt="Bản review này có giúp bạn không?" />
               </div>

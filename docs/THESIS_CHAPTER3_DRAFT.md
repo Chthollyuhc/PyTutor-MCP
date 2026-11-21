@@ -22,7 +22,7 @@
 |---|---|
 | F-S1 | Xem đề bài, viết mã trong trình soạn thảo, chạy thử trên bộ kiểm thử mà không bị ghi vào hồ sơ chính thức |
 | F-S2 | Xin gợi ý theo ba mức do chính mình chọn |
-| F-S3 | Nộp bài chính thức; nhận kết quả, số sao tự làm và lý do của số sao đó |
+| F-S3 | Nộp bài chính thức; nhận kết quả, số điểm nỗ lực và lý do của số sao đó |
 | F-S4 | Trò chuyện với gia sư về khái niệm; sau khi nộp đạt thì hỏi được về bài đã nộp |
 | F-S5 | Chạy từng bước để xem giá trị biến |
 | F-S6 | Xem hồ sơ học tập kèm trạng thái "đủ/chưa đủ dữ liệu" |
@@ -103,7 +103,7 @@ Hàm `select_hint_strategy` (`backend/adaptive_policy.py`) chọn chiến lượ
 
 Chính sách là tất định và trả về danh sách bằng chứng đã dùng. Nó chỉ đổi **cách** gợi ý; mức gợi ý (`requested_level`) được giữ nguyên.
 
-### 3.2.5. Sao tự làm
+### 3.2.5. Điểm nỗ lực
 
 - Sao chỉ sinh khi **Nộp bài** và đạt mọi kiểm thử.
 - Số sao theo mức gợi ý cao nhất đã dùng ở "Hỏi Gia sư AI" cho tới lần nộp đạt đầu tiên: không dùng hoặc Mức 1 → 3 sao; Mức 2 → 2 sao; Mức 3 → 1 sao.
@@ -217,7 +217,7 @@ Giới hạn chung: các lớp 2–4 dựa trên biểu thức chính quy; kết
 ## 3.7. Mô hình người học và chỉ số
 
 - **Chỉ lượt Nộp bài** tính vào chỉ số chính thức; lượt Hỏi Gia sư AI và Chạy thử không tính.
-- Chỉ số: số lượt nộp, số bài khác nhau, tỷ lệ đạt ngay lần đầu, số lượt nộp trên mỗi bài, mức gợi ý cao nhất trung bình, điểm tự làm, cơ cấu lỗi, mức nắm theo chủ đề, khó khăn lặp lại, bài nên luyện tiếp.
+- Chỉ số: số lượt nộp, số bài khác nhau, tỷ lệ đạt ngay lần đầu, số lượt nộp trên mỗi bài, mức gợi ý cao nhất trung bình, điểm nỗ lực, cơ cấu lỗi, mức nắm theo chủ đề, khó khăn lặp lại, bài nên luyện tiếp.
 - **Trạng thái dữ liệu:** `no_data` (chưa nộp), `limited` (dưới 3 bài khác nhau), `sufficient` (từ 3 bài). Khi `limited`, hồ sơ ghi "chưa đủ dữ liệu" thay vì nhận định.
 - Logic mô hình nằm trong module hàm thuần dùng chung `pytutor_shared/learner_model.py`; hai bản `compute_student_model` (backend và tiến trình công cụ) chỉ khác dòng mở kết nối và được kiểm thử là cùng nguồn, cùng kết quả.
 - Mục 3.7.1 thêm phần `learner_model` (phiên bản mô hình "3") cạnh các chỉ số trên; `analytics_metrics` và `metric_definition_version "2"` không đổi.
@@ -237,11 +237,11 @@ Mô hình là **heuristic thứ bậc, không phải BKT/IRT/Knowledge Tracing**
 | `string` | Xử lý chuỗi | chuỗi, string, slicing, text, văn bản |
 | `recursion` | Đệ quy | đệ quy, recurs |
 
-**Trạng thái KC** (chỉ tính từ lượt `submit`): `no_evidence` (chưa có bài gắn KC); `struggling` (có bài gắn KC với từ 2 lượt nộp sai chưa giải); `secure` (từ 2 bài gắn KC đã đạt, điểm tự làm trung bình từ 70, không `struggling`); còn lại `developing`. Dữ liệu theo KC `sufficient` khi có từ 2 bài.
+**Trạng thái KC** (chỉ tính từ lượt `submit`): `no_evidence` (chưa có bài gắn KC); `struggling` (có bài gắn KC với từ 2 lượt nộp sai chưa giải); `secure` (từ 2 bài gắn KC đã đạt, điểm nỗ lực trung bình từ 70, không `struggling`); còn lại `developing`. Dữ liệu theo KC `sufficient` khi có từ 2 bài.
 
 **Hồ sơ lỗi** (`error_profile`) lấy từ bảng mới `attempt_features` (`error_class` thuộc passed/syntax/runtime/timeout/logic_partial/logic_none, cùng cờ AST). Lượt cũ chưa có đặc trưng dùng heuristic dự phòng; mô hình báo `feature_coverage_percent`.
 
-**Hồ sơ hỗ trợ và quá trình** (`support_profile` với `hint_reliance` low/medium/high/unknown; `process_by_exercise`) dùng lượt `ask_ai` và chạy thử; được gắn nhãn `descriptive_process`, **không** vào `analytics_metrics`, sao hay điểm tự làm.
+**Hồ sơ hỗ trợ và quá trình** (`support_profile` với `hint_reliance` low/medium/high/unknown; `process_by_exercise`) dùng lượt `ask_ai` và chạy thử; được gắn nhãn `descriptive_process`, **không** vào `analytics_metrics`, sao hay điểm nỗ lực.
 
 **Luật chính sách v3** (`select_hint_strategy`, vẫn 4 chiến lược). Luật dựa vào mô hình chỉ kích hoạt khi KC liên quan có dữ liệu `sufficient` và dùng bằng chứng **từ bài khác** (không đếm trùng lịch sử bài đang làm):
 
@@ -252,8 +252,8 @@ Mô hình là **heuristic thứ bậc, không phải BKT/IRT/Knowledge Tracing**
 | `repeated_error_type` | sai, loại lỗi trùng `dominant_error_class` của KC | `failed_case_diagnosis` nhấn vào loại lỗi lặp lại |
 | `bridge_from_mastered` | bắt đầu khái niệm, có KC `secure` | nhắc một bài đã làm đạt |
 | `independence_check` | đạt hết và `hint_reliance=high` | ôn lại kèm câu tự kiểm về mức hỗ trợ đã dùng |
-| `granularity_fine` | `hint_reliance=high` hoặc điểm tự làm dưới 45 (dữ liệu đủ) | chia bước kế tiếp nhỏ hơn |
-| `granularity_coarse` + `self_check_first` | mọi KC `secure` và điểm tự làm từ 80 | một câu hỏi và tự kiểm trước |
+| `granularity_fine` | `hint_reliance=high` hoặc điểm nỗ lực dưới 45 (dữ liệu đủ) | chia bước kế tiếp nhỏ hơn |
+| `granularity_coarse` + `self_check_first` | mọi KC `secure` và điểm nỗ lực từ 80 | một câu hỏi và tự kiểm trước |
 
 Đầu ra thêm `model_fields_used`, `learner_signals`, `policy_version "3"`. **`requested_level` luôn bằng mức người học yêu cầu** (luật bất biến 4); mô hình chỉ đổi cách diễn đạt.
 

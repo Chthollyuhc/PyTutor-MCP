@@ -4,7 +4,7 @@ Bộ kiểm thử Tự động Toàn diện cho PHASE 13 & 14 (v4.0 NEU Enterpri
 2. Quản lý Đa Lớp học phần (Multi-Class Enrollment & Per-Class Exercises).
 3. Ghi danh qua Mã tham gia lớp (Enrollment Code) và Rời lớp.
 4. Quản lý danh sách bài tập và quan hệ tiên quyết theo lớp.
-5. Tiến trình hoàn thành dựa trên kết quả pass; sao tự làm chỉ dùng để ghi nhận/xếp hạng.
+5. Tiến trình hoàn thành dựa trên kết quả pass; điểm nỗ lực chỉ dùng để ghi nhận/xếp hạng.
 6. Động cơ Phân tích Năng lực 4 Chiều (4D Analytics: Autonomy Score, First-try Pass Rate, Error Breakdown) & 3 Thẻ Chẩn đoán Sư phạm.
 """
 

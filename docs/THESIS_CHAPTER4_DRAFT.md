@@ -45,7 +45,7 @@ Khóa luận không gộp các loại bằng chứng khác bản chất vào m�
 4. **Chiến lược thích ứng.** Từ kết quả kiểm thử, lịch sử làm bài và hồ sơ, hệ thống chọn một trong bốn chiến lược (`conceptual_start`, `failed_case_diagnosis`, `recurring_difficulty`, `solution_review`). Chiến lược chỉ đổi *cách* gợi ý, không đổi *mức* gợi ý.
 5. **Trò chuyện theo phạm vi.** Trước khi nộp đạt, trò chuyện chỉ bàn khái niệm; sau khi đạt mới bàn về bài đã nộp. Câu trả lời có nguồn thì hiện nguồn, không có thì nói rõ "không có tài liệu nội bộ phù hợp". *(Ảnh: hai trạng thái nguồn.)*
 6. **Chạy từng bước.** Người học xem giá trị biến thay đổi theo từng dòng lệnh. *(Ảnh: thanh trượt bước chạy.)*
-7. **Sao tự làm có giải thích.** Số sao phụ thuộc mức gợi ý cao nhất đã dùng trước lần nộp đạt đầu tiên; số lần nộp không trừ sao; thẻ lý do nêu rõ quy tắc và cách cải thiện. *(Ảnh: thẻ lý do sao.)*
+7. **Điểm nỗ lực có giải thích.** Số sao phụ thuộc mức gợi ý cao nhất đã dùng trước lần nộp đạt đầu tiên; số lần nộp không trừ sao; thẻ lý do nêu rõ quy tắc và cách cải thiện. *(Ảnh: thẻ lý do sao.)*
 8. **Hồ sơ học tập có trạng thái dữ liệu.** Khi dữ liệu còn ít, hồ sơ ghi "chưa đủ dữ liệu" thay vì đưa ra nhận định. *(Ảnh: hồ sơ ở trạng thái `limited`.)*
 
 ### 4.2.2. Phía giảng viên
@@ -85,7 +85,7 @@ Nguồn: lần chạy lại ngày 13/11/2026 (mục 4.3.1); mô tả chi tiết 
 | **Tổng unittest** | **121/121 đạt** |
 | Kịch bản lớp công cụ (`mcp_server.test_mcp_server`) | 8/8 bước đạt |
 | Kịch bản backend đầu-cuối (`backend.test_backend_e2e`) | 6/6 đạt |
-| Kịch bản trò chuyện, sao tự làm, lớp học phần (`test_phase8/10/12`) | 7/7, 6/6, 7/7 đạt |
+| Kịch bản trò chuyện, điểm nỗ lực, lớp học phần (`test_phase8/10/12`) | 7/7, 6/6, 7/7 đạt |
 | Benchmark chống lộ lời giải, RAG, chiến lược thích ứng | Kết quả đếm trùng với mục 4.4 |
 | Biên dịch `backend`, `mcp_server` | Đạt |
 | Cơ sở dữ liệu thật `pytutor.db` | Không đổi (so băm SHA-256 trước và sau) |
@@ -353,7 +353,7 @@ Với cỡ mẫu vài người đến vài chục người và không có nhóm 
 3. **Độ trễ của mô hình thật cao** (trung vị khoảng 12 giây).
 4. **Hiệu năng mới đo ở quy mô nhỏ** trên một máy; mỗi lời gọi công cụ mở một tiến trình mới.
 5. **Kho tri thức là tài liệu nội bộ**, chưa phải giáo trình chính thức.
-6. **Các ngưỡng** (`data_status`, điểm tự làm, nhóm quá trình học) là quy ước vận hành, chưa hiệu chuẩn.
+6. **Các ngưỡng** (`data_status`, điểm nỗ lực, nhóm quá trình học) là quy ước vận hành, chưa hiệu chuẩn.
 7. **Nhánh offline** chỉ nêu điều quan sát được, chưa chỉ ra dòng lệnh cụ thể; khung mã Mức 3 offline là khung chung cho mọi bài (chỉ phần "bước kế tiếp" thay đổi theo bài làm).
 8. **Chưa triển khai** trên máy chủ dùng chung.
 9. **Chưa đạt mức an toàn để triển khai:** mã của người học chạy trong tiến trình con chỉ có giới hạn thời gian, chưa cô lập bộ nhớ, tệp và mạng. Mật khẩu của cơ sở dữ liệu mới được băm (PBKDF2), nhưng cơ sở dữ liệu có từ trước vẫn có thể lưu dạng văn bản thường; khóa ký JWT mặc định chỉ bị cảnh báo. Chấp nhận được cho bản mẫu với dữ liệu giả lập, không chấp nhận được khi vận hành.

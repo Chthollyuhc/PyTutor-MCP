@@ -370,12 +370,12 @@ def derive_learner_model(
         elif (len(passed) >= THRESHOLDS["secure_min_passed_exercises"] and avg_auto is not None
               and avg_auto >= THRESHOLDS["secure_min_avg_autonomy"]):
             state = STATE_SECURE
-            why = (f"Đã nộp đạt {len(passed)} bài thuộc nhóm này, chỉ số tự làm trung bình {round(avg_auto)}/100, "
+            why = (f"Đã nộp đạt {len(passed)} bài thuộc nhóm này, chỉ số nỗ lực trung bình {round(avg_auto)}/100, "
                    "chưa có bài nào đang vướng.")
         else:
             state = STATE_DEVELOPING
             why = (f"Đã nộp {n} bài thuộc nhóm này, đạt {len(passed)}; chưa đủ điều kiện để coi là khá vững "
-                   f"(cần ≥ {THRESHOLDS['secure_min_passed_exercises']} bài đạt với tự làm trung bình ≥ {THRESHOLDS['secure_min_avg_autonomy']}).")
+                   f"(cần ≥ {THRESHOLDS['secure_min_passed_exercises']} bài đạt với điểm nỗ lực trung bình ≥ {THRESHOLDS['secure_min_avg_autonomy']}).")
         unresolved = [x["dominant_error_class"] for x in details if x["dominant_error_class"] and x["status"] != "passed"]
         everything = [x["dominant_error_class"] for x in details if x["dominant_error_class"]]
         concepts.append({

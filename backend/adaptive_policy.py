@@ -167,7 +167,7 @@ def select_hint_strategy(hint_level: int, test_results: dict, attempt_history: l
                 {"hint_reliance": reliance}, ["learner_model.support_profile.hint_reliance"])
         elif autonomy is not None and autonomy < THRESHOLDS["fine_granularity_autonomy_below"]:
             granularity = "fine"
-            add("granularity_fine", f"Chia bước kế tiếp nhỏ hơn vì chỉ số tự làm hiện tại là {autonomy}/100 (heuristic).",
+            add("granularity_fine", f"Chia bước kế tiếp nhỏ hơn vì chỉ số nỗ lực hiện tại là {autonomy}/100 (heuristic).",
                 {"autonomy_score": autonomy}, ["analytics_metrics.autonomy_score"])
         elif (autonomy is not None and autonomy >= THRESHOLDS["coarse_granularity_autonomy_min"]
               and sum(1 for c in with_evidence if c.get("state") == "secure") >= 2
