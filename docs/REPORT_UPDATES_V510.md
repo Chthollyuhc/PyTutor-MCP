@@ -107,6 +107,6 @@ Nên thêm ca **D03** (sai cận `range(1, n)`) ở cả ba mức, trước và 
 ## 7. Cập nhật v5.11 và đổi đầu đề (22/11/2026)
 
 Đã áp dụng vào bản sao `bao_cao_final_v510.docx` (không đụng `bao_cao_final.docx` gốc; sao lưu trước khi sửa ở `scratch/bao_cao_final_v510.docx.bak_v511`):
-- **Đầu đề dễ hiểu hơn** (26 đầu đề, cả mục lục lưu sẵn và Bảng 3.7): 3.2.3 «Các mức gợi ý», 3.4.2 «Cách hệ thống soạn yêu cầu gửi cho Gia sư AI», 4.4.1 «Chống lộ lời giải ở các mức gợi ý», 4.5.3–4.5.5 và các mục còn nhiều thuật ngữ (xem danh sách trong `scratch/edit_docx_v511.py`, biến `RENAMES`). Nội dung chỉ thêm các đoạn giải thích bằng lời thường (đầu mục 3.4.2).
+- **Đầu đề dễ hiểu hơn** (27 đầu đề, cả mục lục lưu sẵn và Bảng 3.7): 3.2.3 «Các mức gợi ý», 3.4.2 «Cách hệ thống soạn yêu cầu gửi cho Gia sư AI», 4.4.1 «Chống lộ lời giải ở các mức gợi ý», 4.5.3–4.5.5 và các mục còn nhiều thuật ngữ (xem danh sách trong `scratch/edit_docx_v511.py`, biến `RENAMES`). Nội dung chỉ thêm các đoạn giải thích bằng lời thường (đầu mục 3.4.2).
 - **Nội dung v5.11:** đoạn «Từ phiên bản 5.11…» ở 3.2.3; đoạn chặng đường trang chủ ở 4.2.1; Bảng 4.3 thêm `test_exercise_brief_v511` 16/16 và `test_path_class_v511` 7/7, tổng 15 mô-đun/234 ca (cũng sửa ở Mở đầu và Kết luận); đoạn kiểm chứng 29 lượt Gemini thật ở 4.5.7 (Mức 2 7/7, Mức 1 4/7 trên mẫu 14 lượt, ghi rõ mẫu nhỏ).
 - Mục lục: Word sẽ hỏi cập nhật trường khi mở; chọn «Có» để số trang khớp.
