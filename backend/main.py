@@ -160,7 +160,7 @@ from backend.attention_marks import (annotate_overview, annotate_plain_groups, c
 from backend.database import get_attention_marks, set_attention_marks, clear_attention_marks
 from backend.schemas import AttentionMarkRequest, AttentionUndoRequest
 from backend.student_journey import build_student_headline, describe_exercise_journey, pick_path_class, DISCLAIMER_VI
-from backend.plain_language import (build_class_plain_view, build_course_path, build_story, build_today_card,
+from backend.plain_language import (enrich_concepts, build_class_plain_view, build_course_path, build_story, build_today_card,
                                     class_brief_line, story_one_liner)
 from pytutor_shared.learner_model import summarize_attempt_features
 
@@ -835,6 +835,15 @@ async def instructor_student_exercise_journey(class_id: str, username: str, exer
     return journey
 
 
+def _learner_model_with_plain(lm: Optional[dict]) -> Optional[dict]:
+    """Bản sao mô hình người học kèm explanation_vi/common_error_vi ở từng kỹ năng (chỉ thêm trường)."""
+    if not lm:
+        return lm
+    out = dict(lm)
+    out["concepts"] = enrich_concepts(lm.get("concepts"), lm.get("error_profile"))
+    return out
+
+
 @app.get("/api/instructor/classes/{class_id}/students/{username}/learner-model")
 async def instructor_student_learner_model(class_id: str, username: str, token_data: dict = Depends(require_instructor)):
     """Mô hình người học v3 của MỘT sinh viên trong lớp của giảng viên (heuristic mô tả, chưa hiệu chuẩn).
@@ -850,7 +859,7 @@ async def instructor_student_learner_model(class_id: str, username: str, token_d
         "class_id": class_id, "username": username,
         "data_status": (sm.get("analytics_metrics") or {}).get("data_status", "no_data"),
         "analytics_metrics": sm.get("analytics_metrics"),
-        "learner_model": sm.get("learner_model"),
+        "learner_model": _learner_model_with_plain(sm.get("learner_model")),
     }
 
 
@@ -1149,7 +1158,7 @@ async def get_student_journey_endpoint(
         "today": today,
         "headline": build_student_headline(lm, next_practice, overview["week"], overview["recent_exercises"]),
         "week": overview["week"],
-        "concepts": lm.get("concepts", []),
+        "concepts": enrich_concepts(lm.get("concepts", []), lm.get("error_profile")),
         "support_profile": lm.get("support_profile"),
         "next_practice": next_practice,
         "recent_exercises": overview["recent_exercises"],

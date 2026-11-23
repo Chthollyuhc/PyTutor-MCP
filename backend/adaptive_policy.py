@@ -11,6 +11,8 @@ from pytutor_shared.learner_model import (
     KC_LABELS, THRESHOLDS, dominant_class, is_struggling_detail, summarize_attempt_features,
 )
 
+from backend.plain_language import error_plain, kc_name, state_plain
+
 POLICY_VERSION = "3"
 
 # Chỉ dẫn cố định cho prompt theo mã điều chỉnh (không chứa nội dung lời giải).
@@ -101,8 +103,11 @@ def select_hint_strategy(hint_level: int, test_results: dict, attempt_history: l
     adaptations: list[dict] = []
     fields_used: list[str] = []
 
-    def add(code: str, reason: str, context: dict | None = None, fields: list[str] | None = None) -> None:
-        adaptations.append({"code": code, "reason_vi": reason, "context": context or {}})
+    def add(code: str, reason: str, context: dict | None = None, fields: list[str] | None = None,
+            view: dict | None = None) -> None:
+        adaptations.append({"code": code, "reason_vi": reason, "context": context or {},
+                            "concept_label_vi": kc_name(view["kc"], view.get("label_vi")) if view else None,
+                            "concept_state_label_vi": state_plain(view["state"]) if view else None})
         for f in fields or []:
             if f not in fields_used:
                 fields_used.append(f)
@@ -134,28 +139,32 @@ def select_hint_strategy(hint_level: int, test_results: dict, attempt_history: l
         if failed and struggling_views:
             strategy = "recurring_difficulty"
             v = struggling_views[0]
+            n_fail = sum(int(d.get("failed_submits") or 0) for d in v["struggling"])
             add("concept_recurring_difficulty",
-                f"Nhóm kiến thức \"{v['label_vi']}\" đã có bài chưa giải được ({v['struggling'][0]['title']}); "
-                "bài này cùng nhóm nên hệ thống đề nghị làm chậm và có phương pháp.",
+                f"{kc_name(v['kc'], v['label_vi'])}: bạn {state_plain(v['state'])} ({n_fail} lần nộp chưa đạt, "
+                f"như ở bài \"{v['struggling'][0]['title']}\") nên bước kế tiếp được chia nhỏ hơn.",
                 {"kc": v["kc"], "kc_label": v["label_vi"], "exercise_title": v["struggling"][0]["title"]},
-                [f"learner_model.concepts[{v['kc']}].state", f"learner_model.concepts[{v['kc']}].exercise_details"])
+                [f"learner_model.concepts[{v['kc']}].state", f"learner_model.concepts[{v['kc']}].exercise_details"],
+                view=v)
         elif failed:
             strategy = "failed_case_diagnosis"
             for v in views:
                 if v["sufficient"] and error_class and v["dominant_error_class"] == error_class:
                     add("repeated_error_type",
-                        f"Dạng lỗi lần này ({error_class}) trùng dạng lỗi thường gặp ở các bài khác thuộc nhóm \"{v['label_vi']}\".",
+                        f"{kc_name(v['kc'], v['label_vi'])} ({state_plain(v['state'])}): lỗi lần này, "
+                        f"{error_plain(error_class) or error_class}, giống lỗi bạn hay gặp ở các bài khác cùng phần.",
                         {"error_class": error_class, "kc": v["kc"], "kc_label": v["label_vi"]},
-                        [f"learner_model.concepts[{v['kc']}].dominant_error_class"])
+                        [f"learner_model.concepts[{v['kc']}].dominant_error_class"], view=v)
                     break
         else:
             strategy = "conceptual_start"
             for v in views:
                 if v["sufficient"] and v["state"] == "secure" and v["passed"]:
                     add("bridge_from_mastered",
-                        f"Nhóm kiến thức \"{v['label_vi']}\" bạn đã nộp đạt ở bài \"{v['passed'][0]['title']}\"; có thể nhớ lại cách đã làm.",
+                        f"{kc_name(v['kc'], v['label_vi'])}: bạn {state_plain(v['state'])}, đã làm đúng bài "
+                        f"\"{v['passed'][0]['title']}\"; có thể nhớ lại cách đã làm.",
                         {"kc": v["kc"], "kc_label": v["label_vi"], "exercise_title": v["passed"][0]["title"]},
-                        [f"learner_model.concepts[{v['kc']}].state"])
+                        [f"learner_model.concepts[{v['kc']}].state"], view=v)
                     break
     # --- Độ chi tiết diễn đạt (không đổi mức tiết lộ) ---
     granularity = "standard"

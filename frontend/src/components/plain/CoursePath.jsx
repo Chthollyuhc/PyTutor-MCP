@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CheckCircle2, Lock, MapPin } from 'lucide-react';
-import { windowSteps } from '../../utils/path';
+
+// Quá ngưỡng này thì dãy trạm có thanh kéo ngang (từ 640px trở lên); dưới 640px vẫn là danh sách dọc.
+const MAX_VISIBLE = 8;
 
 const KIND_TEXT = { done: 'đã xong', current: 'bạn đang ở đây', open: 'chưa làm', locked: 'chưa mở, cần xong bài trước' };
 
@@ -23,13 +25,26 @@ function Stars({ count }) {
 
 /** Chặng đường học phần: mỗi bài là một trạm. Dưới 640px thành danh sách dọc. */
 export default function CoursePath({ path, onOpenExercise }) {
-  const { visible, hiddenBefore, hiddenAfter } = windowSteps(path?.steps, 8);
+  const steps = Array.isArray(path?.steps) ? path.steps : [];
+  const scrollable = steps.length > MAX_VISIBLE;
+  const visible = steps;
+  const listRef = useRef(null);
+  useEffect(() => {
+    const ol = listRef.current;
+    if (!ol || !scrollable) return;
+    const cur = ol.querySelector('[data-current="true"]');
+    if (cur) ol.scrollLeft = Math.max(0, cur.offsetLeft - (ol.clientWidth - cur.clientWidth) / 2);
+  }, [scrollable, path?.class_id, steps.length]);
   if (!visible.length) return null;
   const cls = 'flex w-full items-center gap-3 rounded-2xl p-2 text-left sm:flex-col sm:gap-1.5 sm:text-center';
   return (
     <div className="space-y-2">
       {path.class_name && <p className="text-xs font-semibold text-muted">{path.class_name}</p>}
-      <ol aria-label={`Chặng đường học phần ${path.class_name || ''}`.trim()} className="grid gap-2 sm:grid-flow-col sm:auto-cols-fr">
+      <ol
+        ref={listRef}
+        aria-label={`Chặng đường học phần ${path.class_name || ''}`.trim()}
+        className={`relative grid gap-2 sm:grid-flow-col ${scrollable ? 'sm:auto-cols-[8.5rem] sm:overflow-x-auto sm:pb-2' : 'sm:auto-cols-fr'}`}
+      >
         {visible.map((step) => {
           const label = `${step.title}: ${KIND_TEXT[step.kind]}`;
           const body = (
@@ -43,7 +58,7 @@ export default function CoursePath({ path, onOpenExercise }) {
             </>
           );
           return (
-            <li key={step.exercise_id}>
+            <li key={step.exercise_id} data-current={step.kind === 'current' ? 'true' : undefined}>
               {step.kind !== 'locked' && onOpenExercise ? (
                 <button type="button" aria-label={label} onClick={() => onOpenExercise(step.exercise_id, path.class_id)} className={`${cls} cursor-pointer hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400`}>
                   {body}
@@ -55,11 +70,6 @@ export default function CoursePath({ path, onOpenExercise }) {
           );
         })}
       </ol>
-      <p className="text-center text-sm text-muted">
-        {hiddenBefore > 0 && <span>+{hiddenBefore} bài trước · </span>}
-        {path.caption_vi}
-        {hiddenAfter > 0 && <span> · +{hiddenAfter} bài sau</span>}
-      </p>
     </div>
   );
 }

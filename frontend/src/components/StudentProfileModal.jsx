@@ -5,6 +5,7 @@ import { fetchStudentJourney } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import TodayCard from './plain/TodayCard';
 import StorySteps from './plain/StorySteps';
+import ConceptMap from './journey/ConceptMap';
 
 /** Hành trình học (v5.9, lời thường): thẻ hôm nay, bài đang mở, các bài gần đây. Mọi câu nhận xét lấy từ backend. */
 
@@ -132,6 +133,13 @@ export default function StudentProfileModal({ isOpen, onClose, classId, currentE
           ) : journey ? (
             <>
               <TodayCard today={journey.today} onOpenExercise={openExercise} />
+
+              {journey.concepts?.length > 0 && (
+                <section aria-labelledby="journey-concepts" className="space-y-3">
+                  <h3 id="journey-concepts" className="text-sm font-bold text-foreground">Bạn đang ở đâu trong từng phần</h3>
+                  <ConceptMap concepts={journey.concepts} onOpenExercise={(id) => openExercise(id)} />
+                </section>
+              )}
 
               {current?.points?.length > 0 && (
                 <section aria-labelledby="journey-current" className="space-y-3 rounded-2xl border border-border bg-surface p-4">

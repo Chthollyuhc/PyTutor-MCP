@@ -23,37 +23,59 @@ const KC_STATE_STYLE = {
 
 /** v5.6 — Mô hình người học của một sinh viên (tải khi giảng viên mở). Mô tả theo quy ước, không phải thang năng lực. */
 function StudentLearnerModelDetail({ classId, username }) {
-  const [open, setOpen] = useState(false);
-  const [state, setState] = useState({ loading: false, data: null, error: '' });
+  const [state, setState] = useState({ loading: true, data: null, error: '' });
 
-  const handleToggle = (event) => {
-    const isOpen = event.currentTarget.open;
-    setOpen(isOpen);
-    if (isOpen && !state.data && !state.loading) {
-      setState({ loading: true, data: null, error: '' });
-      fetchStudentLearnerModel(classId, username)
-        .then((data) => setState({ loading: false, data, error: '' }))
-        .catch(() => setState({ loading: false, data: null, error: 'Không tải được mô hình người học.' }));
-    }
-  };
+  // Tải ngay khi thẻ sinh viên hiện ra để chip khái niệm thấy được mà không cần mở mục thu gọn.
+  useEffect(() => {
+    let alive = true;
+    setState({ loading: true, data: null, error: '' });
+    fetchStudentLearnerModel(classId, username)
+      .then((data) => { if (alive) setState({ loading: false, data, error: '' }); })
+      .catch(() => { if (alive) setState({ loading: false, data: null, error: 'Không tải được mô hình người học.' }); });
+    return () => { alive = false; };
+  }, [classId, username]);
 
   const lm = state.data?.learner_model;
+  const allConcepts = lm?.concepts || [];
+  const evidenced = allConcepts.filter((c) => c.state && c.state !== 'no_evidence');
+  // Ưu tiên khái niệm đang vướng; bỏ câu trùng lặp giữa các khái niệm (cùng bài, cùng dạng lỗi).
+  const withError = [...evidenced.filter((c) => c.common_error_vi)]
+    .sort((a, b) => Number(b.state === 'struggling') - Number(a.state === 'struggling'))
+    .filter((c, i, arr) => arr.findIndex((x) => x.common_error_vi === c.common_error_vi) === i);
   return (
-    <details onToggle={handleToggle} className="mt-1.5 text-[11px]">
-      <summary className="cursor-pointer text-muted hover:text-foreground">Mô hình người học</summary>
-      {open && (
+    <div className="mt-1.5 text-[11px]">
+      {state.loading && <p className="text-muted">Đang tải khái niệm…</p>}
+      {state.error && <p className="text-rose-600 dark:text-rose-300">{state.error}</p>}
+      {lm && evidenced.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Khái niệm đã có bài nộp">
+          {evidenced.map((c) => (
+            <li key={c.kc} title={c.explanation_vi || c.explanation} className={`rounded-full border px-2 py-0.5 ${KC_STATE_STYLE[c.state] || KC_STATE_STYLE.no_evidence}`}>
+              {c.label_vi}: {c.state_label_vi || c.state}
+            </li>
+          ))}
+        </ul>
+      )}
+      {lm && evidenced.length === 0 && <p className="text-muted">Chưa có khái niệm nào đủ bài nộp để nhận xét.</p>}
+      {withError.length > 0 && (
+        <ul className="mt-1 space-y-0.5 text-muted">
+          {withError.slice(0, 1).map((c) => <li key={c.kc}><span className="font-semibold text-foreground">{c.label_vi}</span>. {c.common_error_vi}</li>)}
+        </ul>
+      )}
+    <details className="mt-1.5">
+      <summary className="cursor-pointer text-muted hover:text-foreground">Mô hình người học đầy đủ</summary>
+      {lm && (
         <div className="mt-1.5 space-y-1.5">
-          {state.loading && <p className="text-muted">Đang tải…</p>}
-          {state.error && <p className="text-rose-600 dark:text-rose-300">{state.error}</p>}
+          {allConcepts.length > 0 && (
+            <ul className="space-y-1">
+              {allConcepts.map((c) => (
+                <li key={c.kc} className="text-muted">
+                  <span className="font-semibold text-foreground">{c.label_vi}</span>: {c.explanation_vi || c.explanation || (c.state_label_vi || c.state)}
+                </li>
+              ))}
+            </ul>
+          )}
           {lm && (
             <>
-              <ul className="flex flex-wrap gap-1.5">
-                {(lm.concepts || []).map((c) => (
-                  <li key={c.kc} title={c.explanation} className={`rounded-full border px-2 py-0.5 ${KC_STATE_STYLE[c.state] || KC_STATE_STYLE.no_evidence}`}>
-                    {c.label_vi}: {c.state_label_vi || c.state}
-                  </li>
-                ))}
-              </ul>
               <p className="text-muted">
                 Phụ thuộc gợi ý: {({ low: 'thấp', medium: 'trung bình', high: 'cao' })[lm.support_profile?.hint_reliance] || 'chưa đủ dữ liệu'} · {lm.support_profile?.ask_ai_count ?? 0} lượt hỏi Gia sư AI (mô tả quá trình, không tính vào chỉ số chính thức).
               </p>
@@ -63,6 +85,7 @@ function StudentLearnerModelDetail({ classId, username }) {
         </div>
       )}
     </details>
+    </div>
   );
 }
 
@@ -604,7 +627,7 @@ export function ClassesAttentionList({ classes, onOpen }) {
         <div>
           <h3 className="text-sm font-bold text-foreground">Các lớp cần xem tuần này</h3>
           <p className="mt-1 text-[11px] text-muted" aria-live="polite">
-            {state.data ? `${state.data.needing_attention} trong ${state.data.total_classes} lớp có việc nên xem. ` : ''}Nhận xét tự động, có thể chưa chính xác.
+            {state.data ? `${state.data.needing_attention} trong ${state.data.total_classes} lớp có việc nên xem.` : ''}
           </p>
         </div>
         {all.length > ATTENTION_PAGE && (

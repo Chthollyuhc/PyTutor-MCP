@@ -382,12 +382,26 @@ export default function TutorPanel({
                 )}
               </div>
               {adaptiveStrategy && !testResults?.all_passed && (
-                <p className="border-t border-ai-line pt-2 text-[0.8125rem] text-muted">
-                  Vì sao nhận gợi ý này: {adaptiveStrategy.adaptation_codes?.includes('no_code_yet') ? 'bạn chưa viết dòng code nào nên gợi ý giúp hiểu đề và chọn bước đầu tiên' : adaptiveStrategy.reason_code === 'recurring_difficulty' ? 'lịch sử cho thấy bạn đã thử bài này nhiều lần' : adaptiveStrategy.reason_code === 'failed_case_diagnosis' ? 'có kiểm thử chưa đạt để làm căn cứ phân tích' : 'chưa có đủ dữ liệu lịch sử nên bắt đầu bằng gợi mở an toàn'}.
-                  {Array.isArray(adaptiveStrategy.adaptations) && adaptiveStrategy.adaptations.map((a) => (
-                    <span key={a.code} className="block mt-1">· {a.reason_vi}</span>
-                  ))}
-                </p>
+                <div className="border-t border-ai-line pt-2 text-[0.8125rem] text-muted" aria-label="Vì sao nhận gợi ý này">
+                  <p>
+                    Vì sao nhận gợi ý này: {adaptiveStrategy.adaptation_codes?.includes('no_code_yet') ? 'bạn chưa viết dòng code nào nên gợi ý giúp hiểu đề và chọn bước đầu tiên' : adaptiveStrategy.adaptation_codes?.includes('concept_recurring_difficulty') ? 'có kiểm thử chưa đạt, và bạn đang vướng ở một phần kiến thức liên quan từ các bài trước'
+                      : adaptiveStrategy.reason_code === 'recurring_difficulty' ? 'lịch sử cho thấy bạn đã thử bài này nhiều lần' : adaptiveStrategy.reason_code === 'failed_case_diagnosis' ? 'có kiểm thử chưa đạt để làm căn cứ phân tích' : 'chưa có đủ dữ liệu lịch sử nên bắt đầu bằng gợi mở an toàn'}.
+                  </p>
+                  {Array.isArray(adaptiveStrategy.adaptations) && adaptiveStrategy.adaptations.length > 0 && (
+                    <ul className="mt-1 space-y-1.5">
+                      {adaptiveStrategy.adaptations.map((a) => (
+                        <li key={a.code}>
+                          <span>· {a.reason_vi}</span>
+                          {a.concept_label_vi && (
+                            <span className="ml-1.5 inline-block rounded-full border border-ai-line px-2 py-0.5 text-xs font-medium text-foreground">
+                              Phần kiến thức: {a.concept_label_vi}{a.concept_state_label_vi ? ` · ${a.concept_state_label_vi}` : ''}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
 
               {/* Nút leo thang gợi ý thân thiện */}

@@ -459,6 +459,85 @@ def _class_skills(kc_overview: Optional[dict]) -> list[str]:
     return out
 
 
+# ------------------------------------------------------------------ v5.14: mô hình người học bằng lời thường
+STATE_PLAIN = {"secure": "khá vững", "developing": "đang làm quen", "struggling": "đang vướng",
+               "no_evidence": "chưa có bài nộp chính thức"}
+ERROR_PLAIN = {
+    "syntax": "viết sai cú pháp nên chương trình không chạy được",
+    "runtime": "chương trình báo lỗi giữa chừng khi chạy",
+    "timeout": "chương trình chạy quá lâu hoặc lặp mãi không dừng",
+    "logic_partial": "kết quả đúng ở một số trường hợp nhưng sai ở trường hợp khác",
+    "logic_none": "kết quả chưa đúng ở hầu hết các trường hợp",
+    "zero_pass": "kết quả chưa đúng ở hầu hết các trường hợp",
+}
+
+
+def state_plain(state: Optional[str]) -> str:
+    return STATE_PLAIN.get(state or "", STATE_PLAIN["no_evidence"])
+
+
+def error_plain(error_class: Optional[str]) -> Optional[str]:
+    return ERROR_PLAIN.get(error_class or "")
+
+
+def concept_plain(concept: Optional[dict], error_profile: Optional[dict] = None) -> dict[str, Optional[str]]:
+    """Lời giải thích vì sao hệ thống nghĩ vậy cho MỘT kỹ năng. Chỉ dùng số đã có; không bịa.
+
+    Trả {"explanation_vi", "common_error_vi"}. `error_profile` (hồ sơ lỗi chung) chỉ dùng khi kỹ năng chưa có
+    dạng lỗi riêng và chưa có bài nào làm đúng; thiếu cả hai thì common_error_vi là None."""
+    c = concept or {}
+    name = kc_name(c.get("kc"), c.get("label_vi"))
+    state = c.get("state") or "no_evidence"
+    details = c.get("exercise_details") or []
+    passed = [d for d in details if d.get("status") == "passed"]
+    failed_submits = sum(int(d.get("failed_submits") or 0) for d in details if d.get("status") != "passed")
+    stuck = [d for d in details if d.get("status") == "struggling"]
+    if not details:
+        exp = f"{name}: chưa có bài nộp chính thức nào ở phần này, nên hệ thống chưa nhận xét gì."
+    elif state == "struggling":
+        base = stuck or details
+        failed_submits = sum(int(d.get("failed_submits") or 0) for d in base)
+        titles = ", ".join(str(d.get("title")) for d in base[:2])
+        exp = (f"{name}: bạn đang vướng vì có {len(base)} bài chưa làm đúng hết sau {failed_submits} lần nộp "
+               f"chưa đạt ({titles}).")
+    elif state == "secure":
+        exp = f"{name}: bạn đã làm đúng {len(passed)} bài ở phần này và chưa có bài nào đang vướng, nên được xem là khá vững."
+    else:
+        exp = (f"{name}: bạn đã nộp {len(details)} bài ở phần này, làm đúng {len(passed)} bài; "
+               "cần thêm bài làm đúng nhờ tự làm để được xem là khá vững.")
+    err = error_plain(c.get("dominant_error_class")) if details else None
+    if err is None and details and not passed:
+        err = error_plain((error_profile or {}).get("dominant_error_class"))
+    if err and passed and state != "struggling":
+        # Bài đã đạt: chỉ nhắc lỗi cũ khi đã từng nộp chưa đạt, và nói rõ đó là lúc trước khi làm đúng.
+        had_fail = any(int(d.get("failed_submits") or 0) > 0 for d in passed)
+        return {"explanation_vi": exp,
+                "common_error_vi": f"Lúc chưa làm đúng, lỗi hay gặp ở phần này: {err}." if had_fail else None}
+    return {"explanation_vi": exp, "common_error_vi": f"Lỗi hay gặp ở phần này: {err}." if err else None}
+
+
+def enrich_concepts(concepts: Optional[list], error_profile: Optional[dict] = None) -> list[dict]:
+    """Bản sao danh sách kỹ năng kèm explanation_vi, common_error_vi (chỉ THÊM trường)."""
+    out = []
+    for c in concepts or []:
+        d = dict(c)
+        d.update(concept_plain(c, error_profile))
+        out.append(d)
+    return out
+
+
+def concept_focus_line(kc_overview: Optional[dict]) -> Optional[str]:
+    """Một câu nêu kỹ năng có nhiều bạn đang vướng nhất; None nếu không ai vướng."""
+    best = None
+    for it in (kc_overview or {}).get("items") or []:
+        n = int((it.get("students") or {}).get("struggling") or 0)
+        if n >= 1 and (best is None or n > best[0]):
+            best = (n, kc_name(it.get("kc"), it.get("label_vi")))
+    if not best:
+        return None
+    return f"{best[1]} là phần nhiều bạn đang vướng nhất ({best[0]} bạn)."
+
+
 def how_it_works_vi() -> list[str]:
     """Luật chia nhóm nói bằng lời, lấy đúng hằng số đang dùng (không chép tay con số)."""
     t = OVERVIEW_THRESHOLDS
@@ -522,6 +601,7 @@ def build_class_plain_view(insights: Optional[dict], overview: Optional[dict] = 
         "group_titles_vi": dict(GROUP_TITLES_VI),
         "exercises": exercises,
         "skills_vi": _class_skills(insights.get("kc_overview")),
+        "concept_focus_vi": concept_focus_line(insights.get("kc_overview")),
         "how_it_works_vi": how_it_works_vi(),
         "active": active,
         "enrolled": len(rows),

@@ -78,7 +78,8 @@ export default function ConceptMap({ concepts, onOpenExercise }) {
       {active && (
         <div id="concept-why-panel" role="region" aria-label={`Vì sao hệ thống nghĩ vậy về ${active.label_vi}`} className="space-y-2 rounded-2xl border border-border bg-surface-raised p-3 text-xs">
           <p className="font-semibold text-foreground">Vì sao hệ thống nghĩ vậy: {active.label_vi}</p>
-          <p className="leading-relaxed text-muted">{active.explanation}</p>
+          <p className="leading-relaxed text-muted">{active.explanation_vi}</p>
+          {active.common_error_vi && <p className="leading-relaxed text-muted">{active.common_error_vi}</p>}
           {(active.exercise_details || []).length > 0 && (
             <ul className="space-y-1.5">
               {active.exercise_details.map((d) => (
@@ -99,6 +100,7 @@ export default function ConceptMap({ concepts, onOpenExercise }) {
           )}
         </div>
       )}
+      <p className="text-[11px] text-muted">Đây là ước lượng tạm thời, chưa hiệu chuẩn.</p>
     </div>
   );
 }

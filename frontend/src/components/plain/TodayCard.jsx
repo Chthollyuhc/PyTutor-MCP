@@ -55,7 +55,6 @@ export default function TodayCard({ today, onOpenExercise, showGreeting = true }
           <span>{today.skills_vi}</span>
         </p>
       )}
-      <p className="text-[11px] text-muted">{today.note_vi}</p>
     </section>
   );
 }
