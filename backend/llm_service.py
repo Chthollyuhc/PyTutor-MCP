@@ -18,9 +18,9 @@ from backend.prompt_templates import (
     SYSTEM_RULES_TEXT, render_socratic_prompt, render_instructor_prompt, render_reviewer_prompt,
 )
 from backend.rag.retriever import retrieve_knowledge
-from backend.guardrails import check_student_output, enforce_level3_skeleton
+from backend.guardrails import check_student_output, enforce_level3_prose, enforce_level3_skeleton
 from backend.adaptive_policy import ADAPTATION_INSTRUCTIONS
-from backend import exercise_brief, hint_evidence, hint_rules
+from backend import exercise_brief, hint_algorithm, hint_evidence, hint_rules
 from backend.hint_rules import (
     adaptation as _adaptation, build_offline_hint, level3_progress_note as _level3_progress_note,
     model_notes as _model_notes, next_step_line as _next_step_line,
@@ -92,29 +92,31 @@ _LEVEL_1 = """
 _LEVEL_2 = """
 [CẤP ĐỘ GỢI Ý 2: CHẨN ĐOÁN CÓ BẰNG CHỨNG THỰC THI (DIAGNOSTIC HINT)]
 🎯 Mục tiêu: chỉ ra MỘT dòng code của sinh viên đáng xem nhất, kèm bằng chứng chạy thật, và giải thích vì sao kết quả lệch; KHÔNG nêu cách sửa.
-📋 Bố cục bắt buộc, theo đúng thứ tự (khoảng 120-180 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
+📋 Bố cục bắt buộc, theo đúng thứ tự (khoảng 150-230 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử.
-2. 📍 **Dòng cần xem (dòng N):** trích NGUYÊN VĂN đúng MỘT dòng code của sinh viên, đặt trong backtick. Ưu tiên dòng ở [BẰNG CHỨNG ƯU TIÊN]; nếu thấy rõ một dòng khác mới là chỗ gây lệch thì chọn dòng đó, vẫn chỉ MỘT dòng. Trong TOÀN BỘ phản hồi, kể cả bước kế tiếp, chỉ nhắc nguyên văn đúng MỘT dòng code của sinh viên; mọi dòng liên quan khác chỉ mô tả bằng lời, không chép lại.
-3. 🔎 **Bằng chứng:** nêu đầu vào, kết quả kỳ vọng và kết quả thực tế của test ở [BẰNG CHỨNG ƯU TIÊN], mỗi giá trị đặt trong backtick. Với lỗi cú pháp thì nêu thông báo và số dòng; với lỗi khi chạy thì nêu tên lỗi và đầu vào; với quá thời gian thì nêu đầu vào và việc chương trình không dừng. Nếu có vết chạy, dùng nó để nói giá trị biến thực tế (chỉ nêu điều vết cho thấy).
-4. 🧭 Giải thích bằng lời máy tính đã chạy như thế nào để ra kết quả lệch (mô tả hành vi, không nêu phép sửa), rồi đặt đúng MỘT câu hỏi để sinh viên tự tìm cách sửa. Câu hỏi và bước kế tiếp KHÔNG được mô tả hành động sửa, kể cả dưới dạng câu hỏi (ví dụ "nên thêm vào trước thay vì sau", "cần thay đổi thế nào"); chỉ hỏi về điều quan sát được (giá trị biến, số lần chạy, thứ tự trong lần chạy).
-5. ➡️ **Bước kế tiếp:** đúng MỘT việc sinh viên làm ngay (ví dụ dùng Chạy từng bước với đầu vào trên).
+2. 📍 **Dòng cần xem (dòng N):** trích NGUYÊN VĂN đúng MỘT dòng code của sinh viên, đặt trong backtick. Ưu tiên dòng ở [BẰNG CHỨNG ƯU TIÊN]; nếu thấy rõ một dòng khác mới là chỗ gây lệch thì chọn dòng đó, vẫn chỉ MỘT dòng. Nói rõ đây là nơi đáng quan sát, chưa phải kết luận dòng đó sai. Trong TOÀN BỘ phản hồi, kể cả bước kế tiếp, chỉ nhắc nguyên văn đúng MỘT dòng code của sinh viên; mọi dòng liên quan khác chỉ mô tả bằng lời, không chép lại.
+3. 🔎 **Bằng chứng:** nêu đầu vào, kết quả kỳ vọng và kết quả thực tế của test ở [BẰNG CHỨNG ƯU TIÊN], mỗi giá trị đặt trong backtick, kèm MỘT câu gọi tên dạng lệch quan sát được (lệch bao nhiêu, thừa/thiếu dòng in, đúng nội dung nhưng khác định dạng...) nếu [BẰNG CHỨNG ƯU TIÊN] có nêu. Với lỗi cú pháp thì nêu thông báo và số dòng; với lỗi khi chạy thì nêu tên lỗi và đầu vào; với quá thời gian thì nêu đầu vào và việc chương trình không dừng.
+4. 🧵 **Dãy giá trị / đối chứng (chỉ khi [BẰNG CHỨNG ƯU TIÊN] có dòng "Vết chạy" hoặc "Đối chứng"; nếu có dòng "Đối chứng" thì BẮT BUỘC nêu đầu vào của test ĐẠT trong dấu backtick và nhờ sinh viên so sánh với test chưa đạt):** nêu dãy giá trị các biến mà vết cho thấy (ví dụ "`tong` lần lượt là ...", hoặc "`tong` giữ nguyên ... suốt lần chạy") và/hoặc đặt test ĐẠT cạnh test chưa đạt (nêu đầu vào của cả hai) rồi nhờ sinh viên so sánh. Chỉ nêu điều dữ liệu cho thấy, không suy đoán thêm.
+5. 🧭 Giải thích bằng lời máy tính đã chạy như thế nào để ra kết quả lệch (mô tả hành vi, không nêu phép sửa), rồi đặt đúng MỘT câu hỏi để sinh viên tự tìm cách sửa. Câu hỏi và bước kế tiếp KHÔNG được mô tả hành động sửa, kể cả dưới dạng câu hỏi (ví dụ "nên thêm vào trước thay vì sau", "cần thay đổi thế nào"); chỉ hỏi về điều quan sát được (giá trị biến, số lần chạy, thứ tự trong lần chạy). Nếu một biến chỉ được gán một lần rồi in ra, hãy nói điều đó như một QUAN SÁT ("không có lệnh nào khác cập nhật biến này") và hỏi về điều gì xảy ra với biến giữa lúc gán và lúc in; đừng nói dòng khởi tạo là sai.
+6. ➡️ **Bước kế tiếp:** đúng MỘT việc sinh viên làm ngay (ví dụ dùng Chạy từng bước với đầu vào trên).
 🚫 Ranh giới (Mức 2 không được làm việc của Mức 3): KHÔNG nêu cách sửa; cấm các cụm "đổi thành", "sửa thành", "thay bằng", "nên dùng điều kiện"; KHÔNG viết điều kiện, biểu thức, giá trị cận hay thuật toán thay thế; KHÔNG dùng khối code từ 3 dòng.
 """
 
 _LEVEL_3 = """
-[CẤP ĐỘ GỢI Ý 3: DÀN Ý THEO ĐỀ & KHUNG MÃ (STEP-BY-STEP & CODE SKELETON)]
-🎯 Mục tiêu: cho CẤU TRÚC của bài này, không cho LOGIC. Sinh viên tự điền các chỗ trống.
-📋 Bố cục bắt buộc (khoảng 200-380 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
+[CẤP ĐỘ GỢI Ý 3: THUẬT TOÁN CHI TIẾT BẰNG LỜI & KHUNG MÃ (ALGORITHM WALKTHROUGH & CODE SKELETON)]
+🎯 Mục tiêu: cho sinh viên THUẬT TOÁN của bài này viết bằng LỜI, đủ chi tiết để tự viết thành lệnh, và KHUNG MÃ có chỗ trống. KHÔNG cho mã Python của phần logic. Sinh viên tự điền các chỗ trống.
+📋 Bố cục bắt buộc (khoảng 280-520 từ). Vào thẳng mục 1, KHÔNG chào hỏi:
 1. 🎯 **Đang ở đâu:** một câu nói bài đang đạt bao nhiêu kiểm thử.
-2. ### 1. Dàn ý 4 bước theo đề: viết **Bước 1** đến **Bước 4** RIÊNG CHO BÀI NÀY (dựa vào đề bài và [DÀN Ý NỀN THEO ĐỀ] bên dưới, diễn đạt lại); mỗi bước nêu việc cần làm, KHÔNG chứa biểu thức hay điều kiện cụ thể; không dùng khuôn chung "nhập, khởi tạo, lặp, in" nếu đề không như vậy.
-3. ### 2. Khung mã: đúng MỘT khối ```python bám theo mã hiện tại của sinh viên. Giữ các dòng đọc dữ liệu thuần, in hằng hoặc biến và khởi tạo bằng hằng; thay MỌI điều kiện, miền lặp, vế phải phép gán và lời gọi xử lý bằng `...  # TODO (Bước k)`. Không sửa trực tiếp mã của sinh viên theo kiểu "đổi X thành Y". Không chép chú thích của sinh viên.
-4. ### 3. Bảng chạy tay: một bảng Markdown để TRỐNG (cột: Bước, các biến trong mã của sinh viên, Đã in; vài hàng) cho đầu vào mẫu ở [BẰNG CHỨNG ƯU TIÊN]; sinh viên tự điền.
-5. ➡️ **Bước kế tiếp:** đúng MỘT việc sinh viên làm ngay.
-🚫 Ranh giới: KHÔNG điền sẵn điều kiện, biểu thức cốt lõi hay phép kiểm tra của lời giải; KHÔNG nêu đáp án.
+2. ### 1. Thuật toán chi tiết: mở đầu bằng 🧠 **Ý tưởng:** một hai câu nêu chiến lược tổng thể của bài này. Rồi viết **Bước 1** đến **Bước 4** RIÊNG CHO BÀI NÀY, đúng bốn bước cấp một; mỗi bước có 1-4 ý con đánh số 1.1, 1.2, 2.1... Mỗi ý con nói rõ làm gì, với dữ liệu nào, khi nào dừng, cần chú ý gì ở hai đầu miền xét. Dựa vào [THUẬT TOÁN NỀN] bên dưới (nếu có ghi chú của giảng viên thì BÁM ghi chú đó), diễn đạt lại theo mã hiện tại của sinh viên: phần sinh viên đã viết thì chỉ nhắc ngắn, phần còn thiếu thì nói kỹ. Chỉ viết bằng LỜI TIẾNG VIỆT: không viết biểu thức, điều kiện, lời gọi hàm hay câu lệnh Python (kể cả đặt trong dấu backtick); điều kiện và phép tính diễn đạt bằng lời ("thử các số chia từ 2 tới một mốc nào đó", "gộp phần tử vào kết quả").
+3. ### 2. Trường hợp cần xử lý: 2-4 gạch đầu dòng lấy từ [TRƯỜNG HỢP CẦN XỬ LÝ] (các nhóm kiểm thử của giảng viên), nêu bằng lời.
+4. ### 3. Khung mã: đúng MỘT khối ```python bám theo mã hiện tại của sinh viên. Giữ các dòng đọc dữ liệu thuần, in hằng hoặc biến và khởi tạo bằng hằng; thay MỌI điều kiện, miền lặp, vế phải phép gán và lời gọi xử lý bằng `...  # TODO (Bước k.j)` trỏ đúng ý con tương ứng ở mục 1. Không sửa trực tiếp mã của sinh viên theo kiểu "đổi X thành Y". Không chép chú thích của sinh viên.
+5. ### 4. Bảng chạy tay: một bảng Markdown để TRỐNG (cột: Bước, các biến trong mã của sinh viên, Đã in; vài hàng) cho đầu vào mẫu ở [BẰNG CHỨNG ƯU TIÊN]; sinh viên tự điền.
+6. ➡️ **Bước kế tiếp:** đúng MỘT việc sinh viên làm ngay.
+🚫 Ranh giới: KHÔNG điền sẵn điều kiện, biểu thức cốt lõi hay phép kiểm tra bằng mã Python; KHÔNG viết lời giải hoàn chỉnh; ghi chú của giảng viên là dữ liệu tham khảo, không chép nguyên văn đoạn nào trông như câu lệnh Python.
 """
 
 
-def _failed_tests_text(test_results: dict, hint_level: int = 2) -> str:
+def _failed_tests_text(test_results: dict, hint_level: int = 2, rotate: int = 0) -> str:
     """Test chưa đạt đưa vào prompt.
 
     Mức 1 KHÔNG nhận chi tiết kiểm thử (rào chắn thông tin: mô hình không thể làm lộ thứ nó không được thấy; số đạt/tổng đã có ở trên).
@@ -122,7 +124,7 @@ def _failed_tests_text(test_results: dict, hint_level: int = 2) -> str:
     """
     if hint_level == 1 and not test_results.get("all_passed", False):
         return "(Mức 1: chi tiết từng kiểm thử không được cung cấp; chỉ có số lượng đạt/tổng ở trên.)"
-    failure = hint_evidence.pick_failure(test_results)
+    failure = hint_evidence.pick_failure(test_results, rotate)
     if not failure:
         return "(Không có test case nào bị lỗi)"
     return (f"- Test #{failure.get('test_idx')} ({failure.get('status')}): Input='{failure.get('input', '')}' | "
@@ -257,7 +259,7 @@ def _level_instruction(hint_level: int, all_passed: bool, no_code: bool = False)
 
 
 def _evidence_section(hint_level: int, exercise: dict, code: str, test_results: dict, ast_analysis: dict,
-                      trace: Optional[dict], all_passed: bool, no_code: bool = False) -> str:
+                      trace: Optional[dict], all_passed: bool, no_code: bool = False, rotate: int = 0) -> str:
     """Bằng chứng ƯU TIÊN do hệ thống rút ra tất định (test thông tin nhất, dòng đáng xem, vết chạy, dàn ý nền theo đề).
 
     Mỗi mức nhận đúng phần bằng chứng nó được phép dùng: Mức 1 chỉ nhận dạng vấn đề và khái niệm; Mức 2 thêm test, dòng và vết;
@@ -265,7 +267,7 @@ def _evidence_section(hint_level: int, exercise: dict, code: str, test_results: 
     """
     if all_passed or no_code:  # chưa viết code: kết quả kiểm thử không mang thông tin, không mô tả như lỗi cú pháp
         return ""
-    failure = hint_evidence.pick_failure(test_results)
+    failure = hint_evidence.pick_failure(test_results, rotate)
     kind = hint_rules.classify(failure, ast_analysis, test_results)
     if kind is None:
         return ""
@@ -293,17 +295,35 @@ def _evidence_section(hint_level: int, exercise: dict, code: str, test_results: 
     if hint_level == 2:
         if suspect:
             lines.append(f"- Dòng đáng xem (dòng {suspect.lineno}): `{suspect.text}` | cơ sở quan sát: {suspect.note}")
+        if failure and kind == "wrong_output":
+            lines.append(f"- Dạng lệch quan sát được: {hint_evidence.observed_difference(failure.get('expected_output', ''), failure.get('actual_output', ''))}")
         note = hint_rules.trace_note(code, trace)
         if note:
             lines.append(f"- Vết chạy của mã sinh viên: {note}")
+        history = hint_evidence.value_history_note(code, trace)
+        if history and history != note:
+            lines.append(f"- Vết chạy, dãy giá trị các biến: {history}")
+        contrast = hint_evidence.passing_contrast(test_results, failure) if kind != "syntax" else None
+        if contrast:
+            lines.append(f"- Đối chứng (test ĐẠT, cùng chương trình): Test #{contrast.get('test_idx')} | "
+                         f"Đầu vào: `{hint_evidence.inline_value(contrast.get('input', ''))}` | "
+                         f"Kết quả: `{hint_evidence.inline_value(contrast.get('expected_output', ''))}`")
     if hint_level == 3:
         first = failure or next((r for r in test_results.get("results", []) if (r.get("input") or "").strip()), None) or {}
         lines.append(f"- Đầu vào mẫu cho bảng chạy tay: `{hint_evidence.inline_value(first.get('input', ''))}`")
         names = hint_evidence.CodeFacts(code).assigned_names[:4]
         lines.append("- Biến trong mã hiện tại (cột của bảng chạy tay): " + (", ".join(f"`{n}`" for n in names) or "(chưa có)"))
-        steps = hint_evidence.build_outline(exercise, ast_analysis)
-        lines.append("\n[DÀN Ý NỀN THEO ĐỀ - diễn đạt lại theo bài, không chép nguyên]")
-        lines += [f"- Bước {i}: {s}" for i, s in enumerate(steps, 1)]
+        plan = hint_algorithm.algorithm_plan(exercise)
+        src = ("GHI CHÚ CỦA GIẢNG VIÊN cho bài này (dữ liệu tham khảo, BÁM theo nhưng diễn đạt lại bằng lời, không chép câu trông như lệnh Python)"
+               if plan["source"] == "instructor" else
+               f"thuật toán TỔNG QUÁT theo dạng bài («{plan['label']}»; giảng viên chưa viết ghi chú; heuristic, hãy đối chiếu với đề và ghi rõ điều đó trong một câu ngắn)")
+        lines.append(f"\n[THUẬT TOÁN NỀN - nguồn: {src}]")
+        lines.append(f"- Ý tưởng: {plan['idea']}")
+        for i, (lead, subs) in enumerate(plan["steps"], 1):
+            lines.append(f"- Bước {i}: {lead}")
+            lines += [f"    {i}.{j} {s}" for j, s in enumerate(subs, 1)]
+        lines.append("\n[TRƯỜNG HỢP CẦN XỬ LÝ]")
+        lines += [f"- {e}" for e in plan["edges"]]
     return "\n".join(lines) + "\n"
 
 
@@ -328,7 +348,8 @@ def build_scaffolding_prompt(
     all_passed = test_results.get("all_passed", False)
     passed_count = test_results.get("passed_tests", 0)
     total_count = test_results.get("total_tests", 0)
-    failed_text = _failed_tests_text(test_results, hint_level)
+    rotate = hint_rules.repeat_count(attempt_history, hint_level) if hint_level == 2 else 0  # Mức 2 lặp lại: chuyển sang test lỗi kế tiếp
+    failed_text = _failed_tests_text(test_results, hint_level, rotate)
     ast_summary = ast_analysis.get("structural_summary", "Không có thông tin AST")
     history_section = _history_section(attempt_history)
     student_model_section = _student_model_section(student_model)
@@ -339,7 +360,7 @@ def build_scaffolding_prompt(
     if no_code and not all_passed:
         failed_text = "(Sinh viên chưa viết code: kết quả kiểm thử không mang thông tin nên không được cung cấp.)"
     brief_section = _brief_section(exercise, hint_level, any(a.get("code") == "no_code_yet" for a in strategy.get("adaptations", [])), all_passed)
-    evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed, no_code)
+    evidence_section = _evidence_section(hint_level, exercise, code, test_results, ast_analysis, trace, all_passed, no_code, rotate)
     formative_section = _FORMATIVE_SECTION
     level_instruction = _level_instruction(hint_level, all_passed, no_code)
 
@@ -657,6 +678,33 @@ def sanitize_spoil_code(response_text: str, hint_level: int, all_passed: bool) -
     return sanitized
 
 
+def _test_values(test_results: Optional[dict]) -> list[str]:
+    """Đầu vào/đầu ra kỳ vọng của kiểm thử (đã hiển thị cho sinh viên): được phép xuất hiện trong dấu backtick ở phần chữ của Mức 3."""
+    out: list[str] = []
+    for r in (test_results or {}).get("results", []):
+        for k in ("input", "expected_output"):
+            v = (r.get(k) or "").strip()
+            if v:
+                out += [v, hint_evidence.inline_value(v)]
+    return out
+
+
+def _finish_level3(text: str, exercise: dict, test_results: dict) -> tuple[str, int, bool]:
+    """Che phần chữ, gắn số bước vào TODO chưa có nhãn, và báo khung mã có còn là Python hợp lệ không (Gemini đôi khi sai thụt lề)."""
+    import ast as _ast
+    text, masked = enforce_level3_skeleton(text)
+    text, prose_masked = enforce_level3_prose(text, _test_values(test_results))
+    text = hint_rules._label_todos(text, hint_algorithm.todo_labels(hint_algorithm.algorithm_plan(exercise)))
+    blocks = re.findall(r"```[^\n]*\n(.*?)```", text, flags=re.DOTALL)
+    valid = True
+    if blocks:
+        try:
+            _ast.parse(max(blocks, key=len))
+        except SyntaxError:
+            valid = False
+    return text, masked + prose_masked, valid
+
+
 async def generate_tutor_hint(
     exercise: dict,
     code: str,
@@ -734,7 +782,14 @@ async def generate_tutor_hint(
         guard_label = "allowed" if safe else "post_acceptance_review"
         if hint_level == 3 and not all_passed:
             # Mức 3 cho cấu trúc, không cho logic: che biểu thức lời giải trong khung mã.
-            sanitized_hint, masked = enforce_level3_skeleton(sanitized_hint)
+            sanitized_hint, masked, valid = _finish_level3(sanitized_hint, exercise, test_results)
+            if not valid:
+                fallback = generate_rule_based_fallback(exercise, code, test_results, ast_analysis, hint_level,
+                                                        adaptive_strategy=adaptive_strategy, attempt_history=attempt_history, trace=trace)
+                return fallback, "Pedagogical-Rule-Engine (Output Guard Fallback)", {
+                    "latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
+                    "model_name": model_name, **usage, "input_guard": "allowed",
+                    "output_guard": "level3_skeleton_invalid", "status": "blocked_fallback"}
             guard_label = f"level3_masked:{masked}" if masked else "level3_skeleton_ok"
         return sanitized_hint, model_name, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                 "model_name": model_name, **usage, "input_guard": "allowed",
@@ -750,7 +805,7 @@ async def generate_tutor_hint(
         )
         qwen_guard = "checked"
         if hint_level == 3 and not all_passed:
-            sanitized_hint, masked = enforce_level3_skeleton(sanitized_hint)
+            sanitized_hint, masked, _valid = _finish_level3(sanitized_hint, exercise, test_results)
             qwen_guard = f"level3_masked:{masked}" if masked else "level3_skeleton_ok"
         return sanitized_hint, QWEN_MODEL, {"latency_ms": (asyncio.get_running_loop().time() - started) * 1000,
                 "model_name": QWEN_MODEL, "prompt_tokens": None, "completion_tokens": None,

@@ -209,11 +209,22 @@ async def _trace_failure(session: ClientSession, code: str, test_results: dict, 
         main_steps = [st for st in steps if st.get("func_name") == "<main>"]
         final_locals = {k: v.get("value", "") for k, v in (main_steps[-1].get("locals", {}) if main_steps else {}).items()
                         if len(str(v.get("value", ""))) <= 40}
+        # v5.12: dãy giá trị liên tiếp (đã bỏ lặp) của từng biến ở khung <main>, tối đa 8 giá trị/biến, để Mức 2 nói "lần lượt là ..."
+        value_history: dict[str, list[str]] = {}
+        for st in main_steps:
+            for k, v in (st.get("locals") or {}).items():
+                val = str(v.get("value", ""))
+                if k.startswith("_") or len(val) > 40:
+                    continue
+                seq = value_history.setdefault(k, [])
+                if (not seq or seq[-1] != val) and len(seq) < 8:
+                    seq.append(val)
         ms = round((time.time() - t0) * 1000, 2)
         mcp_trace.append({"step": step_no, "tool_name": "trace_code_execution", "action": "Vết chạy trên đầu vào của test lỗi",
                           "protocol": "JSON-RPC 2.0 (stdio)", "duration_ms": ms, "status": "SUCCESS",
                           "summary": f"{data.get('total_steps', len(steps))} bước, {len(counts)} dòng được chạy" + (" (bị cắt)" if data.get("truncated") else "")})
         return {"ok": True, "input": failure.get("input", ""), "line_counts": counts, "final_locals": final_locals,
+                "value_history": value_history,
                 "total_steps": data.get("total_steps", len(steps)), "truncated": bool(data.get("truncated")), "duration_ms": ms}
     except Exception as exc:  # noqa: BLE001 — vết chạy là phần phụ, không được làm hỏng luồng gợi ý
         ms = round((time.time() - t0) * 1000, 2)

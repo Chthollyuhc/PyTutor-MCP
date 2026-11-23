@@ -7,7 +7,7 @@ Bao gồm các mô hình cho:
 - Adaptive Student Model & Learning Events
 - Health & Monitoring
 """
-from typing import Optional, Any
+from typing import Optional, Any, List
 from pydantic import BaseModel, Field
 
 
@@ -180,6 +180,7 @@ class ExerciseDetail(BaseModel):
     is_active: Optional[bool] = True
     created_by: str = "system"
     has_passed: bool = Field(False, description="Sinh viên đang đăng nhập đã có lượt `submit` pass ở bài này (mở chat về code đã nộp)")
+    algorithm_notes: Optional[str] = Field(None, description="Ý tưởng thuật toán của giảng viên (chỉ giảng viên thấy; dùng cho gợi ý Mức 3)")
     class_id: Optional[str] = Field(None, description="Mã lớp học phần chứa bài tập")
     class_name: Optional[str] = Field(None, description="Tên lớp học phần chứa bài tập")
     class_code: Optional[str] = Field(None, description="Mã lớp học phần NEU")
@@ -194,6 +195,7 @@ class ExerciseUpsertRequest(BaseModel):
     description: str = Field(..., description="Đề bài định dạng Markdown")
     starter_code: str = Field(..., description="Mã nguồn mẫu khởi tạo")
     test_cases: list[TestCase] = Field(..., description="Danh sách các test case")
+    algorithm_notes: str = Field("", max_length=3000, description="Ý tưởng thuật toán viết bằng lời (tùy chọn, chỉ dùng cho gợi ý Mức 3)")
 
 
 class ExerciseShareRequest(BaseModel):
@@ -289,6 +291,17 @@ class InstructorAIChatRequest(BaseModel):
     class_id: str
     user_message: str = Field(..., min_length=1, max_length=2000)
     days: int = Field(7, ge=1, le=90)
+
+
+class AttentionMarkRequest(BaseModel):
+    """v5.13: đánh dấu việc nên xem (khóa lấy từ `key` của việc/thẻ/bạn trong Tình hình lớp)."""
+    keys: List[str] = Field(..., min_length=1, max_length=60)
+    status: str = Field("handled", pattern="^(handled|dismissed)$")
+    days: int = Field(7, ge=1, le=90)
+
+
+class AttentionUndoRequest(BaseModel):
+    keys: List[str] = Field(..., min_length=1, max_length=60)
 
 
 class InstructorAIChatResponse(BaseModel):

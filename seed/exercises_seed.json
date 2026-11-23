@@ -32,7 +32,8 @@
         "expected_output": "5050",
         "description": "Kiểm tra giá trị lớn n = 100"
       }
-    ]
+    ],
+    "algorithm_notes": "Dùng một biến tích lũy bắt đầu từ 0. Duyệt lần lượt các số nguyên từ 1 tới n, mỗi số gặp được thì cộng vào biến tích lũy. Duyệt xong thì in biến tích lũy. Với n nhỏ nhất (1) kết quả phải bằng đúng 1."
   },
   {
     "id": "ex_02_prime_check",
@@ -72,7 +73,8 @@
         "expected_output": "YES",
         "description": "Số nguyên tố lớn (97)"
       }
-    ]
+    ],
+    "algorithm_notes": "Số nhỏ hơn 2 (gồm 0, 1 và số âm) không phải số nguyên tố, kết luận NO ngay. Với n từ 2 trở lên, thử lần lượt các số chia từ 2 tới căn bậc hai của n; gặp một số chia hết n thì dừng và kết luận NO. Thử hết mà không có số nào chia hết thì kết luận YES. Chú ý n bằng 2 và 3 là số nguyên tố."
   },
   {
     "id": "ex_03_factorial",
@@ -107,7 +109,8 @@
         "expected_output": "40320",
         "description": "Kiểm tra 8! = 40320"
       }
-    ]
+    ],
+    "algorithm_notes": "Dùng một biến tích bắt đầu từ 1 (phần tử trung hòa của phép nhân, không phải 0). Duyệt các số nguyên từ 1 tới n, mỗi số gặp được thì nhân vào biến tích. Khi n bằng 0 thì không có số nào để nhân nên biến tích giữ nguyên 1, đúng quy ước 0! = 1."
   },
   {
     "id": "ex_04_reverse_string",
@@ -142,7 +145,8 @@
         "expected_output": "9876 54321",
         "description": "Chuỗi chứa số và khoảng trắng"
       }
-    ]
+    ],
+    "algorithm_notes": "Dựng chuỗi kết quả bắt đầu rỗng. Đi qua các ký tự của chuỗi gốc theo thứ tự từ cuối về đầu (hoặc dùng cách cắt lát có bước âm), nối từng ký tự vào chuỗi kết quả. In chuỗi kết quả. Chuỗi một ký tự và chuỗi đối xứng phải ra cùng nội dung ban đầu."
   },
   {
     "id": "ex_05_count_vowels",
@@ -177,6 +181,7 @@
         "expected_output": "10",
         "description": "Câu dài phức tạp"
       }
-    ]
+    ],
+    "algorithm_notes": "Dùng một biến đếm bắt đầu từ 0. Đưa mỗi ký tự về cùng dạng chữ thường để không phân biệt hoa thường, duyệt từng ký tự của chuỗi; ký tự nào thuộc tập năm nguyên âm a, e, i, o, u thì tăng biến đếm thêm 1. Duyệt xong thì in biến đếm; chuỗi không có nguyên âm cho kết quả 0."
   }
 ]

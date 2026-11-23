@@ -81,6 +81,10 @@ def init_db():
             FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE
         )
     """)
+    exercise_columns = {row[1] for row in cursor.execute("PRAGMA table_info(exercises)").fetchall()}
+    if "algorithm_notes" not in exercise_columns:
+        # v5.12: ý tưởng thuật toán do giảng viên viết, chỉ dùng cho gợi ý Mức 3; không bao giờ trả cho sinh viên.
+        cursor.execute("ALTER TABLE exercises ADD COLUMN algorithm_notes TEXT NOT NULL DEFAULT ''")
     submission_columns = {row[1] for row in cursor.execute("PRAGMA table_info(submissions)").fetchall()}
     if "action_type" not in submission_columns:
         cursor.execute("ALTER TABLE submissions ADD COLUMN action_type TEXT NOT NULL DEFAULT 'submit'")
@@ -293,6 +297,20 @@ def init_db():
         )
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_kb_documents_class ON kb_documents(class_id, is_active)")
+    # v5.13: dấu "đã xử lý / không cần" của giảng viên cho từng việc nên xem. Chỉ là ghi chú, không vào mô hình người học.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS attention_marks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            class_id TEXT NOT NULL,
+            item_key TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('handled', 'dismissed')),
+            signature TEXT NOT NULL DEFAULT '',
+            marked_by TEXT NOT NULL,
+            marked_at TEXT DEFAULT (datetime('now', 'localtime')),
+            UNIQUE (class_id, item_key),
+            FOREIGN KEY (class_id) REFERENCES credit_classes(id) ON DELETE CASCADE
+        )
+    """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_interactions_user_time ON llm_interactions(username, created_at)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_interactions_task_time ON llm_interactions(task_type, created_at)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_credit_classes_owner ON credit_classes(instructor_username)")
@@ -348,8 +366,8 @@ def init_db():
             for ex in seed_exercises:
                 cursor.execute("""
                     INSERT INTO exercises (
-                        id, title, difficulty, category, description, starter_code, test_cases, created_by
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        id, title, difficulty, category, description, starter_code, test_cases, created_by, algorithm_notes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     ex["id"],
                     ex["title"],
@@ -358,7 +376,8 @@ def init_db():
                     ex["description"],
                     ex["starter_code"],
                     json.dumps(ex["test_cases"], ensure_ascii=False),
-                    "system"
+                    "system",
+                    ex.get("algorithm_notes", "")
                 ))
             conn.commit()
             logger.info("Đã seed thành công 5 bài tập mẫu vào SQLite.")
@@ -871,7 +890,7 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active, created_by FROM exercises WHERE id = ?",
+        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active, created_by, algorithm_notes FROM exercises WHERE id = ?",
         (exercise_id,)
     )
     row = cursor.fetchone()
@@ -895,6 +914,7 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
         "test_cases": test_cases,
         "is_active": bool(row["is_active"]),
         "created_by": row["created_by"] or "system",
+        "algorithm_notes": row["algorithm_notes"] or "",
     }
 
 
@@ -945,7 +965,8 @@ def save_exercise(
     description: str,
     starter_code: str,
     test_cases: list[dict],
-    created_by: str = "instructor"
+    created_by: str = "instructor",
+    algorithm_notes: str = ""
 ) -> dict:
     """Tạo mới hoặc cập nhật bài tập (Upsert)."""
     conn = get_db_connection()
@@ -954,8 +975,8 @@ def save_exercise(
 
     cursor.execute("""
         INSERT INTO exercises (
-            id, title, difficulty, category, description, starter_code, test_cases, created_by, is_active
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+            id, title, difficulty, category, description, starter_code, test_cases, created_by, is_active, algorithm_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
         ON CONFLICT(id) DO UPDATE SET
             title = excluded.title,
             difficulty = excluded.difficulty,
@@ -963,8 +984,9 @@ def save_exercise(
             description = excluded.description,
             starter_code = excluded.starter_code,
             test_cases = excluded.test_cases,
+            algorithm_notes = excluded.algorithm_notes,
             is_active = 1
-    """, (exercise_id, title, difficulty, category, description, starter_code, tc_json, created_by))
+    """, (exercise_id, title, difficulty, category, description, starter_code, tc_json, created_by, algorithm_notes or ""))
     conn.commit()
     conn.close()
     return get_exercise_by_id(exercise_id)
@@ -1869,6 +1891,53 @@ def instructor_owns_class(class_id: str, instructor_username: str) -> bool:
             (class_id, instructor_username),
         ).fetchone()
         return row is not None
+    finally:
+        conn.close()
+
+
+def get_attention_marks(class_id: str) -> dict[str, dict]:
+    """Mọi dấu của một lớp, theo item_key."""
+    conn = get_db_connection()
+    try:
+        rows = conn.execute(
+            "SELECT item_key, status, signature, marked_by, marked_at FROM attention_marks WHERE class_id = ?",
+            (class_id,),
+        ).fetchall()
+        return {r["item_key"]: dict(r) for r in rows}
+    finally:
+        conn.close()
+
+
+def set_attention_marks(class_id: str, instructor_username: str, items: dict[str, str], status: str) -> int:
+    """Ghi (hoặc ghi đè) dấu cho các việc; `items` là item_key → chữ ký do server tính. Trả số dấu đã ghi."""
+    if status not in ("handled", "dismissed") or not items:
+        return 0
+    conn = get_db_connection()
+    try:
+        with conn:
+            for key, signature in items.items():
+                conn.execute(
+                    """INSERT INTO attention_marks (class_id, item_key, status, signature, marked_by, marked_at)
+                       VALUES (?, ?, ?, ?, ?, datetime('now', 'localtime'))
+                       ON CONFLICT(class_id, item_key) DO UPDATE SET status = excluded.status,
+                           signature = excluded.signature, marked_by = excluded.marked_by, marked_at = excluded.marked_at""",
+                    (class_id, key, status, signature, instructor_username),
+                )
+        return len(items)
+    finally:
+        conn.close()
+
+
+def clear_attention_marks(class_id: str, keys: list[str]) -> int:
+    """Hoàn tác: xóa dấu của các việc. Trả số dấu đã xóa."""
+    if not keys:
+        return 0
+    conn = get_db_connection()
+    try:
+        with conn:
+            cur = conn.executemany("DELETE FROM attention_marks WHERE class_id = ? AND item_key = ?",
+                                   [(class_id, k) for k in keys])
+        return cur.rowcount if cur.rowcount is not None else 0
     finally:
         conn.close()
 

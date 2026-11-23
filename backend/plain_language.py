@@ -530,12 +530,21 @@ def build_class_plain_view(insights: Optional[dict], overview: Optional[dict] = 
     }
 
 
-def class_brief_line(plain: Optional[dict]) -> str:
-    """Một dòng cho thẻ lớp ở danh sách lớp của giảng viên."""
+def class_brief_line(plain: Optional[dict], open_total: Optional[int] = None,
+                     check_in_open: Optional[int] = None) -> str:
+    """Một dòng cho thẻ lớp ở danh sách lớp của giảng viên.
+
+    v5.13: `check_in_open` là số bạn nên hỏi thăm chưa đánh dấu; `open_total` là số việc nên xem chưa đánh dấu
+    (để dòng này khớp với việc lớp có nằm trong danh sách "cần xem" hay không)."""
     if not plain or not plain.get("active"):
         return f"Chưa có hoạt động trong {int((plain or {}).get('days') or 7)} ngày qua."
-    k = len(plain["groups"]["check_in"])
-    parts = [f"{k} bạn nên hỏi thăm" if k else "Chưa có bạn nào cần hỏi thăm"]
+    k = len(plain["groups"]["check_in"]) if check_in_open is None else check_in_open
+    if k:
+        parts = [f"{k} bạn nên hỏi thăm"]
+    elif open_total:
+        parts = [f"{open_total} việc nên xem"]
+    else:
+        parts = ["Chưa có bạn nào cần hỏi thăm"]
     hardest = next((x for x in plain.get("exercises") or [] if x.get("hardest")), None)
     if hardest:
         parts.append(f"bài khó: {hardest['title']}")

@@ -26,12 +26,26 @@ def failures(test_results: Optional[dict]) -> list[dict]:
     return [r for r in (test_results or {}).get("results", []) if r.get("status") not in ("PASS", "SKIPPED")]
 
 
-def pick_failure(test_results: Optional[dict]) -> Optional[dict]:
-    """Test lỗi giàu thông tin nhất: ưu tiên đầu vào ngắn (dễ chạy tay) và tránh TIMEOUT khi còn lựa chọn khác."""
+def pick_failure(test_results: Optional[dict], rotate: int = 0) -> Optional[dict]:
+    """Test lỗi giàu thông tin nhất: ưu tiên đầu vào ngắn (dễ chạy tay) và tránh TIMEOUT khi còn lựa chọn khác.
+
+    `rotate` (v5.12): số lần người học đã xin đúng mức này; lần sau chuyển sang test lỗi kế tiếp trong thứ tự ưu tiên
+    (nếu chỉ có một test lỗi thì vẫn là test đó) để gợi ý không lặp lại cùng một bằng chứng.
+    """
     fails = failures(test_results)
     if not fails:
         return None
-    return min(fails, key=lambda r: (r.get("status") == "TIMEOUT", len((r.get("input") or "").strip()), r.get("test_idx", 0)))
+    ordered = sorted(fails, key=lambda r: (r.get("status") == "TIMEOUT", len((r.get("input") or "").strip()), r.get("test_idx", 0)))
+    return ordered[max(0, rotate) % len(ordered)]
+
+
+def passing_contrast(test_results: Optional[dict], failure: Optional[dict]) -> Optional[dict]:
+    """Một test ĐẠT có đầu vào ngắn nhất, khác test lỗi đang dùng, để đặt cạnh test lỗi (đối chứng). None nếu không có."""
+    passes = [r for r in (test_results or {}).get("results", [])
+              if r.get("status") == "PASS" and (r.get("input") or "").strip() != ((failure or {}).get("input") or "").strip()]
+    if not passes:
+        return None
+    return min(passes, key=lambda r: (len((r.get("input") or "").strip()), r.get("test_idx", 0)))
 
 
 def observed_difference(expected: str, actual: str) -> str:
@@ -45,11 +59,20 @@ def observed_difference(expected: str, actual: str) -> str:
         return "nội dung trùng nhau nhưng khác khoảng trắng hoặc xuống dòng"
     try:
         diff = float(act) - float(exp)
+        if abs(diff) == 1:
+            return f"kết quả là số và lệch {diff:+g} (đúng 1 đơn vị) so với kỳ vọng"
+        if float(act) == 0:
+            return "kết quả in ra là 0 trong khi kỳ vọng khác 0"
         return f"kết quả là số và lệch {diff:+g} so với kỳ vọng"
     except ValueError:
         pass
     if len(act.splitlines()) != len(exp.splitlines()):
         return f"số dòng in ra khác nhau ({len(act.splitlines())} so với {len(exp.splitlines())} dòng kỳ vọng)"
+    if sorted(act) == sorted(exp):
+        return "hai chuỗi gồm đúng các ký tự giống nhau nhưng xếp theo thứ tự khác"
+    if len(act) != len(exp):
+        side = "ngắn hơn" if len(act) < len(exp) else "dài hơn"
+        return f"chuỗi in ra {side} kỳ vọng {abs(len(act) - len(exp))} ký tự"
     return "nội dung in ra khác với kỳ vọng"
 
 
@@ -114,6 +137,10 @@ class CodeFacts:
             return
         self.reads_input = any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == "input" for n in ast.walk(tree))
         self._walk(tree.body, 0, False)
+
+    def blocks_assigning(self, name: str) -> bool:
+        """True nếu có khối lặp/rẽ nhánh nào gán lại `name` trong thân (khi đó không phải trường hợp 'chỉ gán một lần')."""
+        return any(name in b.assigned_in_body for b in self.blocks)
 
     def text(self, lineno: int) -> str:
         """Dòng mã đã bỏ chú thích: chú thích của người học là dữ liệu không tin cậy, không bao giờ được chép lại vào gợi ý."""
@@ -253,12 +280,45 @@ def suspect_line(code: str, failure: Optional[dict], expect_kind: str, ast_analy
             where = facts.assigns.get(name)
             if where and len(where) >= 1:
                 real = [w for w in where if facts.text(w[0]) and "input(" not in facts.text(w[0])]
+                if (len(real) == 1 and real[0][1] == 0 and not facts.blocks_assigning(name)
+                        and re.search(r"=\s*(?:-?\d+(?:\.\d+)?|\"\"|''|\[\])\s*$", facts.text(real[0][0]))):
+                    ln = real[0][0]
+                    return Suspect(ln, facts.text(ln), "never_updated",
+                                   f"`{name}` chỉ được gán một lần ở dòng {ln}; không có lệnh nào khác trong chương trình cập nhật `{name}` "
+                                   "trước khi nó được in ra", name)
                 if real:
                     ln = sorted(real, key=lambda w: (-w[1], -w[0]))[0][0]
                     return Suspect(ln, facts.text(ln), "output_variable",
                                    f"đây là dòng cập nhật `{name}` ở mức lồng sâu nhất, biến được in ra ở cuối chương trình", name)
         return Suspect(last_print[0], facts.text(last_print[0]), "print_line", "đây là lệnh quyết định nội dung in ra")
     return None
+
+
+def value_history_note(code: str, trace: Optional[dict]) -> str:
+    """Một câu về DÃY giá trị các biến của người học qua các lần chạy (từ vết chạy); rỗng nếu vết không có dãy nào đáng nói.
+
+    Chỉ nêu điều vết cho thấy: biến nào lần lượt có những giá trị nào, và dòng điều khiển chạy mấy lần.
+    """
+    history = (trace or {}).get("value_history") or {}
+    if not history:
+        return ""
+    names = [n for n in CodeFacts(code).assigned_names if n in history and not n.startswith("_")]
+    picks = []
+    for n in names:
+        vals = [str(v).replace("`", "'") for v in history[n]][:6]
+        if len(vals) >= 2:
+            picks.append((n, vals, len(history[n]) > 6))
+    if not picks:
+        facts = CodeFacts(code)
+        const = [(n, str(history[n][0]).replace("`", "'")) for n in names
+                 if len(history[n]) == 1 and not any("input(" in facts.text(ln) for ln, _ in facts.assigns.get(n, []))]
+        if not const:
+            return ""
+        inp = inline_value((trace or {}).get("input", ""))
+        return f"với đầu vào `{inp}`, " + "; ".join(f"`{n}` giữ nguyên giá trị `{v}` suốt lần chạy" for n, v in const[:2]) + "."
+    parts = [f"`{n}` lần lượt có giá trị " + ", ".join(f"`{v}`" for v in vals) + (", …" if more else "") for n, vals, more in picks[:2]]
+    inp = inline_value((trace or {}).get("input", ""))
+    return f"với đầu vào `{inp}`, " + "; ".join(parts) + "."
 
 
 # ----------------------------------------------------------------------------------------------

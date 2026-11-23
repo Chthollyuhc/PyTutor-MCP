@@ -10,7 +10,8 @@ import ExerciseProgressList from './plain/ExerciseProgressList';
 import HowItWorks from './plain/HowItWorks';
 import {
   deleteClassKnowledge, fetchClassesAttention, fetchClassInsights, fetchClassKnowledge, fetchKnowledgeBaseCatalogue,
-  fetchStudentLearnerModel, fetchTutorFeedbackSummary, toggleClassKnowledge, uploadClassKnowledge,
+  fetchStudentLearnerModel, fetchTutorFeedbackSummary, markAttention, toggleClassKnowledge, undoAttentionMarks,
+  uploadClassKnowledge,
 } from '../services/api';
 
 const KC_STATE_STYLE = {
@@ -324,6 +325,26 @@ export function ClassInsightsPanel({ classId, onOpenTab }) {
 
   const openJourney = (t) => { if (t?.exercise_id) setJourneyTarget(t); };
 
+  // v5.13 — đánh dấu "đã xử lý" / "không cần" và hoàn tác; máy chủ tính lại danh sách rồi tải lại bản tin.
+  const [markBusy, setMarkBusy] = useState(false);
+  const [markError, setMarkError] = useState('');
+  const runMark = async (action) => {
+    setMarkBusy(true);
+    setMarkError('');
+    try {
+      await action();
+      await reload();
+    } catch {
+      setMarkError('Chưa lưu được dấu. Thầy/cô thử lại nhé.');
+    } finally {
+      setMarkBusy(false);
+    }
+  };
+  const applyMark = (keys, status) => runMark(() => markAttention(classId, keys, status, days));
+  const undoMark = (keys) => runMark(() => undoAttentionMarks(classId, keys));
+  const handledItems = [...(data?.overview?.attention || []), ...(data?.overview?.class_issues || [])]
+    .filter((it) => it.mark?.state === 'handled');
+
   return (
     <section aria-label="Tình hình lớp" className="space-y-5 rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-soft">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -353,9 +374,13 @@ export function ClassInsightsPanel({ classId, onOpenTab }) {
           ) : (
             <>
               <ClassBrief plain={data.plain} />
+              {markError && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-600 dark:text-rose-300">{markError}</p>}
               <StudentGroups
                 plain={data.plain}
                 onOpenStudent={(p) => openJourney({ username: p.username, full_name: p.full_name, exercise_id: p.exercise_id })}
+                onMark={applyMark}
+                onUndo={undoMark}
+                busy={markBusy}
               />
               <ExerciseProgressList exercises={data.plain.exercises} onOpenExercise={(exerciseId) => setExerciseTarget(exerciseId)} />
               <HowItWorks items={data.plain.how_it_works_vi} />
@@ -379,6 +404,10 @@ export function ClassInsightsPanel({ classId, onOpenTab }) {
                       onOpenJourney={openJourney}
                       onShowMore={() => setDetailsOpen(true)}
                       insufficientReason={data.overview?.insufficient_reason_vi}
+                      handledItems={handledItems}
+                      onMark={applyMark}
+                      onUndo={undoMark}
+                      busy={markBusy}
                     />
 
                     {/* Tầng 2 — ma trận lớp */}
@@ -612,7 +641,7 @@ export function ClassesAttentionList({ classes, onOpen }) {
             </button>
           )}
           {quiet.length > 0 && (
-            <p className="text-[11px] text-muted">{quiet.length} lớp khác đang ổn hoặc chưa có hoạt động.</p>
+            <p className="text-[11px] text-muted">{quiet.length} lớp khác đang ổn, chưa có hoạt động hoặc các việc đã được đánh dấu.</p>
           )}
         </>
       )}

@@ -5,8 +5,8 @@ Cùng ranh giới ba mức với nhánh Gemini:
          Không trích dòng code, không nêu đầu vào/đầu ra cụ thể của kiểm thử, không chỉ tham số hay biểu thức sai.
   Mức 2  chẩn đoán có bằng chứng thực thi: đúng MỘT dòng mã của người học + đầu vào/kỳ vọng/thực tế (hoặc lỗi, TIMEOUT, thông báo cú pháp).
          Không nêu cách sửa, điều kiện hay biểu thức thay thế.
-  Mức 3  CẤU TRÚC của bài, không phải logic: dàn ý 4 bước theo đề, khung mã bám mã người học (logic đã bị che bằng `enforce_level3_skeleton`),
-         bảng chạy tay để trống.
+  Mức 3  CẤU TRÚC và THUẬT TOÁN bằng lời (v5.12), không phải mã logic: ý tưởng, Bước 1-4 kèm bước con, trường hợp cần xử lý, khung mã
+         bám mã người học (logic đã bị che bằng `enforce_level3_skeleton`, TODO gắn số bước), bảng chạy tay để trống.
 Mọi câu chỉ nêu điều quan sát được từ kiểm thử, AST, traceback hoặc vết chạy; không khẳng định nguyên nhân vượt bằng chứng.
 """
 from __future__ import annotations
@@ -16,14 +16,15 @@ import re
 from typing import Optional
 
 from backend import exercise_brief
+from backend import hint_algorithm as ha
 from backend import hint_evidence as he
-from backend.guardrails import enforce_level3_skeleton
+from backend.guardrails import enforce_level3_prose, enforce_level3_skeleton
 from backend.hint_evidence import CodeFacts
 
 LEVEL_HEAD = {
     1: "💡 **[MỨC 1: GỢI MỞ TƯ DUY & KHÁI NIỆM]**",
     2: "🔍 **[MỨC 2: CHẨN ĐOÁN CHI TIẾT & KHOANH VÙNG LỖI]**",
-    3: "📘 **[MỨC 3: DÀN Ý THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**",
+    3: "📘 **[MỨC 3: THUẬT TOÁN CHI TIẾT & KHUNG CODE MẪU]**",
 }
 KIND_VI = {
     "syntax": "chương trình chưa chạy được vì lỗi cú pháp",
@@ -173,6 +174,9 @@ def _level2_question(ev: dict) -> str:
         return "Giữa lúc đọc dữ liệu và lúc in ra, chương trình đã thực hiện bước biến đổi nào mà đề yêu cầu?"
     if basis == "no_input":
         return "Dữ liệu mà đề bài đưa vào chương trình ở mỗi lần chạy đi vào chương trình bằng cách nào?"
+    if basis == "never_updated":
+        return (f"Với đầu vào `{inp}`, sau dòng {sus.lineno}, những dòng nào của chương trình có chạy và làm thay đổi giá trị của "
+                f"`{sus.variable}` trước khi nó được in ra, và mỗi dòng đó chạy mấy lần?")
     if basis == "output_variable":
         exp = he.inline_value(failure.get("expected_output", ""))
         return (f"Với đầu vào `{inp}`, giá trị của `{sus.variable}` sau mỗi lần dòng này chạy là gì, "
@@ -209,9 +213,18 @@ def _level2(ev: dict, adaptive_strategy: Optional[dict], repeats: int, extra: st
                          f"- **Quan sát:** {he.observed_difference(failure.get('expected_output', ''), act)}.")
     else:
         parts.append("🔎 **Bằng chứng:** kết quả chấm chưa cho biết kiểm thử cụ thể nào lỗi, nên chưa thể khoanh vùng dòng lệnh.")
+    contrast = ev.get("contrast")
+    if contrast and failure:
+        parts.append(f"↔️ **Đối chứng:** kiểm thử #{contrast.get('test_idx', '?')} **đạt** với đầu vào `{he.inline_value(contrast.get('input', ''))}` "
+                     f"(kỳ vọng `{he.inline_value(contrast.get('expected_output', ''))}`), còn kiểm thử #{failure.get('test_idx', '?')} chưa đạt "
+                     f"với `{he.inline_value(failure.get('input', ''))}`. Hai trường hợp này khác nhau ở điểm nào, và chương trình đi qua các dòng "
+                     "theo cách khác nhau ra sao?")
     trace_note = ev.get("trace_note")
     if trace_note:
         parts.append(f"🧵 **Vết chạy:** {trace_note}")
+    history = ev.get("value_history_note")
+    if history and history != trace_note:
+        parts.append(f"📈 **Dãy giá trị qua các lần chạy:** {history}")
     parts.append(f"❓ **Câu hỏi khoanh vùng:** {_level2_question(ev)}")
     step = {
         "syntax": f"đọc dòng {sus.lineno if sus else '?'} và dòng ngay phía trên, đối chiếu với thông báo của trình phân tích, rồi bấm Chạy thử lại.",
@@ -279,37 +292,52 @@ def _skeleton(code: str, starter: str) -> str:
     if not has_input:
         lines.insert(0, "du_lieu = ...  # TODO (Bước 1): đọc và ép kiểu đầu vào")
     if not any("TODO" in ln for ln in lines) and not has_flow:
-        lines.append("...  # TODO (Bước 3): phần xử lý chính theo dàn ý")
+        lines.append("...  # TODO (Bước 3): phần xử lý chính theo thuật toán ở mục 1")
     elif not has_flow:
         idx = next((i for i in range(len(lines) - 1, -1, -1) if re.match(r"\s*print\(", lines[i])), len(lines))
-        lines.insert(idx, "...  # TODO (Bước 3): phần xử lý chính theo dàn ý")
+        lines.insert(idx, "...  # TODO (Bước 3): phần xử lý chính theo thuật toán ở mục 1")
     if not has_print:
         lines.append("print(...)  # TODO (Bước 4): in kết quả")
     if not any("TODO" in ln for ln in lines):
-        lines.append("...  # TODO: phần còn lại tự viết theo dàn ý")
+        lines.append("...  # TODO: phần còn lại tự viết theo thuật toán ở mục 1")
     return "\n".join(lines)
+
+
+def _label_todos(skeleton: str, labels: list[str]) -> str:
+    """Gắn nhãn bước vào các `# TODO` chưa có nhãn: chỗ trống thứ k trỏ tới bước con thứ k của Bước 3 (quay vòng nếu thừa)."""
+    k = 0
+
+    def repl(m: re.Match) -> str:
+        nonlocal k
+        label = labels[k % len(labels)]
+        k += 1
+        return f"# TODO ({label})"
+    return re.sub(r"# TODO(?!\s*\()", repl, skeleton)
 
 
 def _level3(ev: dict, exercise: dict, code: str, adaptive_strategy: Optional[dict], repeats: int, extra: str) -> str:
     failure = ev["failure"]
-    steps = he.build_outline(exercise, ev.get("ast"))
+    plan = ha.algorithm_plan(exercise)
     goal = he.exercise_goal(exercise)
     parts = [LEVEL_HEAD[3] + ("\n\n↻ Bạn đã xin gợi ý Mức 3 cho bài này trước đó; lần này khung bám sát phần bạn đã viết." if repeats else ""),
              ev["progress"]]
     if failure and failure.get("status") == "FAIL":
         parts.append(f"🔎 **Dùng để tự kiểm:** với đầu vào `{he.inline_value(failure.get('input', ''))}` "
                      f"chương trình cần in `{he.inline_value(failure.get('expected_output', ''))}`.")
-    outline = "\n".join(f"- **Bước {i}:** {s}" for i, s in enumerate(steps, 1))
-    skeleton = _skeleton(code, exercise.get("starter_code", "") or "")
+    skeleton = _label_todos(_skeleton(code, exercise.get("starter_code", "") or ""), ha.todo_labels(plan))
     first_test = next((r for r in ev.get("all_results", []) if (r.get("input") or "").strip()), None)
     sample_input = (failure or first_test or {}).get("input", "")
     table = he.trace_table(code, sample_input, exercise.get("starter_code", "") or "")
-    parts.append(f"### 1. Dàn ý các bước theo đề «{goal}»:\n{outline}")
-    parts.append("### 2. Khung mã nguồn bám bài làm của bạn (các chỗ `...` hoặc `# TODO` là phần logic bạn tự viết):\n"
+    parts.append(f"### 1. Thuật toán chi tiết cho «{goal}»:\n{ha.render_algorithm(plan)}")
+    parts.append(f"### 2. Trường hợp cần xử lý:\n{ha.render_edge_cases(plan)}")
+    parts.append("### 3. Khung mã nguồn bám bài làm của bạn (mỗi dòng ghi TODO kèm số bước là một bước của thuật toán trên mà bạn tự viết thành lệnh):\n"
                  f"```python\n{skeleton}\n```")
-    parts.append(f"### 3. Bảng chạy tay (để trống, bạn tự điền):\n{table}")
+    parts.append(f"### 4. Bảng chạy tay (để trống, bạn tự điền):\n{table}")
     parts.append(level3_progress_note(code, adaptive_strategy))
-    return "\n\n".join(parts) + extra
+    text = "\n\n".join(parts)
+    allowed = [str(r.get(k) or "") for r in ev.get("all_results", []) for k in ("input", "expected_output")]
+    text, _ = enforce_level3_prose(text, [he.inline_value(a) for a in allowed] + [a.strip() for a in allowed])
+    return text + extra
 
 
 def trace_note(code: str, trace: Optional[dict]) -> str:
@@ -344,7 +372,8 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
     ast_analysis = ast_analysis or {}
     title = (exercise or {}).get("title", "Bài tập")
     no_code = bool(adaptation(adaptive_strategy, "no_code_yet"))
-    failure = None if no_code else he.pick_failure(test_results)
+    repeats = repeat_count(attempt_history, hint_level)
+    failure = None if no_code else he.pick_failure(test_results, rotate=repeats if hint_level == 2 else 0)
     kind = None if no_code else classify(failure, ast_analysis, test_results)
     suspect = he.suspect_line(code, failure, kind, ast_analysis, trace) if kind else None
     goal = he.exercise_goal(exercise)
@@ -354,8 +383,9 @@ def build_offline_hint(exercise: dict, code: str, test_results: dict, ast_analys
           "progress": (f"🎯 **Đang ở đâu:** bài **{title}**, bạn chưa viết dòng code nào; đây là khung để bắt đầu." if no_code
                        else _progress_line(title, test_results, kind)),
           "objective": _objective(exercise),
-          "trace_note": trace_note(code, trace), "all_results": (test_results or {}).get("results", [])}
-    repeats = repeat_count(attempt_history, hint_level)
+          "trace_note": trace_note(code, trace), "value_history_note": he.value_history_note(code, trace),
+          "contrast": he.passing_contrast(test_results, failure) if (failure and hint_level == 2 and kind != "syntax") else None,
+          "all_results": (test_results or {}).get("results", [])}
 
     extra = ""
     strategy = (adaptive_strategy or {}).get("strategy", "")

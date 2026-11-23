@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, X } from 'lucide-react';
 import StorySteps from '../plain/StorySteps';
+import { MarkButtons, MarkedNote } from '../plain/MarkButtons';
 import { HBar, StackedBarRows, ChartEmpty } from '../charts/ClassCharts';
 import { fetchStudentExerciseJourney } from '../../services/api';
 import { formatShare } from '../../utils/share';
@@ -186,14 +187,14 @@ function CardAction({ card, onOpenExercise, onOpenJourney }) {
 }
 
 /** Tầng 1 — tối đa 5 thẻ: kết luận + bằng chứng k/n + một nút hành động. */
-export function ActionCards({ actionCards, onOpenExercise, onOpenJourney, onShowMore, insufficientReason }) {
+export function ActionCards({ actionCards, onOpenExercise, onOpenJourney, onShowMore, insufficientReason, handledItems = [], onMark, onUndo, busy }) {
   const cards = actionCards?.cards || [];
   return (
     <section aria-labelledby="class-actions" className="space-y-3">
       <h5 id="class-actions" className="text-sm font-bold text-foreground">Việc nên xem</h5>
       {insufficientReason && <p className="text-[11px] text-muted">{insufficientReason}</p>}
       {cards.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted">{actionCards?.empty_vi || 'Không có việc cần xử lý ngay theo quy ước hiện tại.'}</p>
+        <p className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted">{actionCards?.handled_cards > 0 ? 'Các việc đang có đều đã được đánh dấu.' : (actionCards?.empty_vi || 'Không có việc cần xử lý ngay theo quy ước hiện tại.')}</p>
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
           {cards.map((card) => (
@@ -204,7 +205,7 @@ export function ActionCards({ actionCards, onOpenExercise, onOpenJourney, onShow
               {card.students?.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5" aria-label="Sinh viên trong thẻ">
                   {card.students.slice(0, 6).map((s) => (
-                    <li key={s.username}>
+                    <li key={s.username} className={s.mark?.state === 'handled' ? 'opacity-60' : ''}>
                       <button
                         type="button"
                         disabled={!s.exercise_id}
@@ -218,7 +219,11 @@ export function ActionCards({ actionCards, onOpenExercise, onOpenJourney, onShow
                   {card.students.length > 6 && <li className="self-center text-[11px] text-muted">+{card.students.length - 6}</li>}
                 </ul>
               )}
-              <div className="mt-auto pt-1"><CardAction card={card} onOpenExercise={onOpenExercise} onOpenJourney={onOpenJourney} /></div>
+              {card.reopened_vi && <p className="text-[11px] font-semibold text-foreground">{card.reopened_vi}</p>}
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
+                <CardAction card={card} onOpenExercise={onOpenExercise} onOpenJourney={onOpenJourney} />
+                <MarkButtons keys={card.open_keys} onMark={onMark} busy={busy} who={card.title_vi} />
+              </div>
             </li>
           ))}
         </ul>
@@ -232,6 +237,19 @@ export function ActionCards({ actionCards, onOpenExercise, onOpenJourney, onShow
             <button type="button" onClick={onShowMore} className="rounded-full border border-border px-3 py-1 font-semibold text-foreground hover:bg-surface-raised cursor-pointer">Xem thêm {actionCards.more_count}</button>
           )}
         </div>
+      )}
+      {handledItems.length > 0 && (
+        <details className="rounded-2xl border border-border">
+          <summary className="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-foreground">Đã đánh dấu ({handledItems.length})</summary>
+          <ul className="space-y-1.5 border-t border-border p-3">
+            {handledItems.map((it) => (
+              <li key={it.key} className="flex flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                <span className="min-w-0 break-words text-foreground">{it.text_vi}</span>
+                <MarkedNote mark={it.mark} keys={[it.key]} onUndo={onUndo} busy={busy} />
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
       <p className="text-[11px] text-muted">{actionCards?.note || 'Thẻ tính lại mỗi lần mở; ngưỡng là quy ước vận hành chưa hiệu chuẩn.'}</p>
     </section>

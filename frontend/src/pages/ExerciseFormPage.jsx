@@ -23,6 +23,7 @@ export default function ExerciseFormPage() {
   const [category, setCategory] = useState('Vòng lặp & Biến tích lũy');
   const [description, setDescription] = useState('');
   const [starterCode, setStarterCode] = useState('# Viết code Python của bạn ở đây...\n');
+  const [algorithmNotes, setAlgorithmNotes] = useState('');
   const [testCases, setTestCases] = useState([
     { input: '1\n', expected_output: '1', description: 'Trường hợp mẫu 1' },
     { input: '5\n', expected_output: '15', description: 'Trường hợp mẫu 2' },
@@ -48,6 +49,7 @@ export default function ExerciseFormPage() {
           setCategory(detail.category);
           setDescription(detail.description);
           setStarterCode(detail.starter_code || '');
+          setAlgorithmNotes(detail.algorithm_notes || '');
           setTestCases(detail.test_cases || []);
         } catch (err) {
           console.error('Lỗi khi tải chi tiết bài tập:', err);
@@ -113,6 +115,7 @@ export default function ExerciseFormPage() {
       category: category.trim(),
       description,
       starter_code: starterCode,
+      algorithm_notes: algorithmNotes,
       test_cases: formattedTestCases
     };
 
@@ -247,6 +250,24 @@ export default function ExerciseFormPage() {
               onChange={(e) => setStarterCode(e.target.value)}
               rows={4}
               className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-emerald-700 dark:text-emerald-300 font-mono leading-relaxed outline-none transition-colors duration-200 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25"
+            />
+          </div>
+
+          {/* Ý tưởng thuật toán (tùy chọn, chỉ dùng cho gợi ý Mức 3, sinh viên không thấy) */}
+          <div className="bg-surface border border-border p-5 rounded-2xl space-y-3 shadow-soft">
+            <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
+              Ý TƯỞNG THUẬT TOÁN (TÙY CHỌN, CHỈ GIA SƯ AI DÙNG Ở GỢI Ý MỨC 3)
+            </h3>
+            <p className="text-xs text-muted">
+              Viết bằng lời các bước giải, không viết mã Python. Sinh viên không thấy ô này; chỉ gợi ý Mức 3 dùng nó để diễn đạt lại theo bài làm của từng em.
+            </p>
+            <textarea
+              value={algorithmNotes}
+              onChange={(e) => setAlgorithmNotes(e.target.value)}
+              rows={4}
+              maxLength={3000}
+              placeholder="Ví dụ: Số nhỏ hơn 2 không phải số nguyên tố. Với n còn lại, thử lần lượt từng số từ 2 tới căn bậc hai của n; gặp một ước thì dừng và kết luận NO, thử hết mà không có ước thì YES."
+              className="w-full rounded-xl border border-border bg-surface p-3 text-sm leading-relaxed outline-none transition-colors duration-200 focus-visible:border-emerald-500 focus-visible:ring-2 focus-visible:ring-emerald-500/25"
             />
           </div>
 

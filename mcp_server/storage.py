@@ -52,8 +52,10 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     """Lấy thông tin chi tiết bài tập theo ID từ SQLite."""
     conn = get_conn()
     cursor = conn.cursor()
+    has_notes = any(r[1] == "algorithm_notes" for r in cursor.execute("PRAGMA table_info(exercises)").fetchall())
     cursor.execute(
-        "SELECT id, title, difficulty, category, description, starter_code, test_cases FROM exercises WHERE id = ? AND is_active = 1",
+        "SELECT id, title, difficulty, category, description, starter_code, test_cases"
+        + (", algorithm_notes" if has_notes else "") + " FROM exercises WHERE id = ? AND is_active = 1",
         (exercise_id,)
     )
     row = cursor.fetchone()
@@ -74,7 +76,8 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
         "category": row["category"],
         "description": row["description"],
         "starter_code": row["starter_code"],
-        "test_cases": test_cases
+        "test_cases": test_cases,
+        "algorithm_notes": (row["algorithm_notes"] if has_notes else "") or "",
     }
 
 

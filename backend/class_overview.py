@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.attention_marks import card_keys
+
 OVERVIEW_THRESHOLDS = {
     "hint_pass_min_exercises": 2,        # >= N bài đạt nhờ gợi ý Mức >= 2
     "practice_only_min_exercises": 2,    # >= N bài chỉ chạy thử, chưa nộp
@@ -244,13 +246,32 @@ def build_action_cards(overview: dict[str, Any], insights: dict[str, Any], limit
                           "students": studs, "exercise_id": None, "kc": None, "action": act(code),
                           "_order": (ACTION_PRIORITY.index(code), 0, "")})
 
+    # v5.13: nếu `overview` đã được gắn dấu (annotate_overview), ẩn thẻ mà mọi việc trong đó đã đánh dấu.
+    by_key = {i["key"]: i for f in ("attention", "class_issues") for i in overview.get(f) or [] if i.get("key")}
+    hidden_cards = 0
+    if by_key:
+        visible = []
+        for c in cards:
+            keys = card_keys(c)
+            for s in c.get("students") or []:
+                s["key"] = f"{c['code']}:{s['username']}"
+                s["mark"] = (by_key.get(s["key"]) or {}).get("mark")
+            marks = [(by_key.get(k) or {}).get("mark") for k in keys]
+            c["keys"] = keys
+            c["open_keys"] = [k for k, m in zip(keys, marks) if not (m and m["state"] == "handled")]
+            c["reopened_vi"] = next((m["follow_up_vi"] for m in marks if m and m.get("follow_up_vi")), None)
+            if keys and not c["open_keys"]:
+                hidden_cards += 1
+                continue
+            visible.append(c)
+        cards = visible
     cards.sort(key=lambda c: c.pop("_order"))
     shown = cards[:limit]
     for c in shown:
         ev = c["evidence"]
         ev["show_percent"] = ev["n"] >= SHARE_PERCENT_MIN_N
     return {
-        "cards": shown, "more_count": max(0, len(cards) - len(shown)),
+        "cards": shown, "more_count": max(0, len(cards) - len(shown)), "handled_cards": hidden_cards,
         "positives": (overview.get("positives") or [])[:2],
         "priority": ACTION_PRIORITY, "limit": limit,
         "empty_vi": "Không có việc cần xử lý ngay theo quy ước hiện tại.",

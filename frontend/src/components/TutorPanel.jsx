@@ -51,7 +51,7 @@ export default function TutorPanel({
   // `hasPassedBefore` đến từ API chi tiết bài tập (đã nộp đạt ở phiên trước); backend vẫn là nơi quyết định phạm vi thật.
   const isCodeChatUnlocked = Boolean(starRationale) || hasPassedBefore || chatScope === 'code_review';
 
-  // Mỗi mức một màu: 1 xanh ngọc (gợi mở), 2 cam (chẩn đoán), 3 tím (dàn ý chi tiết).
+  // Mỗi mức một màu: 1 xanh ngọc (gợi mở), 2 cam (chẩn đoán), 3 tím (thuật toán chi tiết).
   const LEVEL_STYLE = {
     1: { bg: 'bg-success-soft', border: 'border-success-line', borderOn: 'border-success', ring: 'border-success', dot: 'bg-success', title: 'text-success-strong' },
     2: { bg: 'bg-warning-soft', border: 'border-warning-line', borderOn: 'border-warning', ring: 'border-warning', dot: 'bg-warning', title: 'text-warning-strong' },
@@ -68,13 +68,13 @@ export default function TutorPanel({
     {
       level: 2,
       title: 'Mức 2 · Chẩn đoán lỗi',
-      desc: 'Khoanh vùng dòng code có vấn đề và giải thích kiểm thử chưa đạt.',
+      desc: 'Khoanh vùng dòng đáng xem, đối chiếu kiểm thử đạt với chưa đạt và nêu dãy giá trị khi chạy.',
       color: 'hover:border-amber-500/60'
     },
     {
       level: 3,
-      title: 'Mức 3 · Dàn ý và khung code',
-      desc: 'Các bước giải chi tiết cùng khung code có chỗ trống để hoàn thiện.',
+      title: 'Mức 3 · Thuật toán và khung code',
+      desc: 'Thuật toán chi tiết bằng lời, các trường hợp cần xử lý và khung code có chỗ trống để bạn tự hoàn thiện.',
       color: 'hover:border-cyan-500/60'
     }
   ];

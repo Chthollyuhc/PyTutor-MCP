@@ -1,6 +1,6 @@
 {
-  "limit": 335,
-  "total": 329,
+  "limit": 375,
+  "total": 375,
   "runs": [
     {
       "tag": "before_real_dev_1",
@@ -125,6 +125,27 @@
       "calls": 4,
       "finished": "2026-11-21T07:49:23",
       "gemini_success_replies": 4,
+      "stopped": ""
+    },
+    {
+      "tag": "v512_real_dev",
+      "calls": 24,
+      "finished": "2026-11-22T16:35:49",
+      "gemini_success_replies": 20,
+      "stopped": ""
+    },
+    {
+      "tag": "v512_real_holdout",
+      "calls": 14,
+      "finished": "2026-11-22T16:39:14",
+      "gemini_success_replies": 8,
+      "stopped": ""
+    },
+    {
+      "tag": "v512_real_recheck",
+      "calls": 8,
+      "finished": "2026-11-22T16:44:53",
+      "gemini_success_replies": 6,
       "stopped": ""
     }
   ],

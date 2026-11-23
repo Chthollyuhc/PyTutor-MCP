@@ -79,7 +79,7 @@ finally {
 1. `backend/` **không** import hàm từ `mcp_server/`; mọi chấm test/AST/trace/đề/student model qua `backend/mcp_client.py` (stdio JSON-RPC).
 2. Ba hành động IDE tách biệt: `▶ Chạy thử` = `POST /api/run-test` (không LLM, không sao); `🤖 Hỏi Gia sư AI` = `POST /api/submit` với `action_type='ask_ai'` (lưu lịch sử, **không** sao/modal/metric chính thức); `🚀 Nộp bài` = `action_type='submit'` (chấm chính thức, sao 1–3, Mastery Rubric, analytics).
 3. Giữ 3 mức gợi ý (1 Socratic; 2 dòng lỗi + test fail; 3 dàn ý 4 bước + khung `# TODO`) và Anti-Spoil (`guardrails.py`).
-3b. Mức 3 cho cấu trúc, không cho logic: đầu ra LLM ở Mức 3 (khi chưa đạt) phải qua `enforce_level3_skeleton`. Hệ thống dành cho người muốn học, không phải để kiểm tra: **không thêm** chức năng chống gian lận hay kỳ thi.
+3b. Mức 3 cho cấu trúc và thuật toán bằng lời, không cho mã Python của logic (v5.12): đầu ra LLM ở Mức 3 (khi chưa đạt) phải qua `enforce_level3_skeleton` (khung mã) và `enforce_level3_prose` (phần chữ). Thuật toán chi tiết lấy từ `exercises.algorithm_notes` (giảng viên viết, **chỉ Mức 3 nhận, sinh viên không bao giờ thấy**) hoặc khuôn theo dạng bài (`backend/hint_algorithm.py`, heuristic). Hệ thống dành cho người muốn học, không phải để kiểm tra: **không thêm** chức năng chống gian lận hay kỳ thi.
 4. `select_hint_strategy()` chỉ chọn chiến lược (`conceptual_start`, `failed_case_diagnosis`, `recurring_difficulty`, `solution_review`), **không** tự tăng `hint_level` vượt mức người học yêu cầu.
 5. EXAM Mode Guard chạy trước RAG/LLM; giữ backend exam dù UI ẩn.
 6. RBAC kiểm tra **server-side**; `/api/instructor/ai/class-chat` kiểm tra sở hữu lớp, chỉ đưa số liệu tổng hợp cho LLM (không SQL tự sinh, không code/danh tính SV).
@@ -117,9 +117,16 @@ Chưa tách. Khi lặp lại nhiều: `.claude/rules/{backend,frontend,evaluatio
 - Test: `.\.claude\run_isolated.ps1 test_plain_language_v59`; frontend `npm.cmd run test:ui-utils` (gồm quét từ cấm ở `components/plain/` và `StudentProfileModal.jsx`).
 
 ## 11. v5.10 (nhánh `feat/overnight-deep-upgrade`) — 3 mức gợi ý
-- Lệnh đo: `py evaluate_hint_levels.py --offline --quiet --tag X` (thêm `--holdout` hoặc `--redteam`); `--real` gọi Gemini thật (trần 300 lượt cả đêm, `evaluation/v510_gemini_calls.json`; chỉ dữ liệu giả lập); `--rescore <json>` tính lại kiểm tra; `--levels 1` tiết kiệm lượt. Hồi quy đầy đủ: `.\.claudeun_suite_v510.ps1 -OutDir <thư mục>`.
+- Lệnh đo: `py evaluate_hint_levels.py --offline --quiet --tag X` (thêm `--holdout` hoặc `--redteam`); `--real` gọi Gemini thật (trần 300 lượt cả đêm, `evaluation/v510_gemini_calls.json`; chỉ dữ liệu giả lập); `--rescore <json>` tính lại kiểm tra; `--levels 1` tiết kiệm lượt. Hồi quy đầy đủ: `.\.claude
+un_suite_v510.ps1 -OutDir <thư mục>`.
 - Test: `test_hint_quality_v510`, `test_hint_evidence_v510`, `test_prompt_golden_v510`, `test_hint_resilience_v510` (không cần DB). Đổi prompt gợi ý thì sinh lại tệp vàng (`py evaluation/gen_prompt_golden_v510.py (đặt PYTHONPATH=. và PYTUTOR_DISABLE_LLM=1)`) và ghi lý do.
 - Luật mới: Mức 1 **không nhận** giá trị kiểm thử trong prompt; dòng Mức 2 trích chỉ là điều quan sát được, không phải kết luận dòng sai; chú thích của người học không bao giờ được chép vào gợi ý; vết chạy chỉ cho `ask_ai`, có timeout và fallback. Tập giữ riêng gợi ý `evaluation/hint_scenarios_holdout.json` chỉ để đo. Điểm 0–5 trong `docs/HINT_LEVELS_BEFORE_AFTER_V510.md` là đề xuất của trợ lý, không ghi thành điểm tác giả.
 
 ## 12. v5.11
 - Tên hiển thị: **Điểm nỗ lực** (trước là "Sao tự lực"); tên nội bộ `autonomy_*`/`stars_earned` giữ nguyên. Chặng đường trang chủ chọn lớp qua `student_journey.pick_path_class` (test `test_path_class_v511`). Gợi ý đọc đề và bộ kiểm thử qua `backend/exercise_brief.py` (test `test_exercise_brief_v511`); Mức 1 vẫn KHÔNG nêu giá trị kiểm thử hay ví dụ của đề.
+
+## 13. v5.12 (chưa commit) — Mức 2 và Mức 3 mạnh hơn
+- Mức 3: thuật toán chi tiết bằng lời (ý tưởng, Bước 1–4 kèm ý con, trường hợp cần xử lý, `# TODO (Bước 3.k)`); Mức 2: đối chứng test đạt/chưa đạt, dãy giá trị theo vết, dạng lệch, "biến chỉ gán một lần" (quan sát, không kết luận sai), xin lại thì đổi test lỗi. Chi tiết và số đo: `docs/HINT_L2_L3_V512.md`; kế hoạch: `plans/PLAN_V512_HINT_L2_L3.md`.
+- Test: `.\.claudeun_isolated.ps1 test_hint_l23_v512` (17 test không cần DB + 3 test API cần DB tạm). Đổi prompt/khuôn thì sinh lại tệp vàng (`py evaluation/gen_prompt_golden_v510.py`, đặt `PYTHONPATH=.` và `PYTUTOR_DISABLE_LLM=1`) và đo lại `evaluate_hint_levels.py --offline` ở cả ba tập.
+- Cột `algorithm_notes` được thêm khi `init_db()` chạy (backend dev `--reload` sẽ thêm cột vào `pytutor.db` thật khi khởi động lại); 5 bài đã có trong DB thật chưa có ghi chú (seed chỉ chạy khi bảng trống).
+- Đã đo Gemini thật 38 lượt cho gói này (tổng 367/375); đã đo lại 8 lượt sau hai sửa (Mức 3 tốt hơn, Mức 2 vẫn yếu). Xem `docs/HINT_L2_L3_V512.md` §5.

@@ -15,7 +15,7 @@ import keyword
 import re
 from typing import Optional
 
-LENGTH_RANGE = {1: (45, 190), 2: (60, 230), 3: (110, 430)}
+LENGTH_RANGE = {1: (45, 190), 2: (60, 300), 3: (140, 760)}  # v5.12: Mức 2 thêm đối chứng/dãy giá trị, Mức 3 thêm thuật toán chi tiết
 OVERLAP_MAX = 0.30
 MIN_LINE_CHARS = 5
 _TRIVIAL_LINES = {"break", "continue", "pass", "else:", "try:", "finally:", "return"}
@@ -337,6 +337,44 @@ def check_l3_skeleton_valid_python(reply: str) -> Optional[bool]:
         return True
     except SyntaxError:
         return False
+
+
+def check_l3_algorithm_detail(reply: str) -> bool:
+    """v5.12: Mức 3 có ý tưởng + ít nhất 5 ý con đánh số (1.1, 2.1, 3.2...) + đủ độ dài phần chữ (>= 150 từ)."""
+    text, _ = split_blocks(reply)
+    subs = re.findall(r"(?m)^\s*(?:[-*]\s*)?([1-4])\.(\d)\s", text)
+    return len(subs) >= 5 and bool(re.search(r"(?i)ý tưởng", text)) and len(words(text)) >= 150
+
+
+def check_l3_no_code_in_prose(reply: str, test_values: list[str]) -> bool:
+    """v5.12: phần chữ (ngoài khối code) của Mức 3 không chứa biểu thức/câu lệnh Python của lời giải trong dấu backtick."""
+    from backend.guardrails import enforce_level3_prose
+    text, _ = split_blocks(reply)
+    text = re.sub(r"🔒[^\n]*", "", text)
+    _, n = enforce_level3_prose(text, test_values)
+    return n == 0
+
+
+def check_l3_todo_labeled(reply: str) -> Optional[bool]:
+    """v5.12: mọi dòng TODO trong khung mã đều trỏ tới một bước (TODO (Bước k.j)). None nếu không có khung."""
+    block = skeleton_block(reply)
+    todos = [ln for ln in block.splitlines() if "TODO" in ln]
+    if not todos:
+        return None
+    return all(re.search(r"TODO\s*\(\s*B[ưứ][ơớ]c", ln) for ln in todos)
+
+
+def check_l2_contrast(reply: str, test_results: dict) -> Optional[bool]:
+    """v5.12: khi có test ĐẠT bên cạnh test lỗi, Mức 2 nêu đầu vào của một test đạt (đối chứng). None nếu không có test đạt."""
+    res = (test_results or {}).get("results", [])
+    passes = [r for r in res if r.get("status") == "PASS" and (r.get("input") or "").strip()]
+    fails = [r for r in res if r.get("status") not in ("PASS", "SKIPPED")]
+    if not passes or not fails:
+        return None
+    spans = {norm(s) for s in _SPAN.findall(reply or "")}
+    def inline(v: str) -> str:
+        return norm(" ⏎ ".join(p.strip() for p in (v or "").strip().splitlines()))
+    return any(inline(p.get("input", "")) in spans for p in passes)
 
 
 def check_l3_has_trace_table(reply: str) -> bool:

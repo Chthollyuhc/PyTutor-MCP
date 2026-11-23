@@ -155,6 +155,10 @@ from backend.llm_service import (generate_tutor_hint, generate_chat_followup, ge
 from backend.guardrails import check_student_input
 from backend.adaptive_policy import is_blank_attempt, select_hint_strategy
 from backend.class_overview import build_class_overview, build_action_cards
+from backend.attention_marks import (annotate_overview, annotate_plain_groups, current_signatures,
+                                     MARK_STATUSES, MAX_KEYS_PER_REQUEST)
+from backend.database import get_attention_marks, set_attention_marks, clear_attention_marks
+from backend.schemas import AttentionMarkRequest, AttentionUndoRequest
 from backend.student_journey import build_student_headline, describe_exercise_journey, pick_path_class, DISCLAIMER_VI
 from backend.plain_language import (build_class_plain_view, build_course_path, build_story, build_today_card,
                                     class_brief_line, story_one_liner)
@@ -343,6 +347,8 @@ async def get_exercise(
         # Sinh viên đã từng `submit` pass bài này → giao diện mở sẵn phạm vi chat "code đã nộp" (khớp /api/tutor/chat).
         # Chỉ là gợi ý hiển thị (quyền thật do /api/tutor/chat quyết định) → lỗi DB không được làm hỏng việc xem đề.
         data["has_passed"] = False
+        if token_data.get("role") != "instructor":
+            data.pop("algorithm_notes", None)  # v5.12: ghi chú thuật toán chỉ giảng viên thấy
         username = token_data.get("sub")
         if token_data.get("role") == "student":
             try:
@@ -729,17 +735,19 @@ async def instructor_classes_attention(token_data: dict = Depends(require_instru
             insights = get_class_insights(cls["id"], 7)
             overview = build_class_overview(insights) if insights else {}
             status = (insights or {}).get("data_status", "no_data")
-            attention = len(overview.get("attention", []))
-            issues = len(overview.get("class_issues", []))
+            # v5.13: việc đã đánh dấu không tính vào số "cần xem"; `handled` là số việc đang được đánh dấu.
+            annotate_overview(overview, get_attention_marks(cls["id"]), datetime.now())
+            counts = overview["open_counts"]
+            attention, issues, handled = counts["attention"], counts["issues"], counts["handled"]
             plain = build_class_plain_view(insights, overview, 7) if insights else None
-            check_in = len(plain["groups"]["check_in"]) if plain else 0
-            brief = class_brief_line(plain)
+            check_in = annotate_plain_groups(plain, overview) if plain else 0
+            brief = class_brief_line(plain, open_total=attention + issues, check_in_open=check_in)
         except Exception as exc:  # noqa: BLE001 - một lớp lỗi không làm hỏng cả danh sách
             logger.warning("Không tổng hợp được lớp %s: %s", cls.get("id"), exc)
-            attention, issues, status, check_in, brief = 0, 0, "error", 0, "Chưa tải được tình hình lớp này."
+            attention, issues, handled, status, check_in, brief = 0, 0, 0, "error", 0, "Chưa tải được tình hình lớp này."
         rows.append({"id": cls["id"], "class_code": cls.get("class_code"), "class_name": cls.get("class_name"),
                      "semester": cls.get("semester"), "attention": attention, "issues": issues,
-                     "data_status": status, "total": attention + issues,
+                     "handled": handled, "data_status": status, "total": attention + issues,
                      "check_in": check_in, "brief_vi": brief})
     rows.sort(key=lambda r: (-r["total"], (r["class_code"] or ""), r["id"]))
     result = {"days": 7, "classes": rows, "total_classes": len(rows),
@@ -758,10 +766,52 @@ async def instructor_class_insights(class_id: str, days: int = 7, token_data: di
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Khoảng thời gian phải từ 1 đến 90 ngày.")
     insights = get_class_insights(class_id, days)
     if insights:
-        insights["overview"] = build_class_overview(insights)
-        insights["action_cards"] = build_action_cards(insights["overview"], insights)
-        insights["plain"] = build_class_plain_view(insights, insights["overview"], days)
+        overview = build_class_overview(insights)
+        annotate_overview(overview, get_attention_marks(class_id), datetime.now())  # v5.13: dấu đã xử lý / không cần
+        insights["overview"] = overview
+        insights["action_cards"] = build_action_cards(overview, insights)
+        plain = build_class_plain_view(insights, overview, days)
+        annotate_plain_groups(plain, overview)
+        insights["plain"] = plain
     return insights
+
+
+def _owned_class_or_404(class_id: str, username: str) -> None:
+    if not get_credit_class_by_id(class_id) or not instructor_owns_class(class_id, username):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy lớp hoặc bạn không có quyền truy cập.")
+
+
+@app.post("/api/instructor/classes/{class_id}/attention-marks")
+async def instructor_mark_attention(class_id: str, request: AttentionMarkRequest,
+                                    token_data: dict = Depends(require_instructor)):
+    """Đánh dấu "đã xử lý" / "không cần" cho các việc nên xem. Khóa phải là việc đang có (server tự tính chữ ký tình hình)."""
+    username = token_data.get("sub", "")
+    _owned_class_or_404(class_id, username)
+    keys = list(dict.fromkeys(k for k in request.keys if isinstance(k, str) and 0 < len(k) <= 200))
+    if not keys or len(keys) > MAX_KEYS_PER_REQUEST or request.status not in MARK_STATUSES:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Danh sách việc hoặc trạng thái không hợp lệ.")
+    insights = get_class_insights(class_id, request.days)
+    sigs = current_signatures(build_class_overview(insights)) if insights else {}
+    # Chữ ký tính trên cửa sổ rộng nhất (90 ngày) để đổi khoảng xem 7/30 ngày không làm việc bị mở lại giả;
+    # chỉ bài mới thật sự xuất hiện sau đó mới làm việc mở lại. Khóa vẫn phải có trong cửa sổ đang xem.
+    wide = get_class_insights(class_id, 90) if request.days != 90 else insights
+    wide_sigs = current_signatures(build_class_overview(wide)) if wide else {}
+    valid = {k: wide_sigs.get(k, sigs[k]) for k in keys if k in sigs}
+    written = set_attention_marks(class_id, username, valid, request.status)
+    _ATTENTION_CACHE.pop(username, None)
+    return {"marked": written, "skipped": len(keys) - written, "status": request.status}
+
+
+@app.post("/api/instructor/classes/{class_id}/attention-marks/undo")
+async def instructor_undo_attention(class_id: str, request: AttentionUndoRequest,
+                                    token_data: dict = Depends(require_instructor)):
+    """Hoàn tác dấu đã đánh dấu: việc hiện lại ngay."""
+    username = token_data.get("sub", "")
+    _owned_class_or_404(class_id, username)
+    keys = list(dict.fromkeys(k for k in request.keys if isinstance(k, str) and 0 < len(k) <= 200))
+    removed = clear_attention_marks(class_id, keys)
+    _ATTENTION_CACHE.pop(username, None)
+    return {"removed": removed}
 
 
 @app.get("/api/instructor/classes/{class_id}/students/{username}/exercises/{exercise_id}/journey")
@@ -1419,7 +1469,8 @@ async def create_new_exercise(
         description=exercise_data.description,
         starter_code=exercise_data.starter_code,
         test_cases=tc_dicts,
-        created_by=token_data.get("sub", "instructor")
+        created_by=token_data.get("sub", "instructor"),
+        algorithm_notes=exercise_data.algorithm_notes
     )
     if not saved:
         raise HTTPException(status_code=400, detail="Không thể tạo bài tập.")
@@ -1444,7 +1495,8 @@ async def update_exercise(
         description=exercise_data.description,
         starter_code=exercise_data.starter_code,
         test_cases=tc_dicts,
-        created_by=token_data.get("sub", "instructor")
+        created_by=token_data.get("sub", "instructor"),
+        algorithm_notes=exercise_data.algorithm_notes
     )
     if not saved:
         raise HTTPException(status_code=404, detail="Không tìm thấy bài tập cần cập nhật.")

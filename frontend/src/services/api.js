@@ -395,6 +395,17 @@ export const fetchStudentExerciseJourney = async (classId, username, exerciseId,
   return response.data;
 };
 
+// v5.13 — đánh dấu "đã xử lý" / "không cần" cho việc nên xem; hoàn tác
+export const markAttention = async (classId, keys, status, days = 7) => {
+  const response = await apiClient.post(`/instructor/classes/${classId}/attention-marks`, { keys, status, days });
+  return response.data;
+};
+
+export const undoAttentionMarks = async (classId, keys) => {
+  const response = await apiClient.post(`/instructor/classes/${classId}/attention-marks/undo`, { keys });
+  return response.data;
+};
+
 // v5.8 — tổng hợp lớp cần chú ý trong một lần gọi
 export const fetchClassesAttention = async () => {
   const response = await apiClient.get('/instructor/classes-attention');

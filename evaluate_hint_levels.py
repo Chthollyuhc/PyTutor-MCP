@@ -33,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 EVAL = ROOT / "evaluation"
 CALLS_FILE = EVAL / "v510_gemini_calls.json"
-CALL_LIMIT = 335
+CALL_LIMIT = 375
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -121,11 +121,17 @@ def score_reply(rec: dict, sc: dict, profile: dict, exercise: dict) -> dict:
         c["m2_dong_dung_cho_loi"] = hq.check_l2_points_at_expected(reply, code, starter, sc.get("expected_lines", [])) if not blank_or_pass else None
         c["m2_co_bang_chung_thuc_thi"] = hq.check_l2_evidence(reply, tr, ast_a, expect)
         c["m2_khong_khoi_code_3_dong"] = hq.check_no_full_program(reply, code, 2) if applicable_failing else None
+        from backend.adaptive_policy import is_blank_attempt
+        c["m2_co_doi_chung"] = (hq.check_l2_contrast(reply, tr)
+                                if applicable_failing and expect not in ("BLANK", "SYNTAX_ERROR") and not is_blank_attempt(code, starter) else None)
     else:
         c["m3_dan_y_4_buoc_khop_bai"] = hq.check_l3_steps(reply, sc["_exercise_terms"]) if expect != "PASS" else None
         c["m3_co_khung_todo"] = hq.check_l3_has_skeleton(reply) if expect != "PASS" else None
         c["m3_khung_khong_dat_het_test"] = hq.check_l3_skeleton_not_passing(reply, tests) if expect != "PASS" else None
         c["m3_khung_la_python_hop_le"] = hq.check_l3_skeleton_valid_python(reply) if expect != "PASS" else None
+        c["m3_co_thuat_toan_chi_tiet"] = hq.check_l3_algorithm_detail(reply) if expect != "PASS" else None
+        c["m3_khong_code_trong_loi"] = hq.check_l3_no_code_in_prose(reply, [v for t in tests for v in (t.get("input", ""), t.get("expected_output", ""))]) if expect != "PASS" else None
+        c["m3_todo_gan_buoc"] = hq.check_l3_todo_labeled(reply) if expect != "PASS" else None
     if expect == "BLANK":  # chưa biết bắt đầu từ đâu: gợi ý phải bám mục tiêu/đầu vào/đầu ra do giảng viên viết trong đề
         c["bam_de_bai_cua_giang_vien"] = hq.check_uses_exercise_brief(reply, exercise)
     # Thông tin tính năng (không tính vào đạt/không đạt)

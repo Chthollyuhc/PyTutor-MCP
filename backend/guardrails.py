@@ -11,7 +11,8 @@ import re
 # v1: Phase 16 (khối code có rào ≥ 3 dòng, code không rào, cụm từ tiết lộ).
 # v2: thêm chương trình một dòng, code chia nhỏ/đánh số/trích dẫn/nối bằng ';', code trong `inline`,
 #     rào ~~~ và <pre>; siết mẫu injection để không chặn nhầm câu hỏi về định dạng đầu ra.
-GUARD_RULES_VERSION = "2"
+# v3 (v5.12): thêm `enforce_level3_prose` (che biểu thức/câu lệnh Python trong phần chữ của gợi ý Mức 3); luật cũ không đổi.
+GUARD_RULES_VERSION = "3"
 
 MAX_INPUT_CHARS = 2000
 
@@ -169,6 +170,65 @@ def enforce_level3_skeleton(reply: str) -> tuple[str, int]:
             "\n\n🔒 *PyTutor đã thay " + str(masked_total) + " biểu thức trong khung mã bằng `...` để phần lập luận "
             "vẫn là của bạn. Hãy điền từng chỗ rồi bấm Chạy thử sau mỗi bước.*")
     return result, masked_total
+
+
+# ---------------------------------------------------------------------------------------------
+# Mức 3 (v5.12): thuật toán chi tiết viết bằng LỜI. Phần chữ ngoài khối code không được chứa biểu thức/câu lệnh Python
+# của lời giải (ví dụ `range(1, n + 1)`, `tong += i`, `s[::-1]`). Các giá trị đầu vào/đầu ra của kiểm thử (đã hiển thị cho
+# sinh viên) và tên biến/hằng thì được giữ.
+# ---------------------------------------------------------------------------------------------
+_L3_SPAN = re.compile(r"`([^`\n]+)`")
+_L3_SAFE_SPAN = re.compile(r"^(?:[A-Za-z_]\w*|-?\d+(?:\.\d+)?|\"[^\"]*\"|'[^']*'|\.{3}|…)$")
+_L3_LOGIC_CHARS = re.compile(r"[+*/%<>=\[\]()]|\bfor\b|\bin\b|\bif\b|\band\b|\bor\b|\bnot\b|\w\s-\s\w")
+
+
+def _prose_span_is_logic(span: str, allowed: set[str]) -> bool:
+    s = span.strip()
+    if not s or _L3_SAFE_SPAN.match(s) or " ".join(s.split()) in allowed:
+        return False
+    return bool(_L3_LOGIC_CHARS.search(s))
+
+
+def enforce_level3_prose(reply: str, allowed: tuple[str, ...] | list[str] = ()) -> tuple[str, int]:
+    """Che biểu thức/câu lệnh Python nằm trong PHẦN CHỮ (ngoài khối code) của gợi ý Mức 3.
+
+    `allowed`: các giá trị đầu vào/đầu ra của kiểm thử được phép xuất hiện trong dấu backtick. Trả về (phản hồi, số chỗ bị che).
+    Tất định, không gọi mô hình; khối code do `enforce_level3_skeleton` xử lý riêng.
+    """
+    allowed_n = {" ".join(str(a).split()) for a in allowed if str(a).strip()}
+    masked = 0
+
+    def _prose(segment: str) -> str:
+        nonlocal masked
+
+        def _span(m: re.Match) -> str:
+            nonlocal masked
+            if _prose_span_is_logic(m.group(1), allowed_n):
+                masked += 1
+                return "`…`"
+            return m.group(0)
+
+        lines = []
+        for line in segment.split("\n"):
+            core = _LIST_PREFIX.sub("", line)
+            if _STATEMENT.match(core) and not _L3_SPAN.search(line) and len(core.split()) <= 12 and re.search(r"[=()]", core):
+                masked += 1
+                lines.append("…")
+            else:
+                lines.append(_L3_SPAN.sub(_span, line))
+        return "\n".join(lines)
+
+    out, pos = [], 0
+    for m in _L3_FENCE.finditer(reply):
+        out.append(_prose(reply[pos:m.start()]))
+        out.append(m.group(0))
+        pos = m.end()
+    out.append(_prose(reply[pos:]))
+    result = "".join(out)
+    if masked:
+        result = result.rstrip() + ("\n\n🔒 *PyTutor đã ẩn " + str(masked) + " đoạn mã giải nằm trong phần mô tả thuật toán; "
+                                    "hãy tự diễn đạt phép tính đó bằng lời rồi viết thành lệnh.*")
+    return result, masked
 
 
 _EVIDENCE_LABEL = re.compile(r"^\s*(input|expected\s+output|actual\s+output|output|đầu vào|kỳ vọng|thực tế)\s*[=:]", flags=re.IGNORECASE)
