@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from './ui';
 import { difficultyVariant } from '../utils/tone';
+import { renderFormattedContent } from '../utils/problemMarkdown';
 import { BookOpen, Tag, Award, CheckCircle, Code2, ListOrdered, School, GraduationCap, ShieldAlert, Sparkles } from 'lucide-react';
 
 export default function ProblemPanel({
@@ -118,115 +119,4 @@ export default function ProblemPanel({
       </div>
     </div>
   );
-}
-
-function renderFormattedContent(text) {
-  if (!text) return null;
-
-  const lines = text.split('\n');
-  const elements = [];
-  let inTable = false;
-  let tableRows = [];
-
-  lines.forEach((line, i) => {
-    const trimmed = line.trim();
-
-    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-      inTable = true;
-      if (!trimmed.includes('---')) {
-        const cells = trimmed
-          .split('|')
-          .slice(1, -1)
-          .map((c) => c.trim());
-        tableRows.push(cells);
-      }
-      return;
-    } else if (inTable) {
-      if (tableRows.length > 0) {
-        elements.push(
-          <div key={`tbl-${i}`} className="my-2.5 overflow-x-auto rounded border border-primary-line">
-            <table className="min-w-full text-xs font-mono text-left">
-              <thead className="border-b border-primary-line bg-primary-soft text-primary-strong">
-                <tr>
-                  {tableRows[0].map((th, thIdx) => (
-                    <th key={thIdx} className="px-3 py-1.5 font-semibold">
-                      {th}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-surface">
-                {tableRows.slice(1).map((row, rIdx) => (
-                  <tr key={rIdx}>
-                    {row.map((cell, cIdx) => (
-                      <td key={cIdx} className="px-3 py-1.5 text-foreground">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-      }
-      inTable = false;
-      tableRows = [];
-    }
-
-    if (trimmed.startsWith('### ')) {
-      elements.push(
-        <h3 key={i} className="mb-1 mt-4 text-base font-bold text-primary-strong">
-          {trimmed.replace('### ', '')}
-        </h3>
-      );
-    } else if (trimmed.startsWith('- ')) {
-      elements.push(
-        <div key={i} className="ml-1 flex items-start gap-2 text-sm leading-6 text-foreground">
-          <span aria-hidden="true" className="text-muted">•</span>
-          <span>{trimmed.replace('- ', '')}</span>
-        </div>
-      );
-    } else if (trimmed === '') {
-      // Empty line
-    } else {
-      elements.push(
-        <p key={i} className="text-sm leading-6 text-foreground">
-          {trimmed}
-        </p>
-      );
-    }
-  });
-
-  // Flush table nếu bảng nằm ở cuối cùng của đề bài
-  if (inTable && tableRows.length > 0) {
-    elements.push(
-      <div key="tbl-end" className="my-2.5 overflow-x-auto rounded border border-primary-line">
-        <table className="min-w-full text-xs font-mono text-left">
-          <thead className="border-b border-primary-line bg-primary-soft text-primary-strong">
-            <tr>
-              {tableRows[0].map((th, thIdx) => (
-                <th key={thIdx} className="px-3 py-1.5 font-semibold">
-                  {th}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border bg-surface">
-            {tableRows.slice(1).map((row, rIdx) => (
-              <tr key={rIdx}>
-                {row.map((cell, cIdx) => (
-                  <td key={cIdx} className="px-3 py-1.5 text-foreground">
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  return elements;
 }

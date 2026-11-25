@@ -10,7 +10,6 @@ import EditorPanel from '../components/EditorPanel';
 import TutorPanel from '../components/TutorPanel';
 import StudentProfileModal from '../components/StudentProfileModal';
 import ExecutionVisualizerModal from '../components/ExecutionVisualizerModal';
-import PythonicReviewModal from '../components/PythonicReviewModal';
 import { isBlankCode } from '../utils/blankCode';
 import { rememberLastClassId } from '../utils/lastClass';
 import { 
@@ -67,7 +66,6 @@ export default function StudentIDE() {
   // Modal States
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isVisualizerOpen, setIsVisualizerOpen] = useState(false);
-  const [isPythonicReviewOpen, setIsPythonicReviewOpen] = useState(false);
   // null = chưa có lượt "Nộp bài" đạt trong phiên này ở bài đang mở (không mặc định 3 sao).
   const [starsEarned, setStarsEarned] = useState(null);
   // v5.3: ID phản hồi AI của gợi ý hiện tại (để đánh giá 👍/👎) và lý do số sao của lượt nộp chính thức gần nhất.
@@ -512,7 +510,6 @@ export default function StudentIDE() {
             exerciseId={selectedExerciseId}
             code={code}
             sessionId={sessionId}
-            onOpenPythonicReview={() => setIsPythonicReviewOpen(true)}
             starsEarned={starsEarned}
             hintInteractionId={hintInteractionId}
             starRationale={starRationale}
@@ -539,16 +536,6 @@ export default function StudentIDE() {
         onClose={() => setIsVisualizerOpen(false)}
         initialCode={code}
         defaultStdin={exerciseDetail?.test_cases?.[0]?.input || ''}
-      />
-
-      {/* Modal 4: Pythonic Code Review */}
-      <PythonicReviewModal
-        isOpen={isPythonicReviewOpen}
-        onClose={() => setIsPythonicReviewOpen(false)}
-        exerciseId={selectedExerciseId}
-        code={code}
-        username={sessionId}
-        starsEarned={starsEarned}
       />
 
       {/* Modal 5: Thông báo nộp bài thành công & Điều hướng */}

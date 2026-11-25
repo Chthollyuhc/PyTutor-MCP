@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Save, Plus, Trash2, Code2, BookOpen, CheckCircle } from 'lucide-react';
 import Header from '../components/Header';
 import { Input } from '../components/ui';
-import { fetchExerciseDetail, createInstructorExercise, updateInstructorExercise } from '../services/api';
+import { fetchExerciseDetail, createInstructorExercise, updateInstructorExercise, fetchKnowledgeComponents } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function ExerciseFormPage() {
@@ -20,7 +20,11 @@ export default function ExerciseFormPage() {
   const [exerciseId, setExerciseId] = useState('');
   const [title, setTitle] = useState('');
   const [difficulty, setDifficulty] = useState('Dễ');
-  const [category, setCategory] = useState('Vòng lặp & Biến tích lũy');
+  const [category, setCategory] = useState('');
+  const [kcTags, setKcTags] = useState([]); // năng lực giảng viên chọn (không gồm io_format, luôn có)
+  const [kcOptions, setKcOptions] = useState([]);
+  const [kcOptionsLoaded, setKcOptionsLoaded] = useState(false);
+  const [savedKcTags, setSavedKcTags] = useState(null); // mã đã lưu của bài; chỉ giữ mã còn bật khi đã biết danh sách năng lực
   const [description, setDescription] = useState('');
   const [starterCode, setStarterCode] = useState('# Viết code Python của bạn ở đây...\n');
   const [algorithmNotes, setAlgorithmNotes] = useState('');
@@ -37,6 +41,14 @@ export default function ExerciseFormPage() {
   }, [isInstructor, user, navigate]);
 
   useEffect(() => {
+    let alive = true;
+    fetchKnowledgeComponents()
+      .then((items) => { if (alive) { setKcOptions((items || []).filter((k) => k.is_active !== false)); setKcOptionsLoaded(true); } })
+      .catch(() => { if (alive) { setKcOptions([]); setKcOptionsLoaded(true); } });
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
     const initPage = async () => {
 
       if (isEditMode) {
@@ -47,6 +59,7 @@ export default function ExerciseFormPage() {
           setTitle(detail.title);
           setDifficulty(detail.difficulty);
           setCategory(detail.category);
+          setSavedKcTags((detail.kc_tags || []).filter((k) => k !== 'io_format'));
           setDescription(detail.description);
           setStarterCode(detail.starter_code || '');
           setAlgorithmNotes(detail.algorithm_notes || '');
@@ -62,6 +75,13 @@ export default function ExerciseFormPage() {
 
     initPage();
   }, [id, isEditMode]);
+
+  // Chỉ giữ các mã năng lực còn bật: mã đã bị tắt/xóa không hiện ra nên không bỏ chọn được, và sẽ làm lệch kiểm tra "ít nhất một năng lực".
+  useEffect(() => {
+    if (savedKcTags === null || !kcOptionsLoaded) return;
+    const active = new Set(kcOptions.map((k) => k.kc));
+    setKcTags(savedKcTags.filter((k) => active.has(k)));
+  }, [savedKcTags, kcOptions, kcOptionsLoaded]);
 
   // Thêm test case mới
   const handleAddTestCase = () => {
@@ -94,6 +114,8 @@ export default function ExerciseFormPage() {
       ...(!exerciseId.trim() && { exerciseId: 'Vui lòng nhập mã bài tập.' }),
       ...(!title.trim() && { title: 'Vui lòng nhập tiêu đề bài tập.' }),
       ...(!description.trim() && { description: 'Vui lòng nhập mô tả đề bài.' }),
+      ...(!category.trim() && { category: 'Vui lòng nhập chủ đề của bài.' }),
+      ...(kcTags.length === 0 && { kcTags: 'Hãy chọn ít nhất một năng lực mà bài này rèn luyện.' }),
     };
     setFieldErrors(nextFieldErrors);
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -116,6 +138,7 @@ export default function ExerciseFormPage() {
       description,
       starter_code: starterCode,
       algorithm_notes: algorithmNotes,
+      kc_tags: kcTags,
       test_cases: formattedTestCases
     };
 
@@ -211,13 +234,47 @@ export default function ExerciseFormPage() {
               </div>
 
               <Input
-                label="Chủ đề thuật toán (Category)"
+                label="Chủ đề thuật toán (Category) *"
                 type="text"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="ví dụ: Vòng lặp & Đệ quy"
+                onChange={(e) => { setCategory(e.target.value); setError(''); setFieldErrors(prev => ({ ...prev, category: undefined })); }}
+                placeholder="Chưa chọn — ví dụ: Đếm tần suất trong danh sách"
+                error={fieldErrors.category}
+                aria-required="true"
               />
             </div>
+
+            <fieldset className="space-y-2 rounded-xl border border-border p-3.5" aria-describedby="kc-tags-hint">
+              <legend className="px-1 text-xs font-medium text-foreground">Năng lực của bài *</legend>
+              <p id="kc-tags-hint" className="text-xs text-muted">
+                Năng lực quyết định bài này được tính vào phần nào trong hồ sơ học tập của sinh viên. "Nhập/xuất và định dạng" luôn có ở mọi bài.
+                Thiếu năng lực phù hợp? Thêm ở mục "Đơn vị kiến thức (KCs)" trong Ngân hàng bài tập.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {kcOptions.length === 0 && <span className="text-xs text-muted">Đang tải danh sách năng lực...</span>}
+                {kcOptions.map((k) => {
+                  const fixed = k.kc === 'io_format';
+                  const checked = fixed || kcTags.includes(k.kc);
+                  return (
+                    <label key={k.kc} className={`inline-flex min-h-9 items-center gap-2 rounded-xl border px-3 text-xs ${checked ? 'border-emerald-500/50 bg-emerald-500/10 text-foreground' : 'border-border bg-surface text-muted'} ${fixed ? 'opacity-80' : 'cursor-pointer'}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={fixed}
+                        onChange={(e) => {
+                          setKcTags((prev) => (e.target.checked ? [...prev, k.kc] : prev.filter((x) => x !== k.kc)));
+                          setError('');
+                          setFieldErrors((prev) => ({ ...prev, kcTags: undefined }));
+                        }}
+                        className="size-4 rounded border-border accent-emerald-600"
+                      />
+                      <span>{k.label_vi}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              {fieldErrors.kcTags && <p role="alert" className="text-xs font-medium text-rose-500">{fieldErrors.kcTags}</p>}
+            </fieldset>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2" htmlFor="exercise-description">

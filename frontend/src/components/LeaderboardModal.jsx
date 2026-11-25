@@ -63,7 +63,7 @@ export default function LeaderboardModal({
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Xếp hạng dựa trên Tổng số Điểm Nỗ lực (⭐), Số bài giải đúng và Điểm Clean Code
+                Xếp hạng dựa trên Tổng số Điểm Nỗ lực (⭐), Số bài giải đúng
               </p>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function LeaderboardModal({
                       <span>{top1.total_stars} Sao Tự Làm</span>
                     </div>
                     <span className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                      {top1.completed_exercises} bài • Clean Max: {top1.highest_clean_score}
+                      {top1.completed_exercises} bài
                     </span>
                   </div>
                 ) : (
@@ -177,7 +177,6 @@ export default function LeaderboardModal({
                         <th className="py-2.5">Học viên</th>
                         <th className="py-2.5 text-center">Tổng Sao (⭐)</th>
                         <th className="py-2.5 text-center">Bài đã giải</th>
-                        <th className="py-2.5 text-center">Điểm Clean Max</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 font-sans">
@@ -197,11 +196,6 @@ export default function LeaderboardModal({
                           </td>
                           <td className="py-2.5 text-center text-slate-700 dark:text-slate-300 font-medium">
                             {item.completed_exercises}
-                          </td>
-                          <td className="py-2.5 text-center">
-                            <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-slate-800 dark:text-emerald-400 font-mono font-bold text-[11px]">
-                              {item.highest_clean_score || 0}
-                            </span>
                           </td>
                         </tr>
                       ))}

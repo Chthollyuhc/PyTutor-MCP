@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, BookOpen, Info, RefreshCw, ThumbsUp, Trash2, Upload, Users } from 'lucide-react';
+import { AlertCircle, BookOpen, Info, Pencil, RefreshCw, ThumbsUp, Trash2, Upload, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TableLoading } from './TableControls';
 import { ChartEmpty, HBar, StackedBarRows, TrendLine } from './charts/ClassCharts';
@@ -9,9 +9,9 @@ import StudentGroups from './plain/StudentGroups';
 import ExerciseProgressList from './plain/ExerciseProgressList';
 import HowItWorks from './plain/HowItWorks';
 import {
-  deleteClassKnowledge, fetchClassesAttention, fetchClassInsights, fetchClassKnowledge, fetchKnowledgeBaseCatalogue,
+  deleteClassKnowledge, deleteGlobalKnowledge, fetchClassesAttention, fetchClassInsights, fetchClassKnowledge, fetchKnowledgeBaseCatalogue,
   fetchStudentLearnerModel, fetchTutorFeedbackSummary, markAttention, toggleClassKnowledge, undoAttentionMarks,
-  uploadClassKnowledge,
+  toggleGlobalKnowledge, toggleSystemKnowledge, updateGlobalKnowledge, uploadClassKnowledge, uploadGlobalKnowledge,
 } from '../services/api';
 
 const KC_STATE_STYLE = {
@@ -719,7 +719,6 @@ export function ClassChatAnswer({ result }) {
 const TASK_LABELS = {
   adaptive_hint: 'Gợi ý từ nút Hỏi Gia sư AI',
   student_chat: 'Trò chuyện với Gia sư',
-  pythonic_review: 'Pythonic Review sau khi đạt',
 };
 
 export function TutorFeedbackPanel() {
@@ -940,9 +939,129 @@ export function ClassKnowledgePanel({ classId }) {
   );
 }
 
+const EMPTY_GLOBAL_FORM = { title: '', license_type: '', license_detail: '', provenance: '', confirm: false };
+
+/** Form dùng chung cho "Thêm" và "Sửa" tài liệu chung. Khi sửa, tệp là tùy chọn (không chọn = giữ nội dung cũ). */
+function GlobalDocForm({ mode, doc, limits, onDone, onCancel }) {
+  const editing = mode === 'edit';
+  const [file, setFile] = useState(null);
+  const [form, setForm] = useState(editing
+    ? { title: doc.title, license_type: doc.license_type, license_detail: '', provenance: doc.provenance, confirm: false }
+    : EMPTY_GLOBAL_FORM);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+  const fileInputRef = useRef(null);
+  const setField = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.type === 'checkbox' ? event.target.checked : event.target.value }));
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!editing && !file) { setMessage({ tone: 'error', text: 'Hãy chọn một tệp tài liệu.' }); return; }
+    const body = new FormData();
+    if (file) body.append('file', file);
+    body.append('title', form.title);
+    body.append('license_type', form.license_type);
+    body.append('license_detail', form.license_detail);
+    body.append('provenance', form.provenance);
+    body.append('no_personal_data', form.confirm ? 'true' : 'false');
+    setBusy(true); setMessage(null);
+    try {
+      const res = editing ? await updateGlobalKnowledge(doc.id, body) : await uploadGlobalKnowledge(body);
+      onDone(res);
+      if (!editing) {
+        setFile(null); setForm(EMPTY_GLOBAL_FORM);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    } catch (err) {
+      const detail = err?.response?.data?.detail;
+      setMessage({ tone: 'error', text: typeof detail === 'string' ? detail : 'Không lưu được. Kiểm tra kết nối rồi thử lại.' });
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-3 text-xs" aria-busy={busy}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1">
+          <span className="font-semibold text-foreground">{editing ? 'Thay nội dung bằng tệp mới (không bắt buộc)' : 'Tệp tài liệu *'}</span>
+          <input ref={fileInputRef} type="file" accept=".md,.txt,.pdf,.docx" onChange={(e) => setFile(e.target.files?.[0] || null)} className={KB_FIELD} />
+        </label>
+        <label className="space-y-1">
+          <span className="font-semibold text-foreground">Tên hiển thị{editing ? ' *' : ' (không bắt buộc)'}</span>
+          <input value={form.title} onChange={setField('title')} maxLength={200} placeholder="Ví dụ: Quy ước đặt tên biến" className={KB_FIELD} />
+        </label>
+        <label className="space-y-1">
+          <span className="font-semibold text-foreground">Quyền sử dụng *</span>
+          <select value={form.license_type} onChange={setField('license_type')} className={KB_FIELD}>
+            <option value="">— Chọn —</option>
+            <option value="own">Tự biên soạn</option>
+            <option value="licensed">Được tác giả hoặc đơn vị cấp phép</option>
+            <option value="open">Tài liệu mở có giấy phép</option>
+          </select>
+        </label>
+        {!editing && form.license_type === 'open' && (
+          <label className="space-y-1">
+            <span className="font-semibold text-foreground">Giấy phép *</span>
+            <input value={form.license_detail} onChange={setField('license_detail')} placeholder="Ví dụ: CC BY 4.0" className={KB_FIELD} />
+          </label>
+        )}
+        <label className="space-y-1 sm:col-span-2">
+          <span className="font-semibold text-foreground">Nguồn gốc * (tác giả, năm, đường dẫn nếu có)</span>
+          <input value={form.provenance} onChange={setField('provenance')} maxLength={editing ? 700 : 500} placeholder="Ví dụ: Nguyễn Văn A, 2026, tự biên soạn" className={KB_FIELD} />
+        </label>
+      </div>
+      {(!editing || file) && (
+        <label className="flex min-h-9 cursor-pointer items-start gap-2 text-muted">
+          <input type="checkbox" checked={form.confirm} onChange={setField('confirm')} className="mt-0.5 size-4 shrink-0 rounded border-border accent-emerald-600" />
+          <span>Tôi cam kết tài liệu không chứa dữ liệu cá nhân sinh viên, đề thi hay đáp án bài tập của lớp. *</span>
+        </label>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={busy} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 shadow-soft cursor-pointer">
+          {editing ? null : <Upload aria-hidden="true" className="size-4" />}
+          {busy ? 'Đang lưu...' : editing ? 'Lưu thay đổi' : 'Thêm tài liệu chung'}
+        </button>
+        {editing && (
+          <button type="button" onClick={onCancel} className="min-h-10 rounded-xl border border-border bg-surface px-4 text-xs font-semibold text-foreground transition-colors hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer">Hủy</button>
+        )}
+        <span className="text-[11px] text-muted">Định dạng {limits.formats.join(', ')} · tối đa {limits.max_file_mb} MB · tối đa {limits.max_documents} tài liệu chung. Chỉ văn bản trích ra được lưu.</span>
+      </div>
+      {message && (
+        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-rose-600 dark:text-rose-300">{message.text}</div>
+      )}
+    </form>
+  );
+}
+
 export function KnowledgeBasePanel() {
   const { data, isLoading, error, reload } = useRemoteData(() => fetchKnowledgeBaseCatalogue(), []);
-  const documents = data?.documents || [];
+  const systemDocs = data?.documents || [];
+  const uploaded = data?.uploaded_documents || [];
+  const limits = data?.limits || { max_documents: 20, max_file_mb: 5, formats: ['.md', '.txt', '.pdf', '.docx'] };
+  const [editingId, setEditingId] = useState(null);
+  const [message, setMessage] = useState(null); // {tone, text, warnings}
+
+  const fail = (err, fallback) => {
+    const detail = err?.response?.data?.detail;
+    setMessage({ tone: 'error', text: typeof detail === 'string' ? detail : fallback });
+  };
+  const toggleSystem = async (doc) => {
+    try { await toggleSystemKnowledge(doc.path, !doc.is_active); setMessage(null); reload(); }
+    catch (err) { fail(err, 'Không đổi được trạng thái tài liệu hệ thống.'); }
+  };
+  const toggleUploaded = async (doc) => {
+    try { await toggleGlobalKnowledge(doc.id, !doc.is_active); setMessage(null); reload(); }
+    catch (err) { fail(err, 'Không đổi được trạng thái tài liệu.'); }
+  };
+  const removeUploaded = async (doc) => {
+    if (!window.confirm(`Xóa tài liệu chung "${doc.title}"? Gia sư AI của mọi lớp sẽ không dùng tài liệu này nữa và không thể hoàn tác.`)) return;
+    try { await deleteGlobalKnowledge(doc.id); setMessage(null); reload(); }
+    catch (err) { fail(err, 'Không xóa được tài liệu.'); }
+  };
+  const afterSave = (res, verb) => {
+    setMessage({ tone: 'ok', text: `Đã ${verb} "${res.document.title}" (${res.document.chunk_count} đoạn). Gia sư AI của mọi lớp dùng được ngay.`, warnings: res.warnings });
+    setEditingId(null);
+    reload();
+  };
+  const toggleBtn = 'min-h-9 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground transition-colors hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer shadow-soft';
 
   return (
     <section aria-label="Nguồn kiến thức của Gia sư AI" className="space-y-3 rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-soft">
@@ -965,20 +1084,34 @@ export function KnowledgeBasePanel() {
             {data.notice}
           </p>
           <p className="text-xs text-muted">
-            <strong className="font-mono tabular-nums text-foreground">{data.total_documents}</strong> tài liệu · <strong className="font-mono tabular-nums text-foreground">{data.total_chunks}</strong> đoạn được lập chỉ mục
+            <strong className="font-mono tabular-nums text-foreground">{data.active_documents ?? data.total_documents}</strong> tài liệu đang bật · <strong className="font-mono tabular-nums text-foreground">{data.total_chunks}</strong> đoạn trong tài liệu hệ thống
             {data.retrieval && <> · truy xuất: {data.retrieval.method}, lấy tối đa {data.retrieval.top_k} đoạn, ngưỡng liên quan tối thiểu {data.retrieval.min_relevance}</>}
           </p>
-          {documents.length === 0 ? (
+
+          {message && (
+            <div role={message.tone === 'error' ? 'alert' : 'status'} className={`rounded-xl border p-3 text-xs ${message.tone === 'error' ? 'border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-300' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}>
+              <p>{message.text}</p>
+              {message.warnings?.length > 0 && <ul className="mt-1 list-disc pl-4 text-amber-700 dark:text-amber-300">{message.warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
+            </div>
+          )}
+
+          <h4 className="text-xs font-bold text-foreground">Tài liệu hệ thống <span className="font-normal text-muted">(chỉ tắt/bật, không sửa nội dung)</span></h4>
+          {systemDocs.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted">
-              Chưa có tài liệu nào trong thư mục kiến thức. Gia sư sẽ trả lời không kèm nguồn.
+              Chưa có tài liệu nào trong thư mục kiến thức.
             </div>
           ) : (
             <ul className="divide-y divide-border rounded-xl border border-border">
-              {documents.map((doc) => (
-                <li key={doc.path} className="p-3.5">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                    <span className="text-xs font-semibold text-foreground">{doc.title}</span>
-                    <span className="font-mono text-[11px] text-muted">{doc.path} · {doc.chunk_count} đoạn · {Number(doc.char_count || 0).toLocaleString('vi-VN')} ký tự</span>
+              {systemDocs.map((doc) => (
+                <li key={doc.path} className={`p-3.5 ${doc.is_active ? '' : 'opacity-60'}`}>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold text-foreground">{doc.title}</span>
+                      <p className="font-mono text-[11px] text-muted">{doc.path} · {doc.chunk_count} đoạn · {Number(doc.char_count || 0).toLocaleString('vi-VN')} ký tự</p>
+                    </div>
+                    <button type="button" onClick={() => toggleSystem(doc)} aria-pressed={doc.is_active} className={`${toggleBtn} shrink-0`}>
+                      {doc.is_active ? 'Đang bật' : 'Đang tắt'}
+                    </button>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed text-muted"><span className="font-semibold text-foreground">Nguồn gốc:</span> {doc.provenance}</p>
                   {doc.sections?.length > 0 && (
@@ -995,6 +1128,54 @@ export function KnowledgeBasePanel() {
               ))}
             </ul>
           )}
+
+          <h4 className="pt-1 text-xs font-bold text-foreground">Tài liệu do giảng viên thêm <span className="font-normal text-muted">(chỉ người thêm sửa, tắt hoặc xóa được)</span></h4>
+          {uploaded.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-5 text-center text-xs text-muted">Chưa có tài liệu chung nào do giảng viên thêm.</div>
+          ) : (
+            <ul className="divide-y divide-border rounded-xl border border-border">
+              {uploaded.map((doc) => (
+                <li key={doc.id} className={`space-y-1.5 p-3.5 ${doc.is_active ? '' : 'opacity-60'}`}>
+                  {editingId === doc.id ? (
+                    <GlobalDocForm mode="edit" doc={doc} limits={limits} onDone={(res) => afterSave(res, 'lưu')} onCancel={() => setEditingId(null)} />
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="break-words text-xs font-semibold text-foreground">{doc.title}</p>
+                          <p className="font-mono text-[11px] text-muted">{doc.filename} · {doc.chunk_count} đoạn · {Number(doc.char_count).toLocaleString('vi-VN')} ký tự · thêm bởi {doc.can_edit ? 'bạn' : doc.uploaded_by}</p>
+                        </div>
+                        {doc.can_edit ? (
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button type="button" onClick={() => toggleUploaded(doc)} aria-pressed={doc.is_active} className={toggleBtn}>
+                              {doc.is_active ? 'Đang bật' : 'Đang tắt'}
+                            </button>
+                            <button type="button" onClick={() => { setEditingId(doc.id); setMessage(null); }} aria-label={`Sửa tài liệu ${doc.title}`} title="Sửa tài liệu" className="inline-flex size-9 items-center justify-center rounded-xl border border-border text-foreground transition-colors hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer">
+                              <Pencil aria-hidden="true" className="size-4" />
+                            </button>
+                            <button type="button" onClick={() => removeUploaded(doc)} aria-label={`Xóa tài liệu ${doc.title}`} title="Xóa tài liệu" className="inline-flex size-9 items-center justify-center rounded-xl border border-rose-500/40 text-rose-500 dark:text-rose-300 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer">
+                              <Trash2 aria-hidden="true" className="size-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted">{doc.is_active ? 'Đang bật' : 'Đang tắt'} · chỉ xem</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-muted"><span className="font-semibold text-foreground">Nguồn gốc:</span> {doc.provenance}</p>
+                      {doc.sections?.length > 0 && <p className="text-[11px] leading-relaxed text-muted"><span className="font-semibold text-foreground">Các mục:</span> {doc.sections.join(' · ')}</p>}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <details className="rounded-xl border border-border bg-surface-raised p-3.5">
+            <summary className="cursor-pointer rounded text-xs font-semibold text-emerald-600 dark:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">Thêm tài liệu chung mới</summary>
+            <div className="mt-3">
+              <GlobalDocForm mode="create" limits={limits} onDone={(res) => afterSave(res, 'thêm')} />
+            </div>
+          </details>
         </div>
       ) : null}
     </section>

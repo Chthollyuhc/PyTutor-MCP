@@ -24,7 +24,7 @@ import {
   askInstructorClassAI,
   fetchKnowledgeComponents,
   createKnowledgeComponent,
-  deleteKnowledgeComponent
+  deleteKnowledgeComponent, updateKnowledgeComponent, toggleKnowledgeComponent
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -112,6 +112,7 @@ export default function InstructorDashboard() {
   const [kcForm, setKcForm] = useState({ kc: '', label_vi: '', keywords: '' });
   const [isSubmittingKc, setIsSubmittingKc] = useState(false);
   const [kcMessage, setKcMessage] = useState(null);
+  const [editingKc, setEditingKc] = useState(null); // mã năng lực đang sửa (null = đang thêm mới)
 
   const loadKnowledgeComponents = async () => {
     setIsLoadingKcs(true);
@@ -125,35 +126,61 @@ export default function InstructorDashboard() {
     }
   };
 
-  const handleCreateKc = async (e) => {
+  const handleSaveKc = async (e) => {
     e.preventDefault();
     if (!kcForm.label_vi.trim()) return;
     setIsSubmittingKc(true);
     setKcMessage(null);
     try {
       const kws = kcForm.keywords.split(',').map(k => k.trim()).filter(Boolean);
-      await createKnowledgeComponent({
-        kc: kcForm.kc.trim() || undefined,
-        label_vi: kcForm.label_vi.trim(),
-        keywords: kws.length > 0 ? kws : [kcForm.label_vi.trim().toLowerCase()]
-      });
-      setKcMessage({ type: 'success', text: 'Đã thêm Đơn vị kiến thức mới thành công!' });
+      const keywords = kws.length > 0 ? kws : [kcForm.label_vi.trim().toLowerCase()];
+      if (editingKc) {
+        await updateKnowledgeComponent(editingKc, { label_vi: kcForm.label_vi.trim(), keywords });
+        setKcMessage({ type: 'success', text: 'Đã lưu thay đổi của Đơn vị kiến thức.' });
+      } else {
+        await createKnowledgeComponent({ kc: kcForm.kc.trim() || undefined, label_vi: kcForm.label_vi.trim(), keywords });
+        setKcMessage({ type: 'success', text: 'Đã thêm Đơn vị kiến thức mới thành công!' });
+      }
+      setEditingKc(null);
       setKcForm({ kc: '', label_vi: '', keywords: '' });
       await loadKnowledgeComponents();
     } catch (err) {
-      setKcMessage({ type: 'error', text: err.response?.data?.detail || 'Không thể tạo Đơn vị kiến thức' });
+      setKcMessage({ type: 'error', text: err.response?.data?.detail || 'Không thể lưu Đơn vị kiến thức' });
     } finally {
       setIsSubmittingKc(false);
     }
   };
 
-  const handleDeleteKc = async (kcSlug) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa đơn vị kiến thức '${kcSlug}' không?`)) return;
+  const startEditKc = (k) => {
+    setEditingKc(k.kc);
+    setKcForm({ kc: k.kc, label_vi: k.label_vi, keywords: (k.keywords || []).join(', ') });
+    setKcMessage(null);
+  };
+
+  const cancelEditKc = () => {
+    setEditingKc(null);
+    setKcForm({ kc: '', label_vi: '', keywords: '' });
+  };
+
+  const handleToggleKc = async (k) => {
     try {
-      await deleteKnowledgeComponent(kcSlug);
+      await toggleKnowledgeComponent(k.kc, !k.is_active);
+      setKcMessage(null);
       await loadKnowledgeComponents();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Không thể xóa đơn vị kiến thức');
+      setKcMessage({ type: 'error', text: err.response?.data?.detail || 'Không đổi được trạng thái đơn vị kiến thức' });
+    }
+  };
+
+  const handleDeleteKc = async (kcSlug) => {
+    if (!window.confirm(`Xóa đơn vị kiến thức '${kcSlug}'? Các bài đang chọn năng lực này sẽ quay về cách suy ra từ danh mục.`)) return;
+    try {
+      const res = await deleteKnowledgeComponent(kcSlug);
+      if (editingKc === kcSlug) cancelEditKc();
+      setKcMessage({ type: 'success', text: res.affected_exercises > 0 ? `Đã xóa. ${res.affected_exercises} bài đang chọn năng lực này sẽ quay về cách suy ra từ danh mục.` : 'Đã xóa đơn vị kiến thức.' });
+      await loadKnowledgeComponents();
+    } catch (err) {
+      setKcMessage({ type: 'error', text: err.response?.data?.detail || 'Không thể xóa đơn vị kiến thức' });
     }
   };
 
@@ -896,7 +923,7 @@ export default function InstructorDashboard() {
                                 onChange={(e) => setAssignExerciseForm({ ...assignExerciseForm, skill_tag: e.target.value })}
                               />
                               <datalist id="kc-skill-tags">
-                                {knowledgeComponents.map(k => (
+                                {knowledgeComponents.filter(k => k.is_active !== false).map(k => (
                                   <option key={k.kc} value={k.label_vi} />
                                 ))}
                               </datalist>
@@ -1514,13 +1541,13 @@ export default function InstructorDashboard() {
             )}
 
             {/* Form thêm KC mới */}
-            <form onSubmit={handleCreateKc} className="p-4 rounded-2xl bg-surface-muted border border-border space-y-3">
+            <form onSubmit={handleSaveKc} className="p-4 rounded-2xl bg-surface-muted border border-border space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-foreground flex items-center space-x-1.5">
-                  <Plus className="w-4 h-4 text-emerald-400" />
-                  <span>Định nghĩa Đơn vị kiến thức mới</span>
+                  {editingKc ? <Edit2 className="w-4 h-4 text-emerald-400" /> : <Plus className="w-4 h-4 text-emerald-400" />}
+                  <span>{editingKc ? `Sửa Đơn vị kiến thức (${editingKc})` : 'Định nghĩa Đơn vị kiến thức mới'}</span>
                 </h4>
-                <span className="text-[11px] text-muted">Mở rộng động cho môn học</span>
+                <span className="text-[11px] text-muted">{editingKc ? 'Mã định danh không đổi được' : 'Mở rộng động cho môn học'}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -1541,7 +1568,8 @@ export default function InstructorDashboard() {
                     placeholder="Tự sinh nếu để trống (ví dụ: file_io)"
                     value={kcForm.kc}
                     onChange={(e) => setKcForm({ ...kcForm, kc: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
-                    className="w-full text-xs rounded-xl bg-surface border border-border px-3 py-2 text-foreground font-mono focus:ring-1 focus:ring-emerald-500 outline-none"
+                    disabled={Boolean(editingKc)}
+                    className="w-full text-xs rounded-xl bg-surface border border-border px-3 py-2 text-foreground font-mono focus:ring-1 focus:ring-emerald-500 outline-none disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -1555,19 +1583,22 @@ export default function InstructorDashboard() {
                   className="w-full text-xs rounded-xl bg-surface border border-border px-3 py-2 text-foreground focus:ring-1 focus:ring-emerald-500 outline-none"
                   required
                 />
-                <p className="text-[10px] text-muted mt-1">Khi giảng viên gán bài tập có chứa các từ khóa này ở tên chương, thẻ kỹ năng hay mô tả, hệ thống sẽ tự động gán vào KC này.</p>
+                <p className="text-[10px] text-muted mt-1">Dùng cho các bài chưa được chọn năng lực trực tiếp: nếu tên chương, thẻ kỹ năng hay danh mục của bài chứa từ khóa này, bài được tính vào năng lực này. Bài đã chọn năng lực trực tiếp không dùng từ khóa.</p>
               </div>
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end gap-2 pt-1">
+                {editingKc && (
+                  <button type="button" onClick={cancelEditKc} className="py-2 px-3.5 bg-surface hover:bg-surface-raised text-foreground border border-border rounded-xl text-xs font-semibold transition-colors">Hủy sửa</button>
+                )}
                 <Button type="submit" disabled={isSubmittingKc || !kcForm.label_vi.trim()}>
-                  {isSubmittingKc ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  <span>Lưu Đơn vị kiến thức</span>
+                  {isSubmittingKc ? <RefreshCw className="w-4 h-4 animate-spin" /> : editingKc ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span>{editingKc ? 'Lưu thay đổi' : 'Lưu Đơn vị kiến thức'}</span>
                 </Button>
               </div>
             </form>
 
             {/* Danh sách KCs hiện có */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold text-foreground">Danh mục KCs đang hoạt động ({knowledgeComponents.length})</h4>
+              <h4 className="text-xs font-bold text-foreground">Danh mục KCs ({knowledgeComponents.filter(k => k.is_active !== false).length} đang bật{knowledgeComponents.some(k => k.is_active === false) ? `, ${knowledgeComponents.filter(k => k.is_active === false).length} đang tắt` : ''})</h4>
               {isLoadingKcs ? (
                 <TableLoading label="Đang tải danh sách đơn vị kiến thức" />
               ) : (
@@ -1583,7 +1614,7 @@ export default function InstructorDashboard() {
                     </thead>
                     <tbody className="divide-y divide-border text-foreground">
                       {knowledgeComponents.map(k => (
-                        <tr key={k.kc} className="hover:bg-surface-muted/50 transition-colors">
+                        <tr key={k.kc} className={`hover:bg-surface-muted/50 transition-colors ${k.is_active === false ? 'opacity-60' : ''}`}>
                           <td className="py-2.5 px-3">
                             <div className="font-semibold text-foreground">{k.label_vi}</div>
                             <div className="font-mono text-[10px] text-muted">{k.kc}</div>
@@ -1591,11 +1622,11 @@ export default function InstructorDashboard() {
                           <td className="py-2.5 px-3">
                             {k.created_by === 'system' ? (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                                Hạt nhân hệ thống
+                                Có sẵn của hệ thống
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                                @{k.created_by}
+                                {k.created_by === user?.username ? 'Của bạn' : `@${k.created_by}`}
                               </span>
                             )}
                           </td>
@@ -1613,16 +1644,36 @@ export default function InstructorDashboard() {
                             </div>
                           </td>
                           <td className="py-2.5 px-3 text-right">
-                            {k.created_by !== 'system' ? (
-                              <button
-                                onClick={() => handleDeleteKc(k.kc)}
-                                className="p-1.5 text-muted hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
-                                title="Xóa đơn vị kiến thức"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                            {k.created_by === 'system' ? (
+                              <span className="text-[11px] text-muted italic">Năng lực hệ thống, chỉ xem</span>
+                            ) : k.created_by === user?.username ? (
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => handleToggleKc(k)}
+                                  aria-pressed={k.is_active !== false}
+                                  className="py-1 px-2 text-[11px] font-semibold text-foreground rounded-lg border border-border hover:bg-surface-raised transition-colors"
+                                >
+                                  {k.is_active === false ? 'Đang tắt' : 'Đang bật'}
+                                </button>
+                                <button
+                                  onClick={() => startEditKc(k)}
+                                  className="p-1.5 text-muted hover:text-foreground rounded-lg hover:bg-surface-raised transition-colors"
+                                  title="Sửa đơn vị kiến thức"
+                                  aria-label={`Sửa đơn vị kiến thức ${k.label_vi}`}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteKc(k.kc)}
+                                  className="p-1.5 text-muted hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
+                                  title="Xóa đơn vị kiến thức"
+                                  aria-label={`Xóa đơn vị kiến thức ${k.label_vi}`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             ) : (
-                              <span className="text-[11px] text-muted italic">Mặc định</span>
+                              <span className="text-[11px] text-muted italic">Của giảng viên khác, chỉ xem</span>
                             )}
                           </td>
                         </tr>

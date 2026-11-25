@@ -4,6 +4,7 @@ import { Badge } from './ui';
 import { sendTutorChatMessage } from '../services/api';
 import TutorFeedbackButtons from './TutorFeedbackButtons';
 import { groupTableLines, parseTable } from '../utils/hintMarkdown';
+import { latexToText } from '../utils/problemMarkdown';
 
 export default function TutorPanel({
   hintLevel,
@@ -23,7 +24,6 @@ export default function TutorPanel({
   exerciseId,
   code,
   sessionId,
-  onOpenPythonicReview,
   starsEarned = 3,
   hintInteractionId = null,
   starRationale = null,
@@ -265,7 +265,7 @@ export default function TutorPanel({
           </div>
         )}
 
-        {/* Thẻ Gamification & Nút Thử thách Tối ưu Code Pythonic (Khi pass 100%) */}
+        {/* Thẻ Điểm nỗ lực (khi pass 100%) */}
         {testResults?.all_passed && (
           <div className="space-y-3 rounded-xl border border-success-line bg-success-soft p-3.5">
             <div className="flex items-center justify-between gap-2">
@@ -334,16 +334,6 @@ export default function TutorPanel({
               </div>
             )}
 
-            {onOpenPythonicReview && (
-              <button
-                onClick={onOpenPythonicReview}
-                type="button"
-                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-ai px-3 text-sm font-semibold text-on-solid transition-colors hover:bg-ai/85"
-              >
-                <Sparkles aria-hidden="true" className="size-4" />
-                <span>Thử thách tối ưu code Pythonic</span>
-              </button>
-            )}
           </div>
         )}
 
@@ -490,9 +480,9 @@ export default function TutorPanel({
                         msg.role === 'user'
                           ? 'rounded-br-sm bg-slate-950 text-white dark:bg-emerald-500 dark:text-white shadow-soft'
                           : 'rounded-bl-sm border border-border/80 bg-surface-raised text-foreground shadow-soft'
-                      } whitespace-pre-wrap break-words text-xs`}
+                      } break-words text-xs ${msg.role === 'user' ? 'whitespace-pre-wrap' : 'space-y-1'}`}
                     >
-                      {renderBold(msg.content)}
+                      {msg.role === 'assistant' ? formatHintText(msg.content) : renderBold(msg.content)}
                     </div>
                     {/* v5.3 (S1.3): nguồn tài liệu nội bộ đã dùng, hoặc nói rõ là không có nguồn phù hợp */}
                     {msg.role === 'assistant' && msg.knowledgeStatus === 'grounded' && msg.sources?.length > 0 && (
@@ -504,9 +494,10 @@ export default function TutorPanel({
                             {sIdx > 0 && '; '}
                             {src.section ? `mục “${src.section}”` : 'tài liệu'} <span className="font-mono">({src.source})</span>
                             {src.origin === 'class' && <span className="font-semibold text-success-strong"> — do giảng viên lớp cung cấp</span>}
+                            {src.origin === 'instructor' && <span className="font-semibold text-success-strong"> — tài liệu chung do giảng viên cung cấp</span>}
                           </span>
                         ))}
-                        {msg.sources.some((src) => src.origin !== 'class') && (
+                        {msg.sources.some((src) => !src.origin) && (
                           <span className="block">Tài liệu do PyTutor biên soạn, chưa phải giáo trình chính thức của NEU.</span>
                         )}
                         <span className="block">Gia sư được cung cấp các mục này khi trả lời. Nếu câu trả lời không nhắc tới chúng, bạn nên tự đọc mục đó để đối chiếu.</span>
@@ -700,7 +691,7 @@ function formatHintText(text, { canInsert = false, onInsert = null } = {}) {
 
 function renderBold(str) {
   if (!str) return null;
-  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`|(?<![\w*])\*[^*\s][^*]*\*(?![\w*]))/g);
+  const parts = str.split(/(\*\*.*?\*\*|\`.*?\`|\$\$[^$]+\$\$|\$[^$\n]+\$|(?<![\w*])\*[^*\s][^*]*\*(?![\w*]))/g);
   return parts.map((part, i) => {
     if (part.length > 2 && part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
       return <em key={i} className="italic text-muted">{part.slice(1, -1)}</em>;
@@ -711,6 +702,9 @@ function renderBold(str) {
           {part.slice(2, -2)}
         </strong>
       );
+    }
+    if (part.length > 2 && part.startsWith("$") && part.endsWith("$")) {
+      return <em key={i} className="font-serif">{latexToText(part.replace(/^\$+|\$+$/g, ''))}</em>;
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (

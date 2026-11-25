@@ -438,7 +438,7 @@ def build_pass_feedback(exercise: dict, test_results: dict, ast_analysis: Option
     checks = ["Trường hợp biên nào của đề đã được bài làm xử lý, và ở dòng nào? Hãy thử tự giải thích bằng một câu trước khi sang bài mới.",
               "Nếu đầu vào lớn gấp mười lần, bài làm của bạn cần chạy thêm khoảng bao nhiêu bước, và vì sao?",
               "Chọn một dòng quan trọng trong bài làm và giải thích bằng lời: nếu bỏ dòng đó đi thì kết quả nào sẽ sai?"]
-    extensions = ["thử viết lại lời giải gọn hơn hoặc mở Thử thách tối ưu code Pythonic.",
+    extensions = ["thử viết lại lời giải gọn hơn rồi chạy thử để so sánh.",
                   "thử tự nghĩ thêm hai đầu vào đặc biệt rồi chạy thử để xem bài làm có còn đúng không.",
                   "thử giải thích lời giải này cho một bạn khác bằng ba câu, không nhìn vào mã."]
     k = repeats % 3
@@ -982,6 +982,8 @@ def _source_refs(rag_docs: list[dict]) -> list[dict]:
         ref = {"source": doc["source"], "section": doc.get("section") or "Tổng quan"}
         if doc.get("scope", "global") != "global":
             ref["origin"] = "class"  # tài liệu do giảng viên lớp cung cấp
+        elif str(doc.get("path", "")).startswith("global/"):
+            ref["origin"] = "instructor"  # tài liệu chung do giảng viên thêm (áp dụng mọi lớp)
         if ref not in refs:
             refs.append(ref)
     return refs
@@ -1001,8 +1003,12 @@ def build_offline_chat_reply(rag_docs: list[dict]) -> tuple[str, list[dict]]:
     excerpt = re.sub(r"```.*?```", "", top["content"], flags=re.DOTALL).strip()
     if len(excerpt) > 520:
         excerpt = excerpt[:520].rsplit(" ", 1)[0] + "…"
-    origin = (f"tài liệu **{top['source']}** do giảng viên lớp cung cấp" if top.get("scope", "global") != "global"
-              else "tài liệu nội bộ của PyTutor")
+    if top.get("scope", "global") != "global":
+        origin = f"tài liệu **{top['source']}** do giảng viên lớp cung cấp"
+    elif str(top.get("path", "")).startswith("global/"):
+        origin = f"tài liệu chung **{top['source']}** do giảng viên cung cấp"
+    else:
+        origin = "tài liệu nội bộ của PyTutor"
     reply = (
         f"Theo {origin}, mục **{top.get('section') or 'Tổng quan'}**:\n\n{excerpt}\n\n"
         "❓ Từ đoạn trên, điều nào áp dụng được vào bài bạn đang làm? Hãy thử nói lại bằng lời của mình rồi chạy thử để kiểm chứng."
@@ -1035,7 +1041,7 @@ def build_offline_code_review_reply(title: str, ast_summary: str, knowledge_repl
     safe, _ = check_student_output(reply)
     if not safe:
         return ("Bài của bạn đã có lượt nộp đạt 100% kiểm thử. Mô hình AI hiện chưa sẵn sàng nên mình chưa giải thích "
-                "chi tiết được code đã nộp; bạn có thể mở Pythonic Review hoặc hỏi lại sau.")
+                "chi tiết được code đã nộp; bạn có thể hỏi lại sau.")
     return reply
 
 

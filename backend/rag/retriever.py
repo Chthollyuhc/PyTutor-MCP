@@ -86,21 +86,35 @@ GLOBAL_SCOPE = "global"
 
 
 def ingest_knowledge_base(root: Path = KB_ROOT, index_path: Path = INDEX_PATH,
-                          class_documents: list[dict[str, Any]] | None = None) -> int:
+                          class_documents: list[dict[str, Any]] | None = None,
+                          global_documents: list[dict[str, Any]] | None = None,
+                          disabled_paths: list[str] | None = None) -> int:
     """Index local Markdown/text knowledge documents; safe to rerun (full index refresh).
 
     `docs/knowledge_base` được nạp với scope 'global'. `class_documents` (do backend truyền vào, mỗi phần tử có
     id, class_id, title, content_text) được nạp với scope = class_id để chỉ truy xuất được trong lớp đó.
     Module này không import `database` cho phần tài liệu lớp nên không có phụ thuộc vòng.
+    v5.15: `global_documents` (id, title, content_text) là tài liệu chung do giảng viên thêm (scope 'global', path
+    'global/<id>'); `disabled_paths` là các tệp trong thư mục KB đang bị tắt. Cả hai mặc định None nên benchmark không đổi.
     """
+    disabled = set(disabled_paths or [])
     docs: list[tuple[str, str, str, str, str, str]] = []
     for path in _knowledge_files(root):
         text = path.read_text(encoding="utf-8").strip()
         if not text:
             continue
         rel = path.relative_to(root).as_posix()
+        if rel in disabled:
+            continue
         for idx, (section, chunk) in enumerate(_chunk_document(text)):
             docs.append((f"{rel}::{idx}", chunk, path.name, rel, section, GLOBAL_SCOPE))
+    for document in global_documents or []:
+        text = (document.get("content_text") or "").strip()
+        if not text:
+            continue
+        key = f"global/{document['id']}"
+        for idx, (section, chunk) in enumerate(_chunk_document(text)):
+            docs.append((f"{key}::{idx}", chunk, document.get("title") or key, key, section, GLOBAL_SCOPE))
     for document in class_documents or []:
         text = (document.get("content_text") or "").strip()
         if not text:

@@ -82,6 +82,9 @@ def init_db():
         )
     """)
     exercise_columns = {row[1] for row in cursor.execute("PRAGMA table_info(exercises)").fetchall()}
+    if "kc_tags" not in exercise_columns:
+        # v5.15: giảng viên chọn trực tiếp năng lực (KC) cho bài; mảng JSON các mã KC. Rỗng -> dò từ khóa như trước.
+        cursor.execute("ALTER TABLE exercises ADD COLUMN kc_tags TEXT NOT NULL DEFAULT '[]'")
     if "algorithm_notes" not in exercise_columns:
         # v5.12: ý tưởng thuật toán do giảng viên viết, chỉ dùng cho gợi ý Mức 3; không bao giờ trả cho sinh viên.
         cursor.execute("ALTER TABLE exercises ADD COLUMN algorithm_notes TEXT NOT NULL DEFAULT ''")
@@ -297,6 +300,32 @@ def init_db():
         )
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_kb_documents_class ON kb_documents(class_id, is_active)")
+    # v5.15: tài liệu chung (áp dụng mọi lớp) do giảng viên thêm; chỉ người tạo được sửa/tắt/xóa.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS kb_global_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            format TEXT NOT NULL,
+            content_text TEXT NOT NULL,
+            provenance TEXT NOT NULL,
+            license_type TEXT NOT NULL,
+            uploaded_by TEXT NOT NULL,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            char_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+    """)
+    # Trạng thái tắt/bật của các tệp tài liệu hệ thống nằm trên đĩa (docs/knowledge_base); không có người tạo.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS kb_system_doc_state (
+            path TEXT PRIMARY KEY,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            updated_by TEXT,
+            updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+        )
+    """)
     # v5.13: dấu "đã xử lý / không cần" của giảng viên cho từng việc nên xem. Chỉ là ghi chú, không vào mô hình người học.
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS attention_marks (
@@ -885,12 +914,29 @@ def get_all_exercises(include_inactive: bool = False, instructor_username: Optio
     return result
 
 
+def parse_kc_tags(raw) -> list[str]:
+    """Đọc cột exercises.kc_tags (mảng JSON mã KC) an toàn; lỗi/rỗng -> []."""
+    if isinstance(raw, list):
+        items = raw
+    else:
+        try:
+            items = json.loads(raw) if raw else []
+        except Exception:
+            items = []
+    out: list[str] = []
+    for x in items if isinstance(items, list) else []:
+        x = str(x).strip()
+        if x and x not in out:
+            out.append(x)
+    return out
+
+
 def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     """Lấy thông tin chi tiết của bài tập bao gồm test cases parsed."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active, created_by, algorithm_notes FROM exercises WHERE id = ?",
+        "SELECT id, title, difficulty, category, description, starter_code, test_cases, is_active, created_by, algorithm_notes, kc_tags FROM exercises WHERE id = ?",
         (exercise_id,)
     )
     row = cursor.fetchone()
@@ -915,6 +961,7 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
         "is_active": bool(row["is_active"]),
         "created_by": row["created_by"] or "system",
         "algorithm_notes": row["algorithm_notes"] or "",
+        "kc_tags": parse_kc_tags(row["kc_tags"]),
     }
 
 
@@ -966,7 +1013,8 @@ def save_exercise(
     starter_code: str,
     test_cases: list[dict],
     created_by: str = "instructor",
-    algorithm_notes: str = ""
+    algorithm_notes: str = "",
+    kc_tags: Optional[list[str]] = None
 ) -> dict:
     """Tạo mới hoặc cập nhật bài tập (Upsert)."""
     conn = get_db_connection()
@@ -975,8 +1023,8 @@ def save_exercise(
 
     cursor.execute("""
         INSERT INTO exercises (
-            id, title, difficulty, category, description, starter_code, test_cases, created_by, is_active, algorithm_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+            id, title, difficulty, category, description, starter_code, test_cases, created_by, is_active, algorithm_notes, kc_tags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             title = excluded.title,
             difficulty = excluded.difficulty,
@@ -985,8 +1033,10 @@ def save_exercise(
             starter_code = excluded.starter_code,
             test_cases = excluded.test_cases,
             algorithm_notes = excluded.algorithm_notes,
+            kc_tags = excluded.kc_tags,
             is_active = 1
-    """, (exercise_id, title, difficulty, category, description, starter_code, tc_json, created_by, algorithm_notes or ""))
+    """, (exercise_id, title, difficulty, category, description, starter_code, tc_json, created_by, algorithm_notes or "",
+          json.dumps(parse_kc_tags(kc_tags), ensure_ascii=False)))
     conn.commit()
     conn.close()
     return get_exercise_by_id(exercise_id)
@@ -1211,45 +1261,117 @@ def get_all_knowledge_components(include_inactive: bool = False) -> list[dict]:
         conn.close()
 
 
+SYSTEM_KC_KEYS = ("io_format", "conditional", "loop", "accumulator", "string", "recursion")
+
+
+class KCPermissionError(Exception):
+    """Lỗi quyền/trùng khi quản lý năng lực; mang mã HTTP gợi ý."""
+
+    def __init__(self, message: str, status_code: int = 403):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def get_knowledge_component_row(kc: str) -> Optional[dict]:
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT kc, label_vi, keywords, created_by, created_at, is_active FROM knowledge_components WHERE kc = ?", (kc,)
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            kw = json.loads(row["keywords"]) if isinstance(row["keywords"], str) else (row["keywords"] or [])
+        except Exception:
+            kw = [k.strip() for k in str(row["keywords"]).split(",") if k.strip()]
+        return {"kc": row["kc"], "label_vi": row["label_vi"], "keywords": kw,
+                "created_by": row["created_by"] or "system", "created_at": row["created_at"],
+                "is_active": bool(row["is_active"])}
+    finally:
+        conn.close()
+
+
+def _require_kc_owner(kc: str, username: str) -> dict:
+    """Chỉ người tạo được sửa/tắt/xóa; 6 năng lực hệ thống chỉ xem."""
+    row = get_knowledge_component_row(kc)
+    if not row:
+        raise KCPermissionError("Không tìm thấy đơn vị kiến thức.", 404)
+    if kc in SYSTEM_KC_KEYS or row["created_by"] == "system":
+        raise KCPermissionError("Đây là năng lực hệ thống, chỉ để xem; không sửa, tắt hay xóa được.", 400)
+    if row["created_by"] != username:
+        raise KCPermissionError("Chỉ người tạo năng lực này mới được sửa, tắt hoặc xóa.", 403)
+    return row
+
+
 def create_knowledge_component(kc: str, label_vi: str, keywords: list[str], created_by: str = "instructor") -> dict:
-    """Tạo hoặc cập nhật một đơn vị kiến thức mới do giảng viên định nghĩa."""
+    """Tạo năng lực mới do giảng viên định nghĩa.
+
+    Mã đã tồn tại -> KCPermissionError(409), trừ khi đó là năng lực của chính người này đã bị xóa mềm
+    (khi đó được khôi phục với nội dung mới). Không bao giờ ghi đè năng lực hệ thống hay của người khác.
+    """
+    existing = get_knowledge_component_row(kc)
+    if existing:
+        if existing["created_by"] == created_by and created_by != "system" and not existing["is_active"]:
+            return update_knowledge_component(kc, created_by, label_vi, keywords, reactivate=True)
+        raise KCPermissionError(f"Mã năng lực '{kc}' đã tồn tại.", 409)
     conn = get_db_connection()
-    cursor = conn.cursor()
     try:
-        kw_json = json.dumps(keywords, ensure_ascii=False)
-        cursor.execute("""
-            INSERT INTO knowledge_components (kc, label_vi, keywords, created_by, is_active)
-            VALUES (?, ?, ?, ?, 1)
-            ON CONFLICT(kc) DO UPDATE SET
-                label_vi = excluded.label_vi,
-                keywords = excluded.keywords,
-                is_active = 1
-        """, (kc, label_vi, kw_json, created_by))
+        conn.execute(
+            "INSERT INTO knowledge_components (kc, label_vi, keywords, created_by, is_active) VALUES (?, ?, ?, ?, 1)",
+            (kc, label_vi, json.dumps(keywords, ensure_ascii=False), created_by))
         conn.commit()
-        return {
-            "kc": kc,
-            "label_vi": label_vi,
-            "keywords": keywords,
-            "created_by": created_by,
-            "is_active": True,
-        }
     finally:
         conn.close()
+    return get_knowledge_component_row(kc)
 
 
-def delete_knowledge_component(kc: str) -> bool:
-    """Xóa (đánh dấu inactive) một đơn vị kiến thức do giảng viên thêm. Không cho xóa 6 KC hệ thống."""
-    system_kcs = {"io_format", "conditional", "loop", "accumulator", "string", "recursion"}
-    if kc in system_kcs:
-        raise ValueError("Không thể xóa các đơn vị kiến thức hạt nhân của hệ thống.")
+def update_knowledge_component(kc: str, username: str, label_vi: str, keywords: list[str], reactivate: bool = False) -> dict:
+    """Sửa tên và từ khóa của năng lực do chính người dùng tạo."""
+    if not reactivate:
+        _require_kc_owner(kc, username)
     conn = get_db_connection()
-    cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE knowledge_components SET is_active = 0 WHERE kc = ?", (kc,))
+        conn.execute(
+            "UPDATE knowledge_components SET label_vi = ?, keywords = ?, is_active = CASE WHEN ? THEN 1 ELSE is_active END WHERE kc = ?",
+            (label_vi, json.dumps(keywords, ensure_ascii=False), 1 if reactivate else 0, kc))
         conn.commit()
-        return cursor.rowcount > 0
     finally:
         conn.close()
+    return get_knowledge_component_row(kc)
+
+
+def set_knowledge_component_active(kc: str, username: str, is_active: bool) -> dict:
+    _require_kc_owner(kc, username)
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE knowledge_components SET is_active = ? WHERE kc = ?", (1 if is_active else 0, kc))
+        conn.commit()
+    finally:
+        conn.close()
+    return get_knowledge_component_row(kc)
+
+
+def count_exercises_using_kc(kc: str) -> int:
+    """Số bài đang chọn trực tiếp năng lực này (để cảnh báo khi xóa/tắt)."""
+    conn = get_db_connection()
+    try:
+        rows = conn.execute("SELECT kc_tags FROM exercises WHERE is_active = 1").fetchall()
+    finally:
+        conn.close()
+    return sum(1 for r in rows if kc in parse_kc_tags(r["kc_tags"]))
+
+
+def delete_knowledge_component(kc: str, username: str) -> int:
+    """Xóa mềm năng lực của chính mình; trả số bài đang chọn năng lực đó (sẽ bị bỏ qua khi tính mô hình)."""
+    _require_kc_owner(kc, username)
+    affected = count_exercises_using_kc(kc)
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE knowledge_components SET is_active = 0 WHERE kc = ?", (kc,))
+        conn.commit()
+    finally:
+        conn.close()
+    return affected
 
 
 def compute_student_model(session_id: str, class_id: Optional[str] = None) -> dict:
@@ -1293,7 +1415,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     try:
         if class_id:
             cursor.execute("""
-                SELECT ce.exercise_id as id, ce.module_name as category, ce.module_name as module_name, ce.skill_tag as skill_tag, e.category as exercise_category, e.title, ce.min_stars_required
+                SELECT ce.exercise_id as id, ce.module_name as category, ce.module_name as module_name, ce.skill_tag as skill_tag, e.category as exercise_category, e.title, ce.min_stars_required, e.kc_tags as kc_tags
                 FROM class_exercises ce
                 JOIN exercises e ON ce.exercise_id = e.id
                 WHERE ce.class_id = ?
@@ -1301,7 +1423,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             """, (class_id,))
             ex_meta_rows = [dict(r) for r in cursor.fetchall()]
         else:
-            cursor.execute("SELECT id, title, category FROM exercises WHERE is_active = 1 ORDER BY id ASC")
+            cursor.execute("SELECT id, title, category, kc_tags FROM exercises WHERE is_active = 1 ORDER BY id ASC")
             ex_meta_rows = [dict(r) for r in cursor.fetchall()]
     except Exception:
         ex_meta_rows = []
@@ -1508,7 +1630,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             weaknesses_and_bottlenecks = f"Thỉnh thoảng vẫn gặp sai lệch ở các test case biên (lỗi logic kiểm thử chiếm {error_breakdown['logic_error_percent']}%)."
         else:
             weaknesses_and_bottlenecks = "Không có điểm nghẽn kỹ thuật nào đáng kể."
-        recommended_next_action = "Thử các thử thách 'Tối ưu Code Pythonic' hoặc bài kế tiếp trên lộ trình."
+        recommended_next_action = "Làm bài kế tiếp trên lộ trình, hoặc hỏi Gia sư AI về mã đã nộp."
     elif len(mastered_exercises) >= 2 and autonomy_score >= 60:
         level_classification = "Hoàn thành ổn định, còn dùng gợi ý ở một số bài"
         strengths_analysis = (
@@ -2296,6 +2418,126 @@ def get_active_kb_documents_for_index() -> list[dict[str, Any]]:
         conn.close()
 
 
+# ---- v5.15: tài liệu chung do giảng viên thêm + trạng thái tệp hệ thống ----
+MAX_GLOBAL_KB_DOCUMENTS = 20
+_GLOBAL_KB_META = "id, title, filename, format, provenance, license_type, uploaded_by, is_active, char_count, created_at, updated_at"
+
+
+def count_global_kb_documents() -> int:
+    conn = get_db_connection()
+    try:
+        return conn.execute("SELECT COUNT(*) FROM kb_global_documents").fetchone()[0]
+    finally:
+        conn.close()
+
+
+def create_global_kb_document(title: str, filename: str, fmt: str, content_text: str, provenance: str,
+                              license_type: str, uploaded_by: str) -> int:
+    conn = get_db_connection()
+    try:
+        cur = conn.execute(
+            "INSERT INTO kb_global_documents(title, filename, format, content_text, provenance, license_type, uploaded_by, char_count) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (title, filename, fmt, content_text, provenance, license_type, uploaded_by, len(content_text)))
+        conn.commit()
+        return int(cur.lastrowid)
+    finally:
+        conn.close()
+
+
+def list_global_kb_documents(include_text: bool = False) -> list[dict[str, Any]]:
+    columns = _GLOBAL_KB_META + (", content_text" if include_text else "")
+    conn = get_db_connection()
+    try:
+        rows = conn.execute(f"SELECT {columns} FROM kb_global_documents ORDER BY id DESC").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_global_kb_document(doc_id: int, include_text: bool = False) -> Optional[dict[str, Any]]:
+    columns = _GLOBAL_KB_META + (", content_text" if include_text else "")
+    conn = get_db_connection()
+    try:
+        row = conn.execute(f"SELECT {columns} FROM kb_global_documents WHERE id = ?", (doc_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def update_global_kb_document(doc_id: int, title: str, provenance: str, license_type: str,
+                              filename: Optional[str] = None, fmt: Optional[str] = None,
+                              content_text: Optional[str] = None) -> None:
+    conn = get_db_connection()
+    try:
+        if content_text is not None:
+            conn.execute(
+                "UPDATE kb_global_documents SET title=?, provenance=?, license_type=?, filename=?, format=?, content_text=?, "
+                "char_count=?, updated_at=datetime('now','localtime') WHERE id=?",
+                (title, provenance, license_type, filename, fmt, content_text, len(content_text), doc_id))
+        else:
+            conn.execute(
+                "UPDATE kb_global_documents SET title=?, provenance=?, license_type=?, updated_at=datetime('now','localtime') WHERE id=?",
+                (title, provenance, license_type, doc_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_global_kb_document_active(doc_id: int, is_active: bool) -> None:
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE kb_global_documents SET is_active=?, updated_at=datetime('now','localtime') WHERE id=?",
+                     (1 if is_active else 0, doc_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_global_kb_document(doc_id: int) -> bool:
+    conn = get_db_connection()
+    try:
+        cur = conn.execute("DELETE FROM kb_global_documents WHERE id = ?", (doc_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def get_active_global_kb_documents_for_index() -> list[dict[str, Any]]:
+    conn = get_db_connection()
+    try:
+        rows = conn.execute("SELECT id, title, content_text FROM kb_global_documents WHERE is_active = 1 ORDER BY id").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_system_doc_states() -> dict[str, bool]:
+    """{path: is_active} cho các tệp hệ thống đã từng bị đổi trạng thái; tệp chưa có dòng = đang bật."""
+    conn = get_db_connection()
+    try:
+        return {r["path"]: bool(r["is_active"]) for r in conn.execute("SELECT path, is_active FROM kb_system_doc_state").fetchall()}
+    finally:
+        conn.close()
+
+
+def set_system_doc_active(path: str, is_active: bool, updated_by: str) -> None:
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "INSERT INTO kb_system_doc_state(path, is_active, updated_by) VALUES (?,?,?) "
+            "ON CONFLICT(path) DO UPDATE SET is_active=excluded.is_active, updated_by=excluded.updated_by, "
+            "updated_at=datetime('now','localtime')", (path, 1 if is_active else 0, updated_by))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_disabled_system_doc_paths() -> list[str]:
+    return [p for p, active in get_system_doc_states().items() if not active]
+
+
 def _clamp_days(days: int) -> int:
     return max(1, min(int(days), 90))
 
@@ -2825,6 +3067,7 @@ def get_tutor_feedback_summary(instructor_username: str, days: int = 30) -> dict
             FROM llm_interactions li
             LEFT JOIN tutor_feedback tf ON tf.interaction_id = li.id
             WHERE li.role = 'student'
+              AND li.task_type IN ('adaptive_hint', 'student_chat')
               AND li.created_at >= datetime('now', 'localtime', ?)
               AND li.username IN (
                   SELECT en.student_username FROM class_enrollments en
@@ -2915,7 +3158,7 @@ def explain_autonomy_stars(stars: int, max_hint_level_used: int, attempt_count: 
     hint_names = {1: "không dùng gợi ý hoặc chỉ Mức 1 (gợi mở)", 2: "Mức 2 (chẩn đoán lỗi)", 3: "Mức 3 (dàn ý và khung code)"}
     level = max(1, min(int(max_hint_level_used or 1), 3))
     if stars >= 3:
-        improve = "Đây là mức cao nhất. Bạn có thể thử Thử thách tối ưu code Pythonic."
+        improve = "Đây là mức cao nhất. Bạn có thể hỏi Gia sư AI về mã đã nộp hoặc làm bài kế tiếp."
     elif stars == 2:
         improve = ("Để đạt 3 sao ở các bài tiếp theo: tự giải và chỉ dùng gợi ý Mức 1 hoặc không cần gợi ý. "
                    "Sao của bài này đã chốt theo mức gợi ý đã dùng trước lần nộp đạt đầu tiên; làm lại bài chỉ để ôn tập.")

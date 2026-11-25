@@ -30,6 +30,9 @@ from backend.database import (
     set_kb_document_active,
     delete_kb_document,
     get_active_kb_documents_for_index,
+    count_global_kb_documents, create_global_kb_document, list_global_kb_documents, get_global_kb_document,
+    update_global_kb_document, set_global_kb_document_active, delete_global_kb_document, get_active_global_kb_documents_for_index,
+    get_system_doc_states, set_system_doc_active, get_disabled_system_doc_paths, MAX_GLOBAL_KB_DOCUMENTS,
     get_db_connection,
     get_all_exercises as db_get_all_exercises,
     get_exercise_by_id as db_get_exercise_by_id,
@@ -80,6 +83,9 @@ from backend.database import (
     get_all_knowledge_components,
     create_knowledge_component,
     delete_knowledge_component,
+    update_knowledge_component,
+    set_knowledge_component_active,
+    KCPermissionError,
     get_exercise_class_info
 )
 from backend.auth import (
@@ -136,7 +142,10 @@ from backend.schemas import (
     ExamSessionItem,
     ExamSessionCreateRequest,
     KnowledgeComponentItem,
-    KnowledgeComponentCreateRequest
+    KnowledgeComponentCreateRequest,
+    KnowledgeComponentUpdateRequest,
+    KnowledgeComponentToggleRequest,
+    KnowledgeSystemToggleRequest
 )
 from backend.mcp_client import (
     discover_tools,
@@ -170,7 +179,9 @@ from pytutor_shared.learner_model import summarize_attempt_features
 def rebuild_knowledge_index() -> int:
     """Dựng lại toàn bộ chỉ mục RAG: tài liệu chung + tài liệu lớp đang bật (truyền từ DB vào retriever)."""
     from backend.rag.retriever import ingest_knowledge_base
-    return ingest_knowledge_base(class_documents=get_active_kb_documents_for_index())
+    return ingest_knowledge_base(class_documents=get_active_kb_documents_for_index(),
+                                 global_documents=get_active_global_kb_documents_for_index(),
+                                 disabled_paths=get_disabled_system_doc_paths())
 
 
 @asynccontextmanager
@@ -873,16 +884,34 @@ async def instructor_ai_feedback_summary(days: int = 30, token_data: dict = Depe
 
 @app.get("/api/instructor/knowledge-base")
 async def instructor_knowledge_base(token_data: dict = Depends(require_instructor)):
-    """Danh mục tài liệu nội bộ mà RAG đang nạp, để giảng viên kiểm tra nguồn kiến thức của AI."""
+    """Tài liệu chung mà RAG đang nạp: tệp hệ thống (bật/tắt được) + tài liệu giảng viên thêm."""
     from backend.rag.retriever import list_knowledge_documents, MIN_RELEVANCE
+    from backend.rag import extract as kb_limits
+    username = token_data.get("sub", "")
+    states = get_system_doc_states()
     documents = list_knowledge_documents()
+    for doc in documents:
+        doc["is_active"] = states.get(doc["path"], True)
+        doc["kind"] = "system"
+    uploaded = []
+    for d in list_global_kb_documents(include_text=True):
+        view = _kb_doc_view(d)
+        view["can_edit"] = d["uploaded_by"] == username
+        view["kind"] = "instructor"
+        uploaded.append(view)
     return {
         "documents": documents,
         "total_documents": len(documents),
         "total_chunks": sum(doc["chunk_count"] for doc in documents),
+        "active_documents": sum(1 for d in documents if d["is_active"]) + sum(1 for d in uploaded if d["is_active"]),
+        "uploaded_documents": uploaded,
+        "limits": {"max_documents": MAX_GLOBAL_KB_DOCUMENTS, "max_file_mb": kb_limits.MAX_FILE_BYTES // (1024 * 1024),
+                   "max_chars": kb_limits.MAX_TEXT_CHARS, "formats": list(kb_limits.ALLOWED_EXTENSIONS)},
+        "license_types": KB_LICENSE_TYPES,
         "retrieval": {"method": "TF-IDF thưa + cosine trên SQLite cục bộ", "min_relevance": MIN_RELEVANCE, "top_k": 3},
         "scope": "global",
-        "notice": ("Đây là tài liệu chung do dự án biên soạn nội bộ, áp dụng cho mọi lớp, chưa phải giáo trình chính thức của NEU. "
+        "notice": ("Tài liệu chung áp dụng cho mọi lớp. Tệp hệ thống do dự án biên soạn nội bộ, chưa phải giáo trình chính thức của NEU; "
+                   "bạn chỉ tắt/bật được, không sửa nội dung. Tài liệu bạn thêm là của bạn: chỉ bạn sửa, tắt hoặc xóa được. "
                    "Tài liệu riêng của từng lớp nằm ở tab \"Tài liệu cho Gia sư AI\" trong trang chi tiết lớp. "
                    "Khi không có đoạn nào đủ liên quan, gia sư trả lời không kèm nguồn."),
     }
@@ -904,6 +933,135 @@ def _kb_doc_view(doc: dict) -> dict:
         view["chunk_count"] = len(chunks)
         view["sections"] = list(dict.fromkeys(section for section, _ in chunks if section))
     return view
+
+
+def _own_global_doc(doc_id: int, token_data: dict) -> dict:
+    doc = get_global_kb_document(doc_id, include_text=True)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu chung.")
+    if doc["uploaded_by"] != token_data.get("sub"):
+        raise HTTPException(status_code=403, detail="Chỉ người thêm tài liệu này mới được sửa, tắt hoặc xóa.")
+    return doc
+
+
+def _check_kb_declarations(license_type: str, license_detail: str, provenance: str) -> None:
+    if license_type not in KB_LICENSE_TYPES:
+        raise HTTPException(status_code=422, detail="Hãy chọn quyền sử dụng tài liệu (tự biên soạn / được cấp phép / tài liệu mở).")
+    if license_type == "open" and not license_detail.strip():
+        raise HTTPException(status_code=422, detail="Tài liệu mở phải ghi rõ giấy phép (ví dụ CC BY 4.0).")
+    if not provenance.strip():
+        raise HTTPException(status_code=422, detail="Hãy khai báo nguồn gốc tài liệu (tác giả, năm, đường dẫn nếu có).")
+
+
+_TRUE = {"true", "1", "on", "yes"}
+
+
+@app.post("/api/instructor/knowledge-base/documents", status_code=status.HTTP_201_CREATED)
+async def upload_global_knowledge(
+    file: UploadFile = File(...),
+    title: str = Form(""),
+    license_type: str = Form(""),
+    license_detail: str = Form(""),
+    provenance: str = Form(""),
+    no_personal_data: str = Form(""),
+    token_data: dict = Depends(require_instructor),
+):
+    """Thêm tài liệu chung (áp dụng mọi lớp). Người thêm là chủ sở hữu."""
+    from backend.rag.extract import ExtractionError, MAX_FILE_BYTES, extract_text, file_format
+    filename = (file.filename or "").strip()
+    try:
+        file_format(filename)
+    except ExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    _check_kb_declarations(license_type, license_detail, provenance)
+    if no_personal_data.strip().lower() not in _TRUE:
+        raise HTTPException(status_code=422, detail="Bạn cần cam kết tài liệu không chứa dữ liệu cá nhân sinh viên, đề thi hay đáp án bài tập của lớp.")
+    if count_global_kb_documents() >= MAX_GLOBAL_KB_DOCUMENTS:
+        raise HTTPException(status_code=422, detail=f"Tối đa {MAX_GLOBAL_KB_DOCUMENTS} tài liệu chung. Hãy xóa bớt tài liệu cũ.")
+    data = await file.read(MAX_FILE_BYTES + 1)
+    try:
+        fmt, text, warnings = extract_text(filename, data)
+    except ExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    clean_title = (title.strip() or filename.rsplit(".", 1)[0])[:200]
+    detail = license_detail.strip()
+    full_provenance = provenance.strip()[:500] + (f" · Giấy phép: {detail[:200]}" if detail else "")
+    doc_id = create_global_kb_document(clean_title, filename[:255], fmt, text, full_provenance, license_type, token_data["sub"])
+    chunks = rebuild_knowledge_index()
+    view = _kb_doc_view(get_global_kb_document(doc_id, include_text=True))
+    view["can_edit"] = True
+    view["kind"] = "instructor"
+    return {"document": view, "warnings": warnings, "total_chunks_indexed": chunks}
+
+
+@app.put("/api/instructor/knowledge-base/documents/{doc_id}")
+async def update_global_knowledge(
+    doc_id: int,
+    title: str = Form(...),
+    license_type: str = Form(...),
+    provenance: str = Form(...),
+    license_detail: str = Form(""),
+    no_personal_data: str = Form(""),
+    file: UploadFile | None = File(None),
+    token_data: dict = Depends(require_instructor),
+):
+    """Sửa tiêu đề, giấy phép, nguồn gốc; có thể thay nội dung bằng tệp mới (khi đó cần cam kết lại)."""
+    from backend.rag.extract import ExtractionError, MAX_FILE_BYTES, extract_text, file_format
+    _own_global_doc(doc_id, token_data)
+    _check_kb_declarations(license_type, license_detail or "giấy phép đã ghi trong nguồn gốc", provenance)
+    clean_title = title.strip()[:200]
+    if not clean_title:
+        raise HTTPException(status_code=422, detail="Tiêu đề không được để trống.")
+    warnings: list = []
+    filename = fmt = text = None
+    if file is not None and (file.filename or "").strip():
+        filename = file.filename.strip()
+        try:
+            file_format(filename)
+        except ExtractionError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        if no_personal_data.strip().lower() not in _TRUE:
+            raise HTTPException(status_code=422, detail="Khi thay nội dung, bạn cần cam kết lại tài liệu không chứa dữ liệu cá nhân sinh viên, đề thi hay đáp án bài tập của lớp.")
+        data = await file.read(MAX_FILE_BYTES + 1)
+        try:
+            fmt, text, warnings = extract_text(filename, data)
+        except ExtractionError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        filename = filename[:255]
+    update_global_kb_document(doc_id, clean_title, provenance.strip()[:700], license_type, filename, fmt, text)
+    chunks = rebuild_knowledge_index()
+    view = _kb_doc_view(get_global_kb_document(doc_id, include_text=True))
+    view["can_edit"] = True
+    view["kind"] = "instructor"
+    return {"document": view, "warnings": warnings, "total_chunks_indexed": chunks}
+
+
+@app.patch("/api/instructor/knowledge-base/documents/{doc_id}")
+async def toggle_global_knowledge(doc_id: int, request: KnowledgeToggleRequest, token_data: dict = Depends(require_instructor)):
+    _own_global_doc(doc_id, token_data)
+    set_global_kb_document_active(doc_id, request.is_active)
+    rebuild_knowledge_index()
+    return {"id": doc_id, "is_active": request.is_active}
+
+
+@app.delete("/api/instructor/knowledge-base/documents/{doc_id}")
+async def delete_global_knowledge(doc_id: int, token_data: dict = Depends(require_instructor)):
+    _own_global_doc(doc_id, token_data)
+    delete_global_kb_document(doc_id)
+    rebuild_knowledge_index()
+    return {"id": doc_id, "deleted": True}
+
+
+@app.patch("/api/instructor/knowledge-base/system")
+async def toggle_system_knowledge(request: KnowledgeSystemToggleRequest, token_data: dict = Depends(require_instructor)):
+    """Tắt/bật một tệp tài liệu hệ thống (không xóa, không sửa nội dung). `path` phải là một tệp có thật trong thư mục KB."""
+    from backend.rag.retriever import KB_ROOT, _knowledge_files
+    known = {p.relative_to(KB_ROOT).as_posix() for p in _knowledge_files(KB_ROOT)}
+    if request.path not in known:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hệ thống này.")
+    set_system_doc_active(request.path, request.is_active, token_data.get("sub", ""))
+    rebuild_knowledge_index()
+    return {"path": request.path, "is_active": request.is_active}
 
 
 @app.post("/api/instructor/classes/{class_id}/knowledge", status_code=status.HTTP_201_CREATED)
@@ -1460,6 +1618,23 @@ async def instructor_list_all_exercises(token_data: dict = Depends(require_instr
     return rows
 
 
+def _validated_kc_tags(tags: list[str], existing: list[str] | None = None) -> list[str]:
+    """Mã năng lực giảng viên chọn cho bài: phải là năng lực đang bật; trùng lặp bị bỏ.
+
+    `existing` là các mã bài đã lưu từ trước: vẫn được giữ dù năng lực đó sau này bị tắt/xóa (mô hình người học tự bỏ qua mã
+    không còn bật), để việc sửa đề/test case của bài không bị chặn vì năng lực bị người khác tắt.
+    """
+    allowed = {k["kc"] for k in get_all_knowledge_components(include_inactive=False)} | set(existing or [])
+    clean: list[str] = []
+    for tag in tags or []:
+        tag = str(tag).strip()
+        if tag not in allowed:
+            raise HTTPException(status_code=400, detail=f"Năng lực '{tag}' không tồn tại hoặc đã bị tắt.")
+        if tag not in clean:
+            clean.append(tag)
+    return clean
+
+
 @app.post("/api/instructor/exercises", response_model=ExerciseDetail)
 async def create_new_exercise(
     exercise_data: ExerciseUpsertRequest,
@@ -1469,6 +1644,7 @@ async def create_new_exercise(
     owner = get_exercise_owner(exercise_data.id)
     if owner:
         raise HTTPException(status_code=409, detail="Mã bài tập đã tồn tại. Mỗi bài tập phải có một chủ sở hữu rõ ràng.")
+    kc_tags = _validated_kc_tags(exercise_data.kc_tags)
     tc_dicts = [tc.model_dump() for tc in exercise_data.test_cases]
     saved = db_save_exercise(
         exercise_id=exercise_data.id,
@@ -1479,7 +1655,8 @@ async def create_new_exercise(
         starter_code=exercise_data.starter_code,
         test_cases=tc_dicts,
         created_by=token_data.get("sub", "instructor"),
-        algorithm_notes=exercise_data.algorithm_notes
+        algorithm_notes=exercise_data.algorithm_notes,
+        kc_tags=kc_tags
     )
     if not saved:
         raise HTTPException(status_code=400, detail="Không thể tạo bài tập.")
@@ -1495,6 +1672,7 @@ async def update_exercise(
     """Giảng viên chỉnh sửa bài tập đã có."""
     if get_exercise_owner(exercise_id) != token_data.get("sub"):
         raise HTTPException(status_code=403, detail="Chỉ người tạo bài tập mới được chỉnh sửa.")
+    kc_tags = _validated_kc_tags(exercise_data.kc_tags, (db_get_exercise_by_id(exercise_id) or {}).get("kc_tags"))
     tc_dicts = [tc.model_dump() for tc in exercise_data.test_cases]
     saved = db_save_exercise(
         exercise_id=exercise_id,
@@ -1505,7 +1683,8 @@ async def update_exercise(
         starter_code=exercise_data.starter_code,
         test_cases=tc_dicts,
         created_by=token_data.get("sub", "instructor"),
-        algorithm_notes=exercise_data.algorithm_notes
+        algorithm_notes=exercise_data.algorithm_notes,
+        kc_tags=kc_tags
     )
     if not saved:
         raise HTTPException(status_code=404, detail="Không tìm thấy bài tập cần cập nhật.")
@@ -1553,10 +1732,36 @@ def get_public_knowledge_components():
     return get_all_knowledge_components(include_inactive=False)
 
 
+def _clean_kc_keywords(raw: list[str]) -> list[str]:
+    """Từ khóa 1-60 ký tự và biên dịch được thành regex; sai thì 400 (tránh làm hỏng mô hình người học)."""
+    clean: list[str] = []
+    for k in raw or []:
+        k = (k or "").strip()
+        if not k:
+            continue
+        if len(k) > 60:
+            raise HTTPException(status_code=400, detail=f"Từ khóa '{k[:20]}…' dài quá 60 ký tự.")
+        if re.search(r"\([^)]*[+*][^)]*\)\s*[+*{]", k):
+            raise HTTPException(status_code=400, detail=f"Từ khóa '{k}' có lượng từ lồng nhau (ví dụ (a+)+), dễ làm chậm hệ thống. Hãy viết đơn giản hơn.")
+        try:
+            re.compile(k)
+        except re.error:
+            raise HTTPException(status_code=400, detail=f"Từ khóa '{k}' không hợp lệ: cần là biểu thức chính quy hợp lệ (ký tự đặc biệt như ( ) [ ] cần có dấu \\ phía trước).")
+        if k not in clean:
+            clean.append(k)
+    if not clean:
+        raise HTTPException(status_code=400, detail="Cần ít nhất một từ khóa nhận diện cho đơn vị kiến thức này.")
+    return clean
+
+
+def _kc_error(err: KCPermissionError) -> HTTPException:
+    return HTTPException(status_code=err.status_code, detail=str(err))
+
+
 @app.get("/api/instructor/knowledge-components", response_model=list[KnowledgeComponentItem])
 def get_instructor_knowledge_components(token_data: dict = Depends(require_instructor)):
-    """[Giảng viên] Lấy toàn bộ danh sách các đơn vị kiến thức (bao gồm nguồn gốc người tạo)."""
-    return get_all_knowledge_components(include_inactive=False)
+    """[Giảng viên] Toàn bộ năng lực, kể cả đã tắt (để chủ sở hữu bật lại)."""
+    return get_all_knowledge_components(include_inactive=True)
 
 
 @app.post("/api/instructor/knowledge-components", response_model=KnowledgeComponentItem)
@@ -1564,7 +1769,7 @@ def create_instructor_knowledge_component(
     body: KnowledgeComponentCreateRequest,
     token_data: dict = Depends(require_instructor)
 ):
-    """[Giảng viên] Thêm hoặc cập nhật đơn vị kiến thức (KC) mới và từ khóa nhận diện."""
+    """[Giảng viên] Thêm năng lực mới và từ khóa nhận diện (mã trùng -> 409)."""
     username = token_data.get("sub", "instructor")
     raw_kc = body.kc
     if not raw_kc or not raw_kc.strip():
@@ -1577,17 +1782,38 @@ def create_instructor_knowledge_component(
             status_code=400,
             detail="Mã định danh KC (slug) chỉ được chứa chữ cái thường, số và dấu gạch dưới, độ dài từ 2 đến 40 ký tự."
         )
-    clean_kws = [k.strip() for k in body.keywords if k and k.strip()]
-    if not clean_kws:
-        raise HTTPException(status_code=400, detail="Cần ít nhất một từ khóa nhận diện cho đơn vị kiến thức này.")
+    clean_kws = _clean_kc_keywords(body.keywords)
+    try:
+        return create_knowledge_component(kc=raw_kc, label_vi=body.label_vi.strip(), keywords=clean_kws, created_by=username)
+    except KCPermissionError as err:
+        raise _kc_error(err)
 
-    res = create_knowledge_component(
-        kc=raw_kc,
-        label_vi=body.label_vi.strip(),
-        keywords=clean_kws,
-        created_by=username
-    )
-    return res
+
+@app.put("/api/instructor/knowledge-components/{kc}", response_model=KnowledgeComponentItem)
+def update_instructor_knowledge_component(
+    kc: str,
+    body: KnowledgeComponentUpdateRequest,
+    token_data: dict = Depends(require_instructor)
+):
+    """[Giảng viên] Sửa tên và từ khóa của năng lực do chính mình tạo."""
+    clean_kws = _clean_kc_keywords(body.keywords)
+    try:
+        return update_knowledge_component(kc, token_data.get("sub", ""), body.label_vi.strip(), clean_kws)
+    except KCPermissionError as err:
+        raise _kc_error(err)
+
+
+@app.patch("/api/instructor/knowledge-components/{kc}", response_model=KnowledgeComponentItem)
+def toggle_instructor_knowledge_component(
+    kc: str,
+    body: KnowledgeComponentToggleRequest,
+    token_data: dict = Depends(require_instructor)
+):
+    """[Giảng viên] Tắt/bật năng lực do chính mình tạo."""
+    try:
+        return set_knowledge_component_active(kc, token_data.get("sub", ""), body.is_active)
+    except KCPermissionError as err:
+        raise _kc_error(err)
 
 
 @app.delete("/api/instructor/knowledge-components/{kc}")
@@ -1595,14 +1821,12 @@ def delete_instructor_knowledge_component(
     kc: str,
     token_data: dict = Depends(require_instructor)
 ):
-    """[Giảng viên] Xóa đơn vị kiến thức tùy chỉnh (không thể xóa 6 KC mặc định của hệ thống)."""
+    """[Giảng viên] Xóa (mềm) năng lực do chính mình tạo; trả số bài đang chọn năng lực này."""
     try:
-        success = delete_knowledge_component(kc)
-        if not success:
-            raise HTTPException(status_code=404, detail="Không tìm thấy đơn vị kiến thức cần xóa.")
-        return {"status": "success", "message": f"Đã xóa đơn vị kiến thức '{kc}' thành công."}
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        affected = delete_knowledge_component(kc, token_data.get("sub", ""))
+    except KCPermissionError as err:
+        raise _kc_error(err)
+    return {"status": "success", "message": f"Đã xóa đơn vị kiến thức '{kc}' thành công.", "affected_exercises": affected}
 
 
 # ==============================================================================

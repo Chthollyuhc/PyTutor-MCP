@@ -130,3 +130,6 @@ un_suite_v510.ps1 -OutDir <thư mục>`.
 - Test: `.\.claudeun_isolated.ps1 test_hint_l23_v512` (17 test không cần DB + 3 test API cần DB tạm). Đổi prompt/khuôn thì sinh lại tệp vàng (`py evaluation/gen_prompt_golden_v510.py`, đặt `PYTHONPATH=.` và `PYTUTOR_DISABLE_LLM=1`) và đo lại `evaluate_hint_levels.py --offline` ở cả ba tập.
 - Cột `algorithm_notes` được thêm khi `init_db()` chạy (backend dev `--reload` sẽ thêm cột vào `pytutor.db` thật khi khởi động lại); 5 bài đã có trong DB thật chưa có ghi chú (seed chỉ chạy khi bảng trống).
 - Đã đo Gemini thật 38 lượt cho gói này (tổng 367/375); đã đo lại 8 lượt sau hai sửa (Mức 3 tốt hơn, Mức 2 vẫn yếu). Xem `docs/HINT_L2_L3_V512.md` §5.
+
+## 14. v5.15 (chưa commit) — năng lực do giảng viên chọn, quản lý năng lực/tài liệu chung
+- Bài có `exercises.kc_tags` (giảng viên chọn); rỗng thì dò từ khóa như cũ. 6 năng lực hệ thống khóa; năng lực/tài liệu chung tự thêm chỉ người tạo sửa/tắt/xóa; hai tệp tài liệu trên đĩa chỉ tắt/bật. Pythonic Review đã ẩn khỏi giao diện (endpoint giữ). Test: `.\.claude\run_isolated.ps1 test_kc_and_kb_management`. Chi tiết: `AI_HANDOFF_CONTEXT.md` §25.

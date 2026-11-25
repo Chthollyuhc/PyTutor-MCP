@@ -181,6 +181,7 @@ class ExerciseDetail(BaseModel):
     created_by: str = "system"
     has_passed: bool = Field(False, description="Sinh viên đang đăng nhập đã có lượt `submit` pass ở bài này (mở chat về code đã nộp)")
     algorithm_notes: Optional[str] = Field(None, description="Ý tưởng thuật toán của giảng viên (chỉ giảng viên thấy; dùng cho gợi ý Mức 3)")
+    kc_tags: list[str] = Field(default_factory=list, description="Mã năng lực (KC) do giảng viên chọn cho bài; rỗng = suy từ danh mục")
     class_id: Optional[str] = Field(None, description="Mã lớp học phần chứa bài tập")
     class_name: Optional[str] = Field(None, description="Tên lớp học phần chứa bài tập")
     class_code: Optional[str] = Field(None, description="Mã lớp học phần NEU")
@@ -196,6 +197,7 @@ class ExerciseUpsertRequest(BaseModel):
     starter_code: str = Field(..., description="Mã nguồn mẫu khởi tạo")
     test_cases: list[TestCase] = Field(..., description="Danh sách các test case")
     algorithm_notes: str = Field("", max_length=3000, description="Ý tưởng thuật toán viết bằng lời (tùy chọn, chỉ dùng cho gợi ý Mức 3)")
+    kc_tags: list[str] = Field(default_factory=list, max_length=12, description="Mã năng lực (KC) giảng viên chọn cho bài")
 
 
 class ExerciseShareRequest(BaseModel):
@@ -568,6 +570,20 @@ class KnowledgeComponentItem(BaseModel):
     created_by: str = Field("system", description="Người tạo (system hoặc username)")
     created_at: Optional[str] = None
     is_active: bool = True
+
+
+class KnowledgeSystemToggleRequest(BaseModel):
+    path: str = Field(..., min_length=1, max_length=300, description="Đường dẫn tệp hệ thống trong docs/knowledge_base (vd. python_fundamentals.md)")
+    is_active: bool
+
+
+class KnowledgeComponentUpdateRequest(BaseModel):
+    label_vi: str = Field(..., min_length=2, max_length=100)
+    keywords: list[str] = Field(..., min_length=1)
+
+
+class KnowledgeComponentToggleRequest(BaseModel):
+    is_active: bool
 
 
 class KnowledgeComponentCreateRequest(BaseModel):

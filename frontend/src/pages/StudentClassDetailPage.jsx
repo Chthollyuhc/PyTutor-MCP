@@ -481,13 +481,12 @@ export default function StudentClassDetailPage() {
                             <th scope="col" className="px-4 py-3 font-bold">Sinh viên</th>
                             <th scope="col" className="px-4 py-3 text-right font-bold">Bài đã giải</th>
                             <th scope="col" className="px-4 py-3 text-right font-bold">Điểm nỗ lực</th>
-                            <th scope="col" className="px-4 py-3 text-right font-bold">Điểm Clean Code</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                           {safeLb.length === 0 ? (
                             <tr>
-                              <td colSpan={5} className="px-4 py-8 text-center text-muted">Chưa có dữ liệu bảng xếp hạng cho học kỳ này.</td>
+                              <td colSpan={4} className="px-4 py-8 text-center text-muted">Chưa có dữ liệu bảng xếp hạng cho học kỳ này.</td>
                             </tr>
                           ) : (
                             safeLb.slice(0, 10).map((row, idx) => (
@@ -499,7 +498,6 @@ export default function StudentClassDetailPage() {
                                 </td>
                                 <td className="px-4 py-3 text-right font-semibold tabular-nums">{row.completed_exercises || 0}</td>
                                 <td className="px-4 py-3 text-right font-semibold tabular-nums text-warning-strong">{row.total_stars || 0}</td>
-                                <td className="px-4 py-3 text-right font-semibold tabular-nums">{row.highest_clean_score || 0}/100</td>
                               </tr>
                             ))
                           )}

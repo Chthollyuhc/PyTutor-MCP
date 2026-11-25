@@ -149,6 +149,38 @@ export const fetchKnowledgeBaseCatalogue = async () => {
   return response.data;
 };
 
+// v5.15: quản lý tài liệu chung (thêm/sửa/tắt/xóa; tệp hệ thống chỉ tắt/bật)
+export const uploadGlobalKnowledge = async (formData) => {
+  const response = await apiClient.post('/instructor/knowledge-base/documents', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  });
+  return response.data;
+};
+
+export const updateGlobalKnowledge = async (docId, formData) => {
+  const response = await apiClient.put(`/instructor/knowledge-base/documents/${docId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  });
+  return response.data;
+};
+
+export const toggleGlobalKnowledge = async (docId, isActive) => {
+  const response = await apiClient.patch(`/instructor/knowledge-base/documents/${docId}`, { is_active: isActive });
+  return response.data;
+};
+
+export const deleteGlobalKnowledge = async (docId) => {
+  const response = await apiClient.delete(`/instructor/knowledge-base/documents/${docId}`);
+  return response.data;
+};
+
+export const toggleSystemKnowledge = async (path, isActive) => {
+  const response = await apiClient.patch('/instructor/knowledge-base/system', { path, is_active: isActive });
+  return response.data;
+};
+
 export const fetchTutorFeedbackSummary = async (days = 30) => {
   const response = await apiClient.get('/instructor/ai/feedback-summary', { params: { days } });
   return response.data;
@@ -368,6 +400,16 @@ export const fetchKnowledgeComponents = async () => {
 
 export const createKnowledgeComponent = async (kcData) => {
   const response = await apiClient.post('/instructor/knowledge-components', kcData);
+  return response.data;
+};
+
+export const updateKnowledgeComponent = async (kc, kcData) => {
+  const response = await apiClient.put(`/instructor/knowledge-components/${encodeURIComponent(kc)}`, kcData);
+  return response.data;
+};
+
+export const toggleKnowledgeComponent = async (kc, isActive) => {
+  const response = await apiClient.patch(`/instructor/knowledge-components/${encodeURIComponent(kc)}`, { is_active: isActive });
   return response.data;
 };
 

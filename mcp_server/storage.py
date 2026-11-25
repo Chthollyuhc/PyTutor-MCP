@@ -52,10 +52,13 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     """Lấy thông tin chi tiết bài tập theo ID từ SQLite."""
     conn = get_conn()
     cursor = conn.cursor()
-    has_notes = any(r[1] == "algorithm_notes" for r in cursor.execute("PRAGMA table_info(exercises)").fetchall())
+    columns = {r[1] for r in cursor.execute("PRAGMA table_info(exercises)").fetchall()}
+    has_notes = "algorithm_notes" in columns
+    has_kc_tags = "kc_tags" in columns
     cursor.execute(
         "SELECT id, title, difficulty, category, description, starter_code, test_cases"
-        + (", algorithm_notes" if has_notes else "") + " FROM exercises WHERE id = ? AND is_active = 1",
+        + (", algorithm_notes" if has_notes else "") + (", kc_tags" if has_kc_tags else "")
+        + " FROM exercises WHERE id = ? AND is_active = 1",
         (exercise_id,)
     )
     row = cursor.fetchone()
@@ -69,6 +72,14 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
     except Exception:
         test_cases = []
 
+    kc_tags: list = []
+    if has_kc_tags:
+        try:
+            loaded = json.loads(row["kc_tags"] or "[]")
+            kc_tags = [str(x) for x in loaded] if isinstance(loaded, list) else []
+        except Exception:
+            kc_tags = []
+
     return {
         "id": row["id"],
         "title": row["title"],
@@ -78,6 +89,7 @@ def get_exercise_by_id(exercise_id: str) -> Optional[dict]:
         "starter_code": row["starter_code"],
         "test_cases": test_cases,
         "algorithm_notes": (row["algorithm_notes"] if has_notes else "") or "",
+        "kc_tags": kc_tags,
     }
 
 
@@ -218,7 +230,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
     try:
         if class_id:
             cursor.execute("""
-                SELECT ce.exercise_id as id, ce.module_name as category, ce.module_name as module_name, ce.skill_tag as skill_tag, e.category as exercise_category, e.title, ce.min_stars_required
+                SELECT ce.exercise_id as id, ce.module_name as category, ce.module_name as module_name, ce.skill_tag as skill_tag, e.category as exercise_category, e.title, ce.min_stars_required, e.kc_tags as kc_tags
                 FROM class_exercises ce
                 JOIN exercises e ON ce.exercise_id = e.id
                 WHERE ce.class_id = ?
@@ -226,7 +238,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             """, (class_id,))
             ex_meta_rows = [dict(r) for r in cursor.fetchall()]
         else:
-            cursor.execute("SELECT id, title, category FROM exercises WHERE is_active = 1 ORDER BY id ASC")
+            cursor.execute("SELECT id, title, category, kc_tags FROM exercises WHERE is_active = 1 ORDER BY id ASC")
             ex_meta_rows = [dict(r) for r in cursor.fetchall()]
     except Exception:
         ex_meta_rows = []
@@ -433,7 +445,7 @@ def compute_student_model(session_id: str, class_id: Optional[str] = None) -> di
             weaknesses_and_bottlenecks = f"Thỉnh thoảng vẫn gặp sai lệch ở các test case biên (lỗi logic kiểm thử chiếm {error_breakdown['logic_error_percent']}%)."
         else:
             weaknesses_and_bottlenecks = "Không có điểm nghẽn kỹ thuật nào đáng kể."
-        recommended_next_action = "Thử các thử thách 'Tối ưu Code Pythonic' hoặc bài kế tiếp trên lộ trình."
+        recommended_next_action = "Làm bài kế tiếp trên lộ trình, hoặc hỏi Gia sư AI về mã đã nộp."
     elif len(mastered_exercises) >= 2 and autonomy_score >= 60:
         level_classification = "Hoàn thành ổn định, còn dùng gợi ý ở một số bài"
         strengths_analysis = (

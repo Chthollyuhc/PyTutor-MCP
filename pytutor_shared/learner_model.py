@@ -190,17 +190,51 @@ def _fold(text: Any) -> str:
     return "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
 
 
-def assign_kcs(category: Any = "", module_name: Any = "", skill_tag: Any = "", exercise_category: Any = "", kc_definitions: Optional[list[dict]] = None) -> list[str]:
-    """Gán KC bằng từ khóa trên category/module_name/skill_tag/exercise_category (đã bỏ dấu); io_format luôn có. Tất định.
-    Nếu truyền kc_definitions thì dùng danh sách đó, ngược lại dùng KC_DEFINITIONS mặc định.
+def _explicit_kc_tags(raw: Any) -> list[str]:
+    """kc_tags có thể là list hoặc chuỗi JSON (từ cột DB); lỗi -> []."""
+    if isinstance(raw, list):
+        return [str(x) for x in raw]
+    if isinstance(raw, str) and raw.strip():
+        try:
+            import json
+            data = json.loads(raw)
+            return [str(x) for x in data] if isinstance(data, list) else []
+        except Exception:
+            return []
+    return []
+
+
+def _fold_pattern(pattern: Any) -> str:
+    """Bỏ dấu/hạ chữ thường phần chữ của regex nhưng giữ nguyên các escape (\\S, \\W, \\D, \\B không được đổi nghĩa)."""
+    return re.sub(r"\\.|[^\\]+", lambda m: m.group(0) if m.group(0).startswith("\\") else _fold(m.group(0)), str(pattern or ""))
+
+
+def _keyword_hit(pattern: Any, haystack: str) -> bool:
+    """Từ khóa là regex trên chuỗi đã bỏ dấu; từ khóa có dấu cũng khớp (được bỏ dấu trước); mẫu lỗi bị bỏ qua."""
+    try:
+        return re.search(_fold_pattern(pattern), haystack) is not None
+    except re.error:
+        return False
+
+
+def assign_kcs(category: Any = "", module_name: Any = "", skill_tag: Any = "", exercise_category: Any = "", kc_definitions: Optional[list[dict]] = None, explicit_kcs: Optional[list[str]] = None) -> list[str]:
+    """Gán KC cho một bài; io_format luôn có. Tất định.
+
+    Nếu giảng viên đã chọn trực tiếp (explicit_kcs) và có ít nhất một mã hợp lệ (nằm trong danh sách KC đang dùng) thì
+    chỉ dùng các mã đó (theo thứ tự trong danh sách KC). Ngược lại dò từ khóa trên category/module_name/skill_tag/
+    exercise_category (đã bỏ dấu). Nếu truyền kc_definitions thì dùng danh sách đó, ngược lại dùng KC_DEFINITIONS mặc định.
     """
+    defs = kc_definitions if kc_definitions is not None else KC_DEFINITIONS
+    chosen = {str(k).strip() for k in (explicit_kcs or []) if str(k).strip()}
+    valid = [d["kc"] for d in defs if d.get("kc") in chosen and d.get("kc") != "io_format"]
+    if valid:
+        return ["io_format"] + valid
     haystack = " | ".join(_fold(x) for x in (category, module_name, skill_tag, exercise_category))
     kcs = ["io_format"]
-    defs = kc_definitions if kc_definitions is not None else KC_DEFINITIONS
     for d in defs:
         if d.get("kc") == "io_format":
             continue
-        if any(re.search(p, haystack) for p in d.get("keywords", [])):
+        if any(_keyword_hit(p, haystack) for p in d.get("keywords", [])):
             kcs.append(d["kc"])
     return kcs
 
@@ -325,7 +359,7 @@ def derive_learner_model(
     """
     defs = kc_definitions if kc_definitions is not None else KC_DEFINITIONS
     meta = {e["id"]: e for e in exercises}
-    exercise_kcs = {e["id"]: assign_kcs(e.get("category"), e.get("module_name"), e.get("skill_tag"), e.get("exercise_category"), kc_definitions=defs) for e in exercises}
+    exercise_kcs = {e["id"]: assign_kcs(e.get("category"), e.get("module_name"), e.get("skill_tag"), e.get("exercise_category"), kc_definitions=defs, explicit_kcs=_explicit_kc_tags(e.get("kc_tags"))) for e in exercises}
     by_ex: dict[str, list[dict]] = {}
     for s in submissions:
         by_ex.setdefault(s["exercise_id"], []).append(s)
